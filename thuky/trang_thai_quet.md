@@ -1,0 +1,146 @@
+# Trạng thái quét dự án — Thư Ký Agent
+File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh lần quét sau.
+
+## Lần quét gần nhất
+- Thời gian: 2026-08-09 20:28:18
+- Git: KHÔNG có repository git tại D:\ung dung tri tue nhan ao\app → so sánh bằng timestamp.
+- Kết quả: Backend xong Demo (19:50:00), Thu phạt UC19 (20:05:33, migration 0008, 67/67), Xoá lịch sử yêu cầu (20:15, 0.12.0). Frontend nối delete requests (20:12-20:14); reservations/fines vẫn mock. Server ĐÃ restart (route mới trả 401 thay vì 405).
+
+## Backend (D:\ung dung tri tue nhan ao\app\Backend)
+- AGENTS.md — 07:54 — ĐÃ SỬA (prompt cập nhật theo YC-002)
+- .env — 06:58:43 — KHÔNG ĐỌC nội dung (tránh lộ bí mật)
+- alembic.ini — 06:58:43 — không đổi
+- api_docs.md — 20:18 — ĐÃ SỬA: bản 0.12.0 (collect-fine + DELETE /api/requests/me/*)
+- LOG_THU_KY.md — 20:18 — ĐÃ SỬA: chứa log 19:50:00, 20:05:33, 20:15 (đã ghi changelog)
+- README.md — 20:05 — ĐÃ SỬA (hướng dẫn seed demo)
+- requirements-dev.txt — 09:47 — MỚI
+- requirements.txt — 06:58:42 — không đổi
+- alembic\env.py, script.py.mako — không đổi
+- alembic\versions\0001_create_users_books.py — không đổi (đã ghi log)
+- alembic\versions\0002_add_admin_support_tables.py — 07:55 — MỚI (LibraryConfig, AIConfig, AuditLog; Users.is_active)
+- alembic\versions\0003_convert_text_columns_to_nvarchar_max.py — 07:55 — MỚI
+- alembic\versions\0004_create_readers_table.py — 09:47 — MỚI (bảng Readers, chức năng 3)
+- alembic\versions\0005_create_borrow_tables.py — 10:25 — MỚI (BorrowSlips, BorrowDetails, FineHistory, so_lan_gia_han — chức năng 4)
+- alembic\versions\0006_add_use_case_compat_tables.py — 17:28 — MỚI (TheLoai, Nxb, YeuCau; Books.theLoaiId/nxbId; Users.reader_id)
+- alembic\versions\0007_create_dat_truoc_table.py — 18:57 — MỚI (bảng DatTruoc, chức năng 6)
+- alembic\versions\0008_add_fine_collection_columns.py — 20:03 — MỚI (FineHistory.da_thu, ngay_thu — UC19)
+- app\audit.py — 07:54 — MỚI (ghi audit log)
+- app\config.py — 08:03 — ĐÃ SỬA (BACKUP_DIR)
+- app\database.py — không đổi
+- app\deps.py — 07:54 — ĐÃ SỬA (kiểm tra tài khoản khoá khi đăng nhập)
+- app\main.py — 10:25 — ĐÃ SỬA (mount router borrows)
+- app\models.py — 10:25 — ĐÃ SỬA (thêm model BorrowSlip/BorrowDetail/FineHistory)
+- app\schemas.py — 10:25 — ĐÃ SỬA (schema borrows)
+- app\security.py — không đổi
+- app\routers\auth.py — 07:54 — ĐÃ SỬA (chặn tài khoản bị khoá)
+- app\routers\books.py — 10:42 — ĐÃ SỬA (tra cứu q/theLoai/trangThai, chức năng 5)
+- app\routers\admin.py — 09:41 — ĐÃ SỬA
+- app\routers\readers.py — 09:47 — MỚI (API /api/readers, chức năng 3)
+- app\routers\borrows.py — 10:25 — MỚI (API /api/borrows, chức năng 4)
+- app\routers\accounts.py — 17:31 — MỚI (API /api/admin/accounts)
+- app\routers\catalog.py — 17:31 — MỚI (API /api/admin/categories + /api/admin/publishers)
+- app\routers\requests.py — 17:38 — MỚI (API /api/requests + approve/reject)
+- app\routers\reservations.py — 18:57 — MỚI (API /api/reservations, chức năng 6)
+- app\routers\notifications.py — 19:15 — MỚI (API GET /api/notifications, UC11)
+- app\routers\stats.py — 19:23 — MỚI (API /api/stats/*, chức năng 7)
+- app\routers\export.py — 19:34 — MỚI (API /api/export/*.csv, chức năng 8)
+- app\routers\requests.py — 20:18 — ĐÃ SỬA (thêm DELETE /api/requests/me/*)
+- app\routers\borrows.py — 20:05 — ĐÃ SỬA (collect-fine + fines trong GET)
+- app\routers\borrows.py — 19:01 — ĐÃ SỬA (thêm 2 DELETE /api/borrows/me/*; admin không xử lý mượn/trả)
+- app\routers\auth.py, readers.py, borrows.py, admin.py, main.py, models.py, schemas.py — 17:28-17:38 — ĐÃ SỬA (Đợt A)
+- tests\__init__.py, tests\conftest.py, tests\test_readers.py — 09:48 — MỚI (test chức năng 3, 9/9 PASS)
+- tests\test_borrows.py, tests\conftest.py — 10:27 — ĐÃ SỬA/MỚI (test chức năng 4, 19/19 PASS tổng)
+- tests\test_books_search.py — 10:43 — MỚI (test tra cứu, 28/28 PASS tổng)
+- tests\test_uc_compat.py — 17:32 — MỚI (Đợt A, 38/38 PASS tổng)
+- tests\test_reservations.py — 19:01 — MỚI (chức năng 6, 50/50 PASS tổng)
+- tests\test_notifications.py — 19:15 — MỚI (UC11, 54/54 PASS tổng)
+- tests\test_stats.py — 19:24 — MỚI (chức năng 7, 58/58 PASS tổng)
+- tests\test_export.py — 19:34 — MỚI (chức năng 8, 62/62 PASS tổng)
+- tests\test_fines.py — 20:04 — MỚI (UC19, 67/67 PASS tổng)
+- scripts\seed_demo.py — 19:46 — MỚI (dữ liệu demo idempotent)
+- app\main.py, tests\conftest.py — 19:34 — ĐÃ SỬA (mount export)
+- Ghi chú: toàn bộ thay đổi Backend đã có log chính thức [BACKEND] 19:34:48 → không ghi thêm dòng quét trùng.
+
+## Frontend (D:\ung dung tri tue nhan ao\app\Frontend)
+- AGENTS.md — 07:54:08 — MỚI (prompt Frontend Agent, tham chiếu DE_BAI.md) — đã ghi log "phát hiện từ quét"
+- UI_DESIGN.md — 09:17:53 — MỚI (spec giao diện mới, WCAG) — đã ghi log quét
+- AGENTS.md — 09:54:52 — ĐÃ SỬA (prompt Frontend) — chưa có log riêng
+- assets\cropped-logoww.png — 08:59:31 — MỚI (logo ICTU)
+- index.html — 09:20:59 — ĐÃ SỬA (giao diện mới)
+- books.html — 10:01:49 — ĐÃ SỬA (giao diện mới + tab Quản lý độc giả)
+- readers.html — 10:01:50 — MỚI (trang Quản lý độc giả)
+- css\style.css — 10:01:51 — ĐÃ SỬA (15949 bytes)
+- js\api.js — 10:01:24 — ĐÃ SỬA (thêm readers/createReader/updateReader/deleteReader + readerOut; CHƯA có /api/admin/*)
+- js\auth.js — 10:00:11 — ĐÃ SỬA (thêm requireStaff)
+- js\books.js — 08:34:50 — ĐÃ SỬA
+- js\admin.js — 08:47:11 — MỚI (khung tiện ích admin, chưa nối API)
+- js\readers.js — 10:01:50 — MỚI (logic trang độc giả)
+- Ghi chú: thay đổi mới nhất đã có log chính thức [FRONTEND] 10:03:12.
+- borrow.html + js\borrow.js — 16:47:53/16:43:04 — MỚI (UI mượn/trả/gia hạn, chức năng 4)
+- search.html + js\search.js — 16:47:53/10:40:14 — MỚI (UI tra cứu sách, chức năng 5)
+- index.html, books.html, readers.html — 16:47 — ĐÃ SỬA (menu điều hướng)
+- css\style.css — 16:43:06 — ĐÃ SỬA (16680 bytes)
+- js\api.js — 16:40:54 — ĐÃ SỬA (thêm createBorrow/borrows/returnBorrow/renewBorrow + queryMap books/borrows; CHƯA có /api/admin/*)
+- js\auth.js — 10:39:05 — ĐÃ SỬA
+- Ghi chú: các thay đổi 16:40-16:47 CHƯA có log Frontend — đã ghi "phát hiện từ quét".
+- register.html + js\register.js — 17:41:47 — MỚI (đăng ký độc giả)
+- my-borrows.html + js\my-borrows.js — 17:41:48 — MỚI (lịch sử mượn của reader)
+- my-borrows.html + js\my-borrows.js — sau 18:08 — ĐÃ SỬA (nút xoá từng phiếu/toàn bộ lịch sử, log 18:17:43)
+- admin-accounts.html + js\admin-accounts.js — 17:43:02/03 — MỚI (quản lý tài khoản)
+- admin-catalog.html + js\admin-catalog.js — 17:43:03/04 — MỚI (danh mục thể loại/NXB)
+- requests.html + js\requests.js — 18:07:02 — MỚI (yêu cầu MUON/TRA/GIA_HAN, so_ngay_muon)
+- borrow.html, borrow.js — 17:56:06 — ĐÃ SỬA
+- books.html, index.html, readers.html, search.html — 17:44 — ĐÃ SỬA (menu)
+- js\api.js — 18:00:56 — ĐÃ SỬA (10121 bytes; nối register/myBorrows/requests/accounts/categories/publishers + soNgayMuon)
+- js\api.js — sau 18:08 — ĐÃ SỬA (thêm deleteMyBorrow, deleteMyBorrows)
+- reservations.html + js\reservations.js + js\reservation-mock.js — 18:32-18:36 — MỚI (UI đặt trước, mock fallback)
+- js\api.js — 18:31:37 — ĐÃ SỬA (thêm reservations/createReservation/cancelReservation/fulfillReservation)
+- js\my-borrows.js — 18:36:46 — ĐÃ SỬA (nối DELETE /api/borrows/me/*)
+- scripts\cleanup_old_data.py — 18:14:04 — MỚI (script dọn dữ liệu test)
+- admin-accounts.html, admin-catalog.html, books.html, borrow.html, my-borrows.html, readers.html, requests.html, search.html — 18:32 — ĐÃ SỬA (menu phân quyền mới)
+- notifications.html — 19:07:35 — MỚI (trang Thông báo UC11)
+- js\notifications-core.js, js\notif-badge.js, js\notifications.js — 19:07-19:11 — MỚI (tổng hợp nhắc hạn trả + SAN_SANG, localStorage tạm)
+- js\api.js — sau 19:03 — ĐÃ SỬA (thêm notifications: "/api/notifications")
+- Các html (admin-accounts, admin-catalog, books, borrow, my-borrows, readers, requests, reservations, search) — 19:08 — ĐÃ SỬA (thêm link Thông báo reader)
+- stats.html — 19:20:11 — MỚI (Dashboard chức năng 7)
+- js\stats.js — 19:20 — MỚI (gọi statsTopBooks/statsTopReaders/statsOverdueBooks + mock)
+- js\api.js — 19:19:44 — ĐÃ SỬA (11957 bytes; thêm 3 endpoint /api/stats/* + fieldMap)
+- Các html — 19:20 — ĐÃ SỬA (thêm link Thống kê admin+librarian)
+- AGENTS.md — 19:21:05 — ĐÃ SỬA (thêm mục LƯU PROMPT) — đã đồng bộ P.3 vào promtAI
+- books.html, borrow.html, stats.html — sau 19:21 — ĐÃ SỬA (3 nút Xuất CSV)
+- js\api.js — sau 19:19 — ĐÃ SỬA (thêm exportBooks/exportBorrows/exportReport + downloadFile)
+- books.html, borrow.html, stats.html — 19:30 — ĐÃ SỬA (nút Xuất CSV hoàn chỉnh)
+- js\api.js — 19:30:11 — ĐÃ SỬA (14092 bytes; downloadFile fetch→blob)
+- js\books.js, js\borrow.js, js\stats.js — 19:31 — ĐÃ SỬA (gắn nút export + gọi downloadFile)
+- admin-config.html — 19:53:46 — MỚI (cấu hình thư viện UC24 + AI UC26 + backup/restore UC27)
+- js\admin-config.js — 19:53:38 — MỚI (7043 bytes; gọi aiConfig/updateAiConfig/updateLibraryConfig/backup/restore)
+- borrow.html — 19:55:58 — ĐÃ SỬA (khu Thu phạt UC19 mock)
+- js\borrow.js — 19:55:18 — ĐÃ SỬA (16052 bytes; MOCK_FINES + collectFine)
+- requests.html — 19:55:56 — ĐÃ SỬA (thêm option DAT_TRUOC)
+- js\requests.js — 19:55:43 — ĐÃ SỬA (14079 bytes; payload DAT_TRUOC)
+- js\api.js — sau 19:30 — ĐÃ SỬA (thêm aiConfig/updateAiConfig/backup/restore/updateLibraryConfig/collectFine)
+- Các html — 19:55-19:56 — ĐÃ SỬA (menu Cấu hình chỉ admin)
+- requests.html — 20:12:21 — ĐÃ SỬA (6712 bytes; nút xoá lịch sử yêu cầu)
+- js\requests.js — 20:14:41 — ĐÃ SỬA (18084 bytes; deleteMyRequest/deleteMyRequests)
+- js\api.js — 20:12:20 — ĐÃ SỬA (15648 bytes; thêm deleteMyRequest/deleteMyRequests)
+- reservations.html + js\reservations.js + js\reservation-mock.js — 20:22 — ĐÃ SỬA (VẪN mock fallback)
+- js\auth.js — 17:41:22 — ĐÃ SỬA
+- Ghi chú: requests có log 18:01:49 + 18:07:45; các trang còn lại CHƯA có log riêng.
+
+## AI_Engine (D:\ung dung tri tue nhan ao\app\AI_Engine)
+- AI.txt — 07:54:08 — 4854 bytes — ĐÃ SỬA (prompt tham chiếu DE_BAI.md) — đã ghi log "phát hiện từ quét"
+- Chưa có code AI-1/2/3 và chưa có code dùng cấu hình AI.
+
+## hỗ trợ (tài liệu dự án, mới xuất hiện)
+- DE_BAI.md (07:45:44), KE_HOACH_9_TUAN.md (07:45:44), REQUIREMENTS_QA.md (07:45:45), TIEU_CHI_DANH_GIA.md (07:45:45), QUY_TRINH_CHAY_TUAN_TU.md (07:45:46), AGENT_TRỢ_LÝ_DỰ_ÁN.md (06:21:10), FRONTEND_AGENT_PROMPT.md (07:54:09)
+- Đã đọc DE_BAI.md + QUY_TRINH_CHAY_TUAN_TU.md; đã ghi log "phát hiện từ quét".
+
+## Ghi chú lần quét sau
+- File nào có LastWriteTime mới hơn 08:09:34 → coi là mới/vừa sửa.
+- File chưa từng xuất hiện trong danh sách này → coi là file mới.
+
+### Cập nhật 2026-08-09 09:55 (Trợ Lý đồng bộ dữ liệu — Thư Ký nên quét lại để xác nhận)
+- Frontend: AGENTS.md, index.html, books.html, UI_DESIGN.md, assets/cropped-logoww.png, css/style.css, js/admin.js, js/api.js, js/auth.js, js/books.js. ĐÃ XOÁ: admin-librarians.html, js/admin-librarians.js.
+- Backend: đã xoá `/api/admin/librarians*`; ĐÃ THÊM chức năng 3 (`/api/readers`, migration 0004, api_docs 0.3.0) — server chưa restart nên API chưa live.
+- AI_Engine: chỉ có AI.txt.
+- DB: 5 sách S001-S005; 3 tài khoản login admin/librarian/reader.
