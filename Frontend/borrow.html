@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mượn / Trả sách — Thư viện ICTU AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260809-2">
+</head>
+<body data-page="borrow">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="brand">
+        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+        <strong class="app-title">Mượn / Trả sách</strong>
+      </div>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
+      </div>
+    </div>
+    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
+      <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
+      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
+      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
+      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
+      <a href="borrow.html" class="active" data-roles="librarian">Mượn / Trả sách</a>
+      <a href="books.html" data-roles="librarian">Quản lý sách</a>
+      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
+      <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
+      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
+      <a href="admin-config.html" data-roles="admin">Cấu hình</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="page-message" class="alert" hidden></div>
+
+    <div class="toolbar">
+      <button type="button" id="export-borrows-button" class="btn btn-secondary">Xuất CSV</button>
+    </div>
+
+    <div id="loading" class="loading" hidden>
+      <span class="spinner"></span>
+      <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <div class="card">
+      <h2>Lập phiếu mượn</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="borrow-ma-phieu">Mã phiếu mượn</label>
+          <input type="text" id="borrow-ma-phieu" maxlength="20" placeholder="VD: PM001" required>
+        </div>
+        <div class="form-group">
+          <label for="borrow-reader">Độc giả</label>
+          <select id="borrow-reader" required>
+            <option value="">— Chọn độc giả —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="borrow-so-ngay">Số ngày mượn (hạn trả)</label>
+          <input type="number" id="borrow-so-ngay" min="1" max="365" value="14" required>
+        </div>
+      </div>
+
+      <h3>Sách mượn</h3>
+      <div id="borrow-items"></div>
+      <div class="modal-actions">
+        <button type="button" id="add-borrow-item" class="btn btn-secondary">+ Thêm sách</button>
+        <button type="button" id="create-borrow-button" class="btn btn-primary">Lập phiếu mượn</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Phiếu đang mượn</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã phiếu</th>
+              <th>Độc giả</th>
+              <th>Ngày mượn</th>
+              <th>Hạn trả</th>
+              <th>Gia hạn</th>
+              <th>Chi tiết</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="active-borrow-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Thu phạt (UC19)</h2>
+      <div id="fine-banner" class="alert" hidden>Đang dùng dữ liệu mẫu — Backend chưa có API liệt kê phạt chưa thu / thu phạt.</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã phiếu</th>
+              <th>Độc giả</th>
+              <th>Số ngày quá hạn</th>
+              <th>Số tiền</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="fine-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260809-2"></script>
+  <script src="js/auth.js?v=20260809-2"></script>
+  <script src="js/borrow.js?v=20260809-10"></script>
+</body>
+</html>

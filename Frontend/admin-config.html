@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cấu hình — Thư viện ICTU AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260809-10">
+</head>
+<body data-page="admin-config">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="brand">
+        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+        <strong class="app-title">Cấu hình</strong>
+      </div>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
+      </div>
+    </div>
+    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
+      <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
+      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
+      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
+      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
+      <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
+      <a href="books.html" data-roles="librarian">Quản lý sách</a>
+      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
+      <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
+      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
+      <a href="admin-config.html" class="active" data-roles="admin">Cấu hình</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="page-message" class="alert" hidden></div>
+    <div id="loading" class="loading" hidden>
+      <span class="spinner"></span>
+      <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <section class="card">
+      <h2>Cấu hình thư viện (UC24)</h2>
+      <form id="library-config-form" novalidate>
+        <div class="form-group">
+          <label for="cfg-max-borrow-days">Số ngày mượn tối đa</label>
+          <input type="number" id="cfg-max-borrow-days" name="maxBorrowDays" min="1" max="365" required>
+        </div>
+        <div class="form-group">
+          <label for="cfg-fine">Phạt quá hạn (đồng/ngày)</label>
+          <input type="number" id="cfg-fine" name="overdueFinePerDay" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="cfg-max-books">Giới hạn số sách mượn cùng lúc</label>
+          <input type="number" id="cfg-max-books" name="maxBooksAtOnce" min="1" max="100" required>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" id="save-library-config-button" class="btn btn-primary">Lưu cấu hình thư viện</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Cấu hình AI Engine (UC26)</h2>
+      <p id="ai-key-status" class="key-status"></p>
+      <form id="ai-config-form" novalidate>
+        <div class="form-group">
+          <label for="ai-provider">Provider</label>
+          <input type="text" id="ai-provider" name="provider" maxlength="50" required>
+        </div>
+        <div class="form-group">
+          <label for="ai-model">Model</label>
+          <input type="text" id="ai-model" name="model" maxlength="100" required>
+        </div>
+        <div class="form-group">
+          <label for="ai-api-key">API key</label>
+          <input type="password" id="ai-api-key" name="apiKey" maxlength="500" autocomplete="off">
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="ai-clear-key" name="clearKey">
+            Xoá API key hiện tại (chỉ khi muốn xoá)
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="ai-prompt">Prompt template</label>
+          <textarea id="ai-prompt" name="promptTemplate"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" id="save-ai-config-button" class="btn btn-primary">Lưu cấu hình AI</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Sao lưu &amp; phục hồi CSDL (UC27)</h2>
+      <div class="modal-actions actions-left">
+        <button type="button" id="backup-button" class="btn btn-primary">Sao lưu CSDL</button>
+      </div>
+      <div class="form-group field-gap">
+        <label for="restore-path">Đường dẫn file .bak để phục hồi</label>
+        <input type="text" id="restore-path" placeholder="VD: C:\Program Files\Microsoft SQL Server\MSSQL16.QUANGHUNG\MSSQL\Backup\LibraryDB_....bak">
+      </div>
+      <div class="modal-actions actions-left">
+        <button type="button" id="restore-button" class="btn btn-danger">Phục hồi CSDL</button>
+      </div>
+      <p class="hint">Phục hồi sẽ THAY THẾ toàn bộ dữ liệu hiện tại (WITH REPLACE).</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260809-10"></script>
+  <script src="js/auth.js?v=20260809-10"></script>
+  <script src="js/admin-config.js?v=20260809-10"></script>
+</body>
+</html>

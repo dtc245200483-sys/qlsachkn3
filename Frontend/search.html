@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra cứu sách — Thư viện ICTU AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260809-2">
+</head>
+<body data-page="search">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="brand">
+        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+        <strong class="app-title">Tra cứu sách</strong>
+      </div>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
+      </div>
+    </div>
+    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
+      <a href="search.html" class="active" data-roles="admin,librarian,reader">Tra cứu sách</a>
+      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
+      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
+      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
+      <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
+      <a href="books.html" data-roles="librarian">Quản lý sách</a>
+      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
+      <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
+      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
+      <a href="admin-config.html" data-roles="admin">Cấu hình</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="page-message" class="alert" hidden></div>
+
+    <div class="search-bar">
+      <div class="form-group">
+        <label for="search-q">Tìm theo tên / tác giả</label>
+        <input type="text" id="search-q" placeholder="VD: Python hoặc Nguyễn">
+      </div>
+      <div class="form-group">
+        <label for="search-theloai">Thể loại</label>
+        <select id="search-theloai">
+          <option value="">Tất cả thể loại</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="search-trangthai">Trạng thái</label>
+        <select id="search-trangthai">
+          <option value="">Tất cả</option>
+          <option value="con">Còn sách</option>
+          <option value="het">Hết sách</option>
+          <option value="dang_muon">Đang mượn</option>
+        </select>
+      </div>
+      <button type="button" id="search-button" class="btn btn-primary">Tìm</button>
+      <button type="button" id="clear-search-button" class="btn btn-secondary">Xoá lọc</button>
+    </div>
+
+    <div id="loading" class="loading" hidden>
+      <span class="spinner"></span>
+      <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mã sách</th>
+            <th>Tên sách</th>
+            <th>Tác giả</th>
+            <th>Thể loại</th>
+            <th>Nhà xuất bản</th>
+            <th>Năm XB</th>
+            <th>Số lượng</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="search-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260809-6"></script>
+  <script src="js/auth.js?v=20260809-6"></script>
+  <script src="js/reservation-mock.js?v=20260809-6"></script>
+  <script src="js/notifications-core.js?v=20260809-7"></script>
+  <script src="js/notif-badge.js?v=20260809-7"></script>
+  <script src="js/search.js?v=20260809-6"></script>
+</body>
+</html>

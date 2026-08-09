@@ -1,0 +1,215 @@
+/* Trang đặt trước sách — reader xem/huỷ; librarian xử lý (chức năng 6). */
+(function () {
+  var API = window.API;
+  var Auth = window.Auth;
+  var messageTimer = null;
+
+  function showMessage(text, type) {
+    var el = document.getElementById("page-message");
+    if (!el) {
+      return;
+    }
+    if (messageTimer) {
+      clearTimeout(messageTimer);
+    }
+    el.className = "alert " + (type || "alert-error");
+    el.textContent = text;
+    el.hidden = false;
+    messageTimer = setTimeout(function () {
+      el.hidden = true;
+      messageTimer = null;
+    }, 6000);
+  }
+
+  function setLoading(visible) {
+    var el = document.getElementById("loading");
+    if (el) {
+      el.hidden = !visible;
+    }
+  }
+
+  function TRANG_THAI_LABEL(t) {
+    return {
+      CHO_XU_LY: "Chờ xử lý",
+      SAN_SANG: "Sẵn sàng",
+      DA_MUON: "Đã mượn",
+      HUY: "Đã huỷ"
+    }[t] || t;
+  }
+
+  function normalize(item) {
+    if (item.ma_dat !== undefined) {
+      return API.mapResponse("reservationOut", item) || item;
+    }
+    return item;
+  }
+
+  function load() {
+    setLoading(true);
+    window.Reservation.list()
+      .then(function (res) {
+        setLoading(false);
+        if (!res.ok) {
+          showMessage(res.message);
+          return;
+        }
+        document.getElementById("mock-banner").hidden = !res.mock;
+        var items = (res.data || []).map(normalize);
+        var user = Auth.currentUser();
+        if (user && user.role === "reader") {
+          renderReader(items);
+        } else {
+          renderLibrarian(items);
+        }
+      })
+      .catch(function () {
+        setLoading(false);
+        showMessage("Đã xảy ra lỗi khi tải danh sách đặt trước.");
+      });
+  }
+
+  function renderReader(list) {
+    var tbody = document.getElementById("reader-reservation-tbody");
+    tbody.innerHTML = "";
+    if (list.length === 0) {
+      var emptyRow = document.createElement("tr");
+      var emptyCell = document.createElement("td");
+      emptyCell.className = "empty-row";
+      emptyCell.colSpan = 5;
+      emptyCell.textContent = "Chưa có đặt trước nào.";
+      emptyRow.appendChild(emptyCell);
+      tbody.appendChild(emptyRow);
+      return;
+    }
+    list.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var values = [
+        r.maDat,
+        r.tenSach || r.maSach,
+        r.ngayDat ? new Date(r.ngayDat).toLocaleString("vi-VN") : "—",
+        TRANG_THAI_LABEL(r.trangThai),
+        null
+      ];
+      values.forEach(function (v, index) {
+        var td = document.createElement("td");
+        if (index === 4) {
+          if (r.trangThai === "CHO_XU_LY" || r.trangThai === "SAN_SANG") {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn btn-danger";
+            btn.textContent = "Huỷ";
+            btn.addEventListener("click", function () {
+              cancel(r);
+            });
+            td.appendChild(btn);
+          } else {
+            td.textContent = "—";
+          }
+        } else {
+          td.textContent = v;
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderLibrarian(list) {
+    var tbody = document.getElementById("librarian-reservation-tbody");
+    tbody.innerHTML = "";
+    if (list.length === 0) {
+      var emptyRow = document.createElement("tr");
+      var emptyCell = document.createElement("td");
+      emptyCell.className = "empty-row";
+      emptyCell.colSpan = 7;
+      emptyCell.textContent = "Chưa có đặt trước nào.";
+      emptyRow.appendChild(emptyCell);
+      tbody.appendChild(emptyRow);
+      return;
+    }
+    list.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var values = [
+        r.maDat,
+        r.maSach,
+        r.tenSach || "—",
+        r.maDocGia || "—",
+        r.ngayDat ? new Date(r.ngayDat).toLocaleString("vi-VN") : "—",
+        TRANG_THAI_LABEL(r.trangThai),
+        null
+      ];
+      values.forEach(function (v, index) {
+        var td = document.createElement("td");
+        if (index === 6) {
+          var actions = document.createElement("div");
+          actions.className = "row-actions";
+          if (r.trangThai === "CHO_XU_LY") {
+            var ready = document.createElement("button");
+            ready.type = "button";
+            ready.className = "btn btn-primary";
+            ready.textContent = "Sẵn sàng";
+            ready.addEventListener("click", function () {
+              fulfill(r);
+            });
+            actions.appendChild(ready);
+          }
+          if (r.trangThai === "CHO_XU_LY" || r.trangThai === "SAN_SANG") {
+            var cancelBtn = document.createElement("button");
+            cancelBtn.type = "button";
+            cancelBtn.className = "btn btn-danger";
+            cancelBtn.textContent = "Huỷ";
+            cancelBtn.addEventListener("click", function () {
+              cancel(r);
+            });
+            actions.appendChild(cancelBtn);
+          }
+          td.appendChild(actions);
+        } else {
+          td.textContent = v;
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function cancel(r) {
+    var ok = window.confirm('Huỷ đặt trước "' + (r.tenSach || r.maSach) + '"?');
+    if (!ok) {
+      return;
+    }
+    window.Reservation.cancel(r.maDat).then(function (res) {
+      if (!res.ok) {
+        showMessage(res.message);
+        return;
+      }
+      showMessage("Đã huỷ đặt trước.", "alert-success");
+      load();
+    });
+  }
+
+  function fulfill(r) {
+    window.Reservation.fulfill(r.maDat).then(function (res) {
+      if (!res.ok) {
+        showMessage(res.message);
+        return;
+      }
+      showMessage("Đã đánh dấu sách sẵn sàng.", "alert-success");
+      load();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var user = Auth.currentUser();
+    if (!user) {
+      window.location.replace("index.html");
+      return;
+    }
+    if (user.role === "admin") {
+      window.location.replace("search.html");
+      return;
+    }
+    Auth.applyRoleUI();
+    load();
+  });
+})();

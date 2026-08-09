@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý tài khoản — Thư viện ICTU AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260809-2">
+</head>
+<body data-page="admin-accounts">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="brand">
+        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+        <strong class="app-title">Quản lý tài khoản</strong>
+      </div>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
+      </div>
+    </div>
+    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
+      <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
+      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
+      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
+      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
+      <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
+      <a href="books.html" data-roles="librarian">Quản lý sách</a>
+      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
+      <a href="admin-accounts.html" class="active" data-roles="admin">Tài khoản</a>
+      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
+      <a href="admin-config.html" data-roles="admin">Cấu hình</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="page-message" class="alert" hidden></div>
+
+    <div class="search-bar">
+      <div class="form-group">
+        <label for="account-role-filter">Lọc theo vai trò</label>
+        <select id="account-role-filter">
+          <option value="">Tất cả</option>
+          <option value="librarian">Thủ thư</option>
+          <option value="reader">Độc giả</option>
+        </select>
+      </div>
+      <button type="button" id="apply-account-filter" class="btn btn-primary">Tải lại</button>
+      <div class="toolbar">
+        <button type="button" id="add-account-button" class="btn btn-primary">+ Tạo tài khoản</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" hidden>
+      <span class="spinner"></span>
+      <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Họ tên</th>
+            <th>Role</th>
+            <th>Mã độc giả</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="account-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="account-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h2 id="account-form-title">Tạo tài khoản</h2>
+      <form id="account-form" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="account-username">Username</label>
+            <input type="text" id="account-username" name="username" minlength="3" maxlength="50" autocomplete="off" required>
+          </div>
+          <div class="form-group">
+            <label for="account-role">Vai trò</label>
+            <select id="account-role" name="role" required>
+              <option value="librarian">Thủ thư</option>
+              <option value="reader">Độc giả</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="account-password">Mật khẩu (≥ 6 ký tự)</label>
+            <input type="password" id="account-password" name="password" minlength="6" maxlength="128" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="account-reader-id">Mã độc giả (nếu role = độc giả)</label>
+            <input type="text" id="account-reader-id" name="readerId" maxlength="20" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="account-hoten">Họ tên</label>
+            <input type="text" id="account-hoten" name="hoTen" maxlength="255" required>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="account-active" name="isActive" checked>
+              Tài khoản hoạt động
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancel-account-button" class="btn btn-secondary">Huỷ</button>
+          <button type="submit" id="save-account-button" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260809-2"></script>
+  <script src="js/auth.js?v=20260809-2"></script>
+  <script src="js/admin-accounts.js?v=20260809-2"></script>
+</body>
+</html>
