@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260809-2">
+  <link rel="stylesheet" href="css/style.css?v=20260809-4">
 </head>
 <body data-page="admin-accounts">
   <header class="app-header">
@@ -24,13 +24,13 @@
     </div>
     <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
       <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
-      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="reservations.html" data-roles="admin,librarian,reader">Đặt trước</a>
       <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
       <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
       <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
       <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
       <a href="books.html" data-roles="librarian">Quản lý sách</a>
-      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="readers.html" data-roles="admin,librarian">Quản lý độc giả</a>
       <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
       <a href="admin-accounts.html" class="active" data-roles="admin">Tài khoản</a>
       <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
@@ -51,9 +51,7 @@
         </select>
       </div>
       <button type="button" id="apply-account-filter" class="btn btn-primary">Tải lại</button>
-      <div class="toolbar">
-        <button type="button" id="add-account-button" class="btn btn-primary">+ Tạo tài khoản</button>
-      </div>
+      <button type="button" id="add-account-button" class="btn btn-primary">+ Tạo tài khoản</button>
     </div>
 
     <div id="loading" class="loading" hidden>
@@ -93,14 +91,13 @@
             <label for="account-role">Vai trò</label>
             <select id="account-role" name="role" required>
               <option value="librarian">Thủ thư</option>
-              <option value="reader">Độc giả</option>
             </select>
           </div>
           <div class="form-group">
             <label for="account-password">Mật khẩu (≥ 6 ký tự)</label>
             <input type="password" id="account-password" name="password" minlength="6" maxlength="128" autocomplete="new-password">
           </div>
-          <div class="form-group">
+          <div class="form-group" id="account-reader-group" hidden>
             <label for="account-reader-id">Mã độc giả (nếu role = độc giả)</label>
             <input type="text" id="account-reader-id" name="readerId" maxlength="20" autocomplete="off">
           </div>
@@ -128,8 +125,8 @@
     <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
   </footer>
 
-  <script src="js/api.js?v=20260809-2"></script>
-  <script src="js/auth.js?v=20260809-2"></script>
-  <script src="js/admin-accounts.js?v=20260809-2"></script>
+  <script src="js/api.js?v=20260810-4"></script>
+  <script src="js/auth.js?v=20260809-14"></script>
+  <script src="js/admin-accounts.js?v=20260810-3"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Thu phạt",
-            "email": f"{username}@example.com",
+            "email": f"{username}@ictu.edu.vn",
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },
@@ -88,7 +88,7 @@ def test_collect_fine_success_and_shows_da_thu(client_and_tokens):
     before = _fines_of(client, staff, reader["reader_ma"], "PMFINE1")
     assert before[0]["da_thu"] is False
     assert before[0]["ngay_thu"] is None
-    assert before[0]["so_tien"] == 15000.0
+    assert before[0]["so_diem"] == 6
 
     collected = client.post(
         "/api/borrows/PMFINE1/collect-fine",
@@ -96,13 +96,21 @@ def test_collect_fine_success_and_shows_da_thu(client_and_tokens):
     )
     assert collected.status_code == 200, collected.text
     data = collected.json()
-    assert data["message"] == "Đã thu phạt."
-    assert data["so_tien_da_thu"] == 15000.0
+    assert data["message"] == "Đã trừ điểm SVNET."
+    assert data["so_diem_da_thu"] == 6
+    assert data["diem_con_lai"] == 94
     assert data["ngay_thu"] is not None
 
     after = _fines_of(client, staff, reader["reader_ma"], "PMFINE1")
     assert after[0]["da_thu"] is True
     assert after[0]["ngay_thu"] is not None
+
+    readers = client.get(
+        "/api/readers",
+        params={"q": reader["reader_ma"]},
+        headers=_headers(staff),
+    ).json()
+    assert readers[0]["diem_svnet"] == 94
 
 
 def test_collect_fine_twice_fails(client_and_tokens):

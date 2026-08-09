@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -58,6 +56,7 @@ def _slip_out(db: Session, slip: BorrowSlip) -> BorrowSlipOut:
         details=[
             BorrowDetailOut(
                 ma_sach=detail.ma_sach,
+                ten_sach=db.get(Book, detail.ma_sach).ten if db.get(Book, detail.ma_sach) is not None else "",
                 so_luong=detail.so_luong,
                 ngay_tra_chi_tiet=detail.ngay_tra_chi_tiet,
             )
@@ -66,7 +65,7 @@ def _slip_out(db: Session, slip: BorrowSlip) -> BorrowSlipOut:
         fines=[
             FineOut(
                 so_ngay_qua_han=fine.so_ngay_qua_han,
-                so_tien=float(fine.so_tien),
+                so_diem=fine.so_diem,
                 da_thu=fine.da_thu,
                 ngay_thu=fine.ngay_thu,
             )
@@ -85,6 +84,7 @@ def _perform_create_borrow(
     ma_phieu: str,
     ma_doc_gia: str,
     items: list[BorrowItemCreate],
+    so_ngay_muon: int | None = None,
 ) -> BorrowSlip:
     if db.get(BorrowSlip, ma_phieu) is not None:
         raise HTTPException(status_code=409, detail="Mã phiếu mượn đã tồn tại.")
@@ -95,26 +95,41 @@ def _perform_create_borrow(
     if reader.trangThaiThe != "hoat_dong":
         raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
 
+    # Gộp trùng mã sách (VD: 2 dòng cùng S005) để không trùng khóa chính BorrowDetails
+    merged: dict[str, int] = {}
+    for item in items:
+        merged[item.ma_sach] = merged.get(item.ma_sach, 0) + item.so_luong
+
     cfg = _get_library_config(db)
-    total_books = sum(item.so_luong for item in items)
+    total_books = sum(merged.values())
     if total_books > cfg.max_books_at_once:
         raise HTTPException(
             status_code=400,
             detail=f"Vượt quá giới hạn {cfg.max_books_at_once} sách/lần mượn.",
         )
 
-    for item in items:
-        book = db.get(Book, item.ma_sach)
+    for ma_sach, qty in merged.items():
+        book = db.get(Book, ma_sach)
         if book is None:
-            raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {item.ma_sach}.")
-        if book.soLuong <= 0 or book.soLuong < item.so_luong:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {ma_sach}.")
+        if book.soLuong <= 0 or book.soLuong < qty:
             raise HTTPException(
                 status_code=400,
-                detail=f"Sách {item.ma_sach} không đủ số lượng (còn {book.soLuong}).",
+                detail=f"Sách {ma_sach} không đủ số lượng (còn {book.soLuong}).",
             )
 
     ngay_muon = datetime.now()
-    han_tra = ngay_muon + timedelta(days=cfg.max_borrow_days)
+    if so_ngay_muon is not None:
+        if so_ngay_muon > cfg.max_borrow_days:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Số ngày mượn vượt quá tối đa {cfg.max_borrow_days} ngày.",
+            )
+        if so_ngay_muon < 1:
+            raise HTTPException(status_code=400, detail="Số ngày mượn phải >= 1.")
+        han_tra = ngay_muon + timedelta(days=so_ngay_muon)
+    else:
+        han_tra = ngay_muon + timedelta(days=cfg.max_borrow_days)
     slip = BorrowSlip(
         ma_phieu=ma_phieu,
         ma_doc_gia=ma_doc_gia,
@@ -124,14 +139,14 @@ def _perform_create_borrow(
         so_lan_gia_han=0,
     )
     db.add(slip)
-    for item in items:
-        book = db.get(Book, item.ma_sach)
-        book.soLuong -= item.so_luong
+    for ma_sach, qty in merged.items():
+        book = db.get(Book, ma_sach)
+        book.soLuong -= qty
         db.add(
             BorrowDetail(
                 ma_phieu=ma_phieu,
-                ma_sach=item.ma_sach,
-                so_luong=item.so_luong,
+                ma_sach=ma_sach,
+                so_luong=qty,
                 ngay_tra_chi_tiet=None,
             )
         )
@@ -203,18 +218,18 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
     fine = None
     days = _overdue_days(slip.han_tra, ngay_tra)
     if days > 0:
-        amount = Decimal(days) * cfg.overdue_fine_per_day
+        points = days * cfg.overdue_fine_points_per_day
         db.add(
             FineHistory(
                 ma_phieu=ma,
                 ma_doc_gia=slip.ma_doc_gia,
                 so_ngay_qua_han=days,
-                so_tien=amount,
+                so_diem=points,
                 ngay_tinh=ngay_tra,
             )
         )
-        fine = FineOut(so_ngay_qua_han=days, so_tien=float(amount))
-        audit_detail = f"quá hạn {days} ngày, phạt {float(amount)}"
+        fine = FineOut(so_ngay_qua_han=days, so_diem=points)
+        audit_detail = f"quá hạn {days} ngày, phạt {points} điểm"
     else:
         audit_detail = "không quá hạn"
 
@@ -265,17 +280,17 @@ def _perform_renew_borrow(db: Session, user, ma: str) -> BorrowRenewOut:
     fine = None
     days = _overdue_days(slip.han_tra, now)
     if days > 0:
-        amount = Decimal(days) * cfg.overdue_fine_per_day
+        points = days * cfg.overdue_fine_points_per_day
         db.add(
             FineHistory(
                 ma_phieu=ma,
                 ma_doc_gia=slip.ma_doc_gia,
                 so_ngay_qua_han=days,
-                so_tien=amount,
+                so_diem=points,
                 ngay_tinh=now,
             )
         )
-        fine = FineOut(so_ngay_qua_han=days, so_tien=float(amount))
+        fine = FineOut(so_ngay_qua_han=days, so_diem=points)
 
     slip.han_tra = slip.han_tra + timedelta(days=cfg.max_borrow_days)
     slip.so_lan_gia_han += 1
@@ -477,7 +492,13 @@ def collect_fine(
         raise HTTPException(status_code=400, detail="Không có phạt để thu.")
 
     ngay_thu = datetime.now()
-    total = sum(float(fine.so_tien) for fine in fines)
+    reader = db.get(Reader, slip.ma_doc_gia)
+    total_days = sum(fine.so_ngay_qua_han for fine in fines)
+    so_diem_da_thu = sum(fine.so_diem for fine in fines)
+    diem_con_lai = reader.diem_svnet if reader is not None else 0
+    if reader is not None:
+        diem_con_lai = max(0, reader.diem_svnet - so_diem_da_thu)
+        reader.diem_svnet = diem_con_lai
     for fine in fines:
         fine.da_thu = True
         fine.ngay_thu = ngay_thu
@@ -487,11 +508,12 @@ def collect_fine(
         "COLLECT_FINE",
         "FINE",
         entity_id=ma,
-        details=f"so_tien={total}; so_dong={len(fines)}",
+        details=f"so_ngay_qua_han={total_days}; so_diem_da_thu={so_diem_da_thu}; diem_con_lai={diem_con_lai}",
     )
     db.commit()
     return CollectFineOut(
-        message="Đã thu phạt.",
-        so_tien_da_thu=total,
+        message="Đã trừ điểm SVNET.",
+        so_diem_da_thu=so_diem_da_thu,
+        diem_con_lai=diem_con_lai,
         ngay_thu=ngay_thu,
     )

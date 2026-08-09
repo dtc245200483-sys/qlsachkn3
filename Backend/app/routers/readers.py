@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Reader
-from ..schemas import ReaderCreate, ReaderOut, ReaderUpdate
+from ..models import Reader, User
+from ..schemas import LockReaderRequest, ReaderCreate, ReaderOut, ReaderUpdate
 
 router = APIRouter(prefix="/api/readers", tags=["readers"])
 
@@ -33,7 +33,7 @@ def list_readers(
 def create_reader(
     body: ReaderCreate,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin", "librarian")),
+    user=Depends(require_roles("admin")),
 ) -> ReaderOut:
     if db.get(Reader, body.ma) is not None:
         raise HTTPException(status_code=409, detail="Mã độc giả đã tồn tại.")
@@ -59,7 +59,7 @@ def update_reader(
     ma: str,
     body: ReaderUpdate,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin", "librarian")),
+    user=Depends(require_roles("admin")),
 ) -> ReaderOut:
     reader = db.get(Reader, ma)
     if reader is None:
@@ -75,6 +75,10 @@ def update_reader(
             raise HTTPException(status_code=409, detail="Email đã được sử dụng.")
     for field, value in data.items():
         setattr(reader, field, value)
+    if "trangThaiThe" in data:
+        linked = db.query(User).filter(User.reader_id == ma).first()
+        if linked is not None:
+            linked.is_active = data["trangThaiThe"] == "hoat_dong"
     write_audit_log(
         db,
         user,
@@ -82,6 +86,36 @@ def update_reader(
         "READER",
         entity_id=ma,
         details=f"changed={','.join(data.keys())}",
+    )
+    db.commit()
+    db.refresh(reader)
+    return reader
+
+
+@router.put("/{ma}/lock", response_model=ReaderOut)
+def lock_reader(
+    ma: str,
+    body: LockReaderRequest,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("admin", "librarian")),
+) -> ReaderOut:
+    reader = db.get(Reader, ma)
+    if reader is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
+    reader.trangThaiThe = body.trangThaiThe
+    linked = db.query(User).filter(User.reader_id == ma).first()
+    if linked is not None:
+        linked.is_active = body.trangThaiThe == "hoat_dong"
+    write_audit_log(
+        db,
+        user,
+        "UPDATE_READER_STATUS",
+        "READER",
+        entity_id=ma,
+        details=(
+            f"trangThaiThe={body.trangThaiThe}; "
+            f"account_locked={linked is not None and body.trangThaiThe == 'khoa'}"
+        ),
     )
     db.commit()
     db.refresh(reader)

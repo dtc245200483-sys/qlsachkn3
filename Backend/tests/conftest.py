@@ -1,7 +1,11 @@
+import glob
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+from app.config import AVATAR_DIR
 from app.database import SessionLocal
 from app.main import app
 from app.models import User
@@ -35,10 +39,15 @@ def _cleanup_test_data() -> None:
             text(
                 "DELETE FROM DatTruoc WHERE ma_dat LIKE 'RV%' "
                 "AND (ma_doc_gia LIKE 'TEST%' OR ma_doc_gia IN "
-                "(SELECT ma FROM Readers WHERE email LIKE 'tmp_backend_test_%@example.com'))"
+                "(SELECT ma FROM Readers WHERE email LIKE 'tmp_backend_test_%@ictu.edu.vn'))"
             )
         )
-        db.execute(text("DELETE FROM YeuCau WHERE ma_yeu_cau LIKE 'YCTEST%' OR ma_yeu_cau LIKE 'TEST%'"))
+        db.execute(
+            text(
+                "DELETE FROM YeuCau WHERE ma_yeu_cau LIKE 'YCTEST%' OR ma_yeu_cau LIKE 'YCRDT%' OR ma_yeu_cau LIKE 'TEST%'"
+                " OR ma_yeu_cau LIKE 'YCSO%'"
+            )
+        )
         db.execute(
             text(
                 "DELETE FROM FineHistory WHERE ma_phieu LIKE 'PMTEST%' OR ma_phieu LIKE 'PMYC%' OR ma_phieu LIKE 'PMHIST%' OR ma_phieu LIKE 'PMRSV%' OR ma_phieu LIKE 'PMNTF%' OR ma_phieu LIKE 'PMSTT%' OR ma_phieu LIKE 'PMEXP%' OR ma_phieu LIKE 'PMFINE%' OR ma_phieu LIKE 'TEST%'"
@@ -56,13 +65,24 @@ def _cleanup_test_data() -> None:
         )
         db.execute(text("DELETE FROM Books WHERE ma LIKE 'TEST%'"))
         db.execute(text("DELETE FROM Users WHERE username LIKE 'tmp_backend_test_%'"))
-        db.execute(text("DELETE FROM Readers WHERE ma LIKE 'TEST%' OR email LIKE 'tmp_backend_test_%@example.com'"))
+        db.execute(
+            text(
+                "DELETE FROM Readers WHERE ma LIKE 'TEST%' "
+                "OR email LIKE 'tmp_backend_test_%@ictu.edu.vn'"
+            )
+        )
         db.execute(text("DELETE FROM TheLoai WHERE ma LIKE 'TEST%'"))
         db.execute(text("DELETE FROM Nxb WHERE ma LIKE 'TEST%'"))
         db.execute(text("DELETE FROM AuditLog WHERE username LIKE 'tmp_backend_test_%'"))
         db.commit()
     finally:
         db.close()
+
+    for path in glob.glob(os.path.join(AVATAR_DIR, "tmp_backend_test_*.*")):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
 
 
 @pytest.fixture(scope="module")

@@ -51,7 +51,7 @@ def test_update_reader(client_and_tokens):
     client.post(
         "/api/readers",
         json=_reader_payload("TEST003"),
-        headers=_headers(tokens["librarian"]),
+        headers=_headers(tokens["admin"]),
     )
     response = client.put(
         "/api/readers/TEST003",
@@ -69,10 +69,10 @@ def test_lock_unlock_card(client_and_tokens):
     client.post(
         "/api/readers",
         json=_reader_payload("TEST004"),
-        headers=_headers(tokens["librarian"]),
+        headers=_headers(tokens["admin"]),
     )
     locked = client.put(
-        "/api/readers/TEST004",
+        "/api/readers/TEST004/lock",
         json={"trangThaiThe": "khoa"},
         headers=_headers(tokens["librarian"]),
     )
@@ -80,7 +80,7 @@ def test_lock_unlock_card(client_and_tokens):
     assert locked.json()["trangThaiThe"] == "khoa"
 
     unlocked = client.put(
-        "/api/readers/TEST004",
+        "/api/readers/TEST004/lock",
         json={"trangThaiThe": "hoat_dong"},
         headers=_headers(tokens["librarian"]),
     )
@@ -137,17 +137,22 @@ def test_search_by_name_and_ma(client_and_tokens):
 def test_permissions(client_and_tokens):
     client, tokens = client_and_tokens
     reader_headers = _headers(tokens["reader"])
+    librarian_headers = _headers(tokens["librarian"])
+    admin_headers = _headers(tokens["admin"])
 
     assert client.get("/api/readers", headers=reader_headers).status_code == 403
     assert client.post("/api/readers", json=_reader_payload("TEST007"), headers=reader_headers).status_code == 403
 
-    librarian_headers = _headers(tokens["librarian"])
-    created = client.post("/api/readers", json=_reader_payload("TEST007"), headers=librarian_headers)
-    assert created.status_code == 200
+    assert client.post("/api/readers", json=_reader_payload("TEST007"), headers=librarian_headers).status_code == 403
+    assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi thủ thư"}, headers=librarian_headers).status_code == 403
+    assert client.get("/api/readers", headers=librarian_headers).status_code == 200
 
-    assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi thủ thư"}, headers=librarian_headers).status_code == 200
+    created = client.post("/api/readers", json=_reader_payload("TEST007"), headers=admin_headers)
+    assert created.status_code == 200
+    assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi admin"}, headers=admin_headers).status_code == 200
+    assert client.put("/api/readers/TEST007/lock", json={"trangThaiThe": "khoa"}, headers=librarian_headers).status_code == 200
     assert client.delete("/api/readers/TEST007", headers=librarian_headers).status_code == 403
-    assert client.delete("/api/readers/TEST007", headers=_headers(tokens["admin"])).status_code == 200
+    assert client.delete("/api/readers/TEST007", headers=admin_headers).status_code == 200
 
 
 def test_required_fields_and_invalid_values(client_and_tokens):
@@ -169,10 +174,15 @@ def test_audit_log_for_reader_crud(client_and_tokens):
     client.post(
         "/api/readers",
         json=_reader_payload("TEST009"),
-        headers=_headers(tokens["librarian"]),
+        headers=_headers(tokens["admin"]),
     )
     client.put(
         "/api/readers/TEST009",
+        json={"hoTen": "Sửa tên"},
+        headers=_headers(tokens["admin"]),
+    )
+    client.put(
+        "/api/readers/TEST009/lock",
         json={"trangThaiThe": "khoa"},
         headers=_headers(tokens["librarian"]),
     )
@@ -189,4 +199,5 @@ def test_audit_log_for_reader_crud(client_and_tokens):
     actions = [row["action"] for row in audit.json()]
     assert "CREATE_READER" in actions
     assert "UPDATE_READER" in actions
+    assert "UPDATE_READER_STATUS" in actions
     assert "DELETE_READER" in actions

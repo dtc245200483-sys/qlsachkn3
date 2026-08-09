@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ sơ cá nhân — Thư viện ICTU AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260809-4">
+</head>
+<body data-page="profile">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="brand">
+        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+        <strong class="app-title">Hồ sơ cá nhân</strong>
+      </div>
+      <div class="user-info">
+        <span id="user-name"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
+      </div>
+    </div>
+    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
+      <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
+      <a href="reservations.html" data-roles="admin,librarian,reader">Đặt trước</a>
+      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
+      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
+      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
+      <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
+      <a href="books.html" data-roles="librarian">Quản lý sách</a>
+      <a href="readers.html" data-roles="admin,librarian">Quản lý độc giả</a>
+      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
+      <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
+      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
+      <a href="admin-config.html" data-roles="admin">Cấu hình</a>
+      <a href="profile.html" class="active" data-roles="admin,librarian,reader">Hồ sơ</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="page-message" class="alert" hidden></div>
+    <div id="mock-banner" class="alert alert-warning" hidden>
+      Đang dùng dữ liệu mẫu — Backend chưa có API /api/profile/me, thông tin chưa được lưu thật.
+    </div>
+
+    <div id="loading" class="loading" hidden>
+      <span class="spinner"></span>
+      <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <div class="profile-layout">
+      <section class="card profile-avatar-card">
+        <img id="profile-avatar" class="avatar avatar--lg" src="assets/default-avatar.svg" alt="Ảnh đại diện">
+        <div>
+          <button type="button" id="change-avatar-button" class="btn btn-secondary">Đổi ảnh đại diện</button>
+          <input type="file" id="avatar-input" accept="image/png,image/jpeg" hidden>
+          <p class="caption">PNG/JPG, tối đa 2MB</p>
+        </div>
+        <div class="profile-meta">
+          <h2 id="profile-name">—</h2>
+          <p id="profile-username">—</p>
+          <p id="profile-loai" hidden>—</p>
+          <span id="profile-role" class="role-badge">—</span>
+        </div>
+      </section>
+
+      <div class="profile-forms">
+        <section class="card">
+          <h2>Cập nhật thông tin cá nhân</h2>
+          <form id="profile-form" novalidate>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="profile-ho-ten">Họ tên</label>
+                <input type="text" id="profile-ho-ten" name="hoTen" required>
+              </div>
+              <div class="form-group">
+                <label for="profile-email">Email</label>
+                <input type="email" id="profile-email" name="email">
+              </div>
+              <div class="form-group">
+                <label for="profile-sdt">Số điện thoại</label>
+                <input type="tel" id="profile-sdt" name="soDienThoai">
+              </div>
+              <div class="form-group" id="profile-loai-group" hidden>
+                <label for="profile-loai-doc-gia">Loại độc giả</label>
+                <select id="profile-loai-doc-gia" name="loaiDocGia">
+                  <option value="sinh_vien">Sinh viên</option>
+                  <option value="giang_vien">Giảng viên</option>
+                  <option value="khac">Khác</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" id="save-profile-button" class="btn btn-primary">Lưu thông tin</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Đổi mật khẩu</h2>
+          <form id="password-form" novalidate>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="password-old">Mật khẩu cũ</label>
+                <input type="password" id="password-old" name="matKhauCu" required autocomplete="current-password">
+              </div>
+              <div class="form-group">
+                <label for="password-new">Mật khẩu mới</label>
+                <input type="password" id="password-new" name="matKhauMoi" required minlength="6" autocomplete="new-password">
+              </div>
+              <div class="form-group">
+                <label for="password-confirm">Xác nhận mật khẩu mới</label>
+                <input type="password" id="password-confirm" required autocomplete="new-password">
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" id="change-password-button" class="btn btn-primary">Đổi mật khẩu</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260810-4"></script>
+  <script src="js/auth.js?v=20260809-14"></script>
+  <script src="js/notifications-core.js?v=20260810-2"></script>
+  <script src="js/notif-badge.js?v=20260809-7"></script>
+  <script src="js/profile.js?v=20260809-2"></script>
+</body>
+</html>

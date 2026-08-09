@@ -17,7 +17,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Thống kê",
-            "email": f"{username}@example.com",
+            "email": f"{username}@ictu.edu.vn",
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },

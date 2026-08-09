@@ -99,6 +99,40 @@
   Xoá lịch sử yêu cầu (20:15, 0.12.0). Server đã restart. Frontend nối delete
   requests; còn mock: danh sách phạt (borrow.js), reservations (YC-007);
   DAT_TRUOC Backend chưa có.
+- Cập nhật 23:19:29: Backend SVNET (21:52:51, 0009), role_display (21:56:59,
+  68/68), sort/order (23:16:54, 0.13.0, 75/75). Git + .env.example + README +
+  docs + QA đã có → KT2 đủ 10/10. Frontend sortBooksBackend còn FALSE → YC-012.
+- Cập nhật 02:17:44 (10/08): Backend Hồ sơ cá nhân (02:15:52, /api/profile/me
+  + password + avatar, static avatars, api_docs 0.14.0, test 82/82). Frontend
+  profile.html/profile.js nối API thật; sortBooksBackend=true; borrow.js nối
+  phạt thật → YC-012 còn phần reservations mock; YC-011 chỉ còn DAT_TRUOC.
+- Cập nhật 03:01:24 (10/08): Backend 0.16.0 — validation email ICTU/SĐT (0010),
+  phạt = ĐIỂM (0011), email theo tên, backfill + restart (86/86). Frontend
+  profile/admin-config theo kịp; NHƯNG fineOut còn map so_tien → YC-013.
+- Cập nhật 03:07:46 (10/08): Frontend log 03:07:07 — fineOut soDiem,
+  collectFineOut so_diem_da_thu/diem_con_lai, hiển thị điểm → YC-013 xong,
+  cảnh báo 14 đóng.
+- Cập nhật 04:01:20 (10/08): Backend 0.17.0 (03:59:25) — thêm/sửa/xoá độc giả
+  chỉ admin, PUT /api/readers/{ma}/lock (admin+librarian); test 86/86; restart.
+  Frontend nối lockReader; menu độc giả chỉ librarian → YC-014.
+- Cập nhật 04:53:07 (10/08): Backend DAT_TRUOC xong (04:52:00, migration 0012,
+  api_docs 0.19.0, test 90/90) → YC-011 đóng. Menu độc giả admin+librarian
+  (04:31:48) → YC-014 đóng. Còn: so_ngay_muon (YC-005/YC-015), reservations mock.
+- Cập nhật 05:01:03 (10/08): Khôi phục dữ liệu demo theo yêu cầu người dùng —
+  xoá + seed lại PM001–PM004 (PM001/PM004 dang_muon, PM002/PM003 da_tra,
+  PM003 phạt 4 điểm); xác minh API dang_muon = 2 phiếu.
+- Cập nhật 05:02:44 (10/08): S005 "Lịch sử Việt Nam hiện đại" soLuong 0 → 2
+  theo yêu cầu người dùng; đã xác minh API; RV002 (CHO_XU_LY) vẫn còn, chưa
+  tự ý huỷ/duyệt.
+- YC-2026-08-10-016 (05:05:08): bỏ Xuất CSV ở books/stats; thêm Xoá lịch sử
+  đặt trước — chờ người dùng xác nhận phạm vi xoá trước khi gửi agent.
+- YC-2026-08-10-017 (05:06:54): chặn Gửi yêu cầu khi chưa chọn sách — code đã
+  có validate items rỗng, cần disable nút + bump version JS (nghi cache cũ).
+- Cập nhật 05:48:15 (10/08): Backend xong Xoá lịch sử đặt trước (05:13:10,
+  0.20.0, 94/94) + Export reservations.csv + accounts chỉ thủ thư (05:22:45,
+  0.21.0, 95/95). Frontend nối xoá lịch sử + accounts thủ thư (theo quét).
+  CHƯA LÀM: bỏ Xuất CSV books/stats (YC-016), disable nút gửi (YC-017),
+  so_ngay_muon (YC-015), reservations mock (YC-007).
 
 ## Đối chiếu chức năng (cập nhật 09:50:40)
 - 1 (đăng nhập/phân quyền): Backend + Frontend có code; phần admin-only Backend
@@ -124,6 +158,21 @@
 - UC19/24/26/27: Frontend có UI (20:00:07); Backend cần collect-fine + DAT_TRUOC (YC-011).
 - UC19 cập nhật: collect-fine xong (20:05:33); Frontend nối danh sách phạt chưa.
 - UC07/08/09: xoá lịch sử yêu cầu xong (20:15) — Frontend đã nối (20:12-20:14).
+- UC02/KT2: tìm/lọc/sắp xếp xong (10:43:48 + 23:16:54); Frontend dropdown có,
+  chờ bật sortBooksBackend.
+- Mở rộng Profile (10/08): Backend xong (02:15:52, 82/82); Frontend xong
+  (02:09) — profile.html + avatar + đổi mật khẩu.
+- Phạt ĐIỂM (0.16.0): Backend xong (02:56:16); Frontend chưa cập nhật fineOut
+  (so_tien → so_diem) → YC-013.
+- Phạt ĐIỂM (cập nhật): Frontend đã theo (log 03:07:07) → UC19 khép kín.
+- UC14 (0.17.0): thêm/sửa/xoá chỉ admin; lock librarian+admin — Frontend nối
+  lockReader; menu cần xác nhận (YC-014).
+- UC06/07 (DAT_TRUOC): Backend xong (04:52:00) — approve tạo reservation thật.
+
+## KT2 — Xác nhận 10/10 (2026-08-09 23:19)
+1. Cấu trúc ✅ 2. Đăng nhập/phân quyền ✅ 3. CRUD ✅ 4. Tìm/lọc/sắp xếp ✅
+5. Thống kê/báo cáo ✅ 6. UI ✅ 7. CSDL + dữ liệu mẫu ✅ 8. Xử lý lỗi ✅
+9. Minh chứng AI ✅ 10. README/.env.example/git ✅
 - 4 (mở rộng): có luồng yêu cầu reader → duyệt thủ thư (requests, 0.6.0);
   chờ Backend bổ sung so_ngay_muon (YC-005). Đăng ký độc giả + lịch sử mượn
   cá nhân đã có (register, my-borrows); xoá lịch sử chờ YC-006.

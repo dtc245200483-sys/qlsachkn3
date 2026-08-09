@@ -95,13 +95,28 @@
     select.value = current;
   }
 
+  function parseSort(value) {
+    if (!value) {
+      return { sort: "", order: "" };
+    }
+    var parts = String(value).split("_");
+    return { sort: parts[0] || "", order: parts[1] || "asc" };
+  }
+
   function loadBooks() {
     clearMessage();
     setLoading(true);
     var q = document.getElementById("search-q").value.trim();
     var theLoai = document.getElementById("search-theloai").value;
     var trangThai = document.getElementById("search-trangthai").value;
-    var built = API.buildQuery("books", { q: q, theLoai: theLoai, trangThai: trangThai });
+    var sortParsed = parseSort(document.getElementById("search-sort").value);
+    var built = API.buildQuery("books", {
+      q: q,
+      theLoai: theLoai,
+      trangThai: trangThai,
+      sort: sortParsed.sort,
+      order: sortParsed.order
+    });
 
     API.call("books", undefined, "GET", undefined, built.query)
       .then(function (res) {
@@ -116,6 +131,9 @@
         }
         addTheLoaiOptions(res.data);
         var list = clientFilter(res.data, { q: q, theLoai: theLoai, trangThai: trangThai });
+        if (!API.config.sortBooksBackend) {
+          list = API.sortBooks(list, sortParsed.sort, sortParsed.order);
+        }
         render(list);
       })
       .catch(function () {
@@ -191,7 +209,7 @@
       reserveBtn.addEventListener("click", function () {
         reserveBtn.disabled = true;
         reserveBtn.textContent = "Đã gửi...";
-        window.Reservation.create(book).then(function (res) {
+        API.call("createReservation", { ma_sach: book.ma }, "POST").then(function (res) {
           if (!res.ok) {
             reserveBtn.disabled = false;
             reserveBtn.textContent = "Đặt trước";
@@ -226,8 +244,13 @@
         document.getElementById("search-q").value = "";
         document.getElementById("search-theloai").value = "";
         document.getElementById("search-trangthai").value = "";
+        document.getElementById("search-sort").value = "";
         loadBooks();
       });
+    }
+    var sortSelect = document.getElementById("search-sort");
+    if (sortSelect) {
+      sortSelect.addEventListener("change", loadBooks);
     }
     var qInput = document.getElementById("search-q");
     if (qInput) {

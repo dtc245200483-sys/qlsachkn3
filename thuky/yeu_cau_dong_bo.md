@@ -301,6 +301,141 @@ var config = {
   (cần Frontend cập nhật).
 - Phần 3 (DAT_TRUOC): CHƯA — Backend chưa hỗ trợ loai này.
 
+---
+
+## YC-2026-08-09-012 — Frontend: bật sort Backend + nối danh sách phạt thật + đóng mock
+
+- Ngày tạo: 2026-08-09 23:19:29
+- Người yêu cầu: Thư Ký (quét thấy sortBooksBackend=false, MOCK_FINES, reservation-mock.js)
+- Gửi cho: **Frontend Agent**
+- Trạng thái: CHỜ FRONTEND XỬ LÝ
+
+### Việc cần làm
+1. Đổi sortBooksBackend = true trong api.js (Backend 23:16:54 đã hỗ trợ
+   sort/order; bỏ sắp xếp client trùng).
+2. Nối danh sách phạt chưa thu từ GET /api/borrows (bỏ MOCK_FINES) — UC19.
+3. Xác nhận reservations dùng API thật (đóng YC-007) và gửi log [FRONTEND].
+
+### Trạng thái cập nhật 2026-08-10 02:17:44
+- Phần 1 (sortBooksBackend=true): HOÀN THÀNH — api.js 02:08:52.
+- Phần 2 (danh sách phạt thật): HOÀN THÀNH — borrow.js 01:52:48 bỏ MOCK_FINES.
+- Phần 3 (reservations bỏ mock): VẪN CHỜ — reservation-mock.js còn trong trang.
+
+---
+
+## YC-2026-08-10-013 — Frontend: cập nhật phạt ĐIỂM theo Backend 0.16.0
+
+- Ngày tạo: 2026-08-10 03:01:24
+- Người yêu cầu: Thư Ký (Backend 0.16.0 đổi so_tien → so_diem; Frontend chưa theo)
+- Gửi cho: **Frontend Agent**
+- Trạng thái: CHỜ FRONTEND XỬ LÝ
+
+### Việc cần làm
+1. api.js: fieldMap fineOut đổi soTien:"so_tien" → soDiem:"so_diem".
+2. borrow.js + my-borrows.js: hiển thị fine.soDiem (điểm) thay vì fine.soTien;
+   collect-fine dùng so_diem_da_thu + diem_con_lai.
+3. Gửi log [FRONTEND] xác nhận.
+
+### Trạng thái cập nhật 2026-08-10 03:07:46
+- **HOÀN THÀNH** — log [FRONTEND] 03:07:07 (fineOut/collectFineOut + hiển thị điểm).
+
+---
+
+## YC-2026-08-10-014 — Frontend: xác nhận menu Quản lý độc giả cho admin
+
+- Ngày tạo: 2026-08-10 04:01:20
+- Người yêu cầu: Thư Ký (Backend 0.17.0 admin có đủ quyền độc giả; menu chỉ librarian)
+- Gửi cho: **Frontend Agent**
+- Trạng thái: CHỜ FRONTEND XÁC NHẬN
+
+### Việc cần làm
+1. Xác nhận menu "Quản lý độc giả" có nên hiển thị cho admin không (đề xuất:
+   data-roles="admin,librarian" vì admin có quyền thêm/sửa/xoá/lock).
+2. Hoặc giữ thiết kế hiện tại và xác nhận bằng log [FRONTEND].
+
+### Trạng thái cập nhật 2026-08-10 04:53:07
+- **HOÀN THÀNH** — readers.html 04:31:48 đã đổi data-roles="admin,librarian"
+  (theo quét; chưa có log chính thức).
+
+---
+
+## YC-2026-08-10-015 — Backend: bổ sung so_ngay_muon (đóng YC-005 còn treo)
+
+- Ngày tạo: 2026-08-10 04:53:07
+- Người yêu cầu: Thư Ký (YC-005 từ 18:08/08 — Frontend vẫn gửi soNgayMuon)
+- Gửi cho: **Backend Agent**
+- Trạng thái: CHỜ BACKEND XỬ LÝ
+
+### Việc cần làm
+1. Thêm so_ngay_muon vào RequestCreate (reader đề xuất số ngày mượn).
+2. Trả về trong RequestOut + dùng khi approve MUON (giới hạn max_borrow_days).
+3. Cập nhật api_docs.md; gửi log [BACKEND].
+
+---
+
+## YC-2026-08-10-016 — UI: bỏ Xuất CSV + thêm Xoá lịch sử đặt trước
+
+- Ngày tạo: 2026-08-10 05:05:08
+- Người yêu cầu: Người dùng (trực tiếp)
+- Gửi cho: **Frontend Agent** (chính) + **Backend Agent** (nếu cần DELETE lịch sử)
+- Trạng thái: CHỜ XÁC NHẬN PHẠM VI XOÁ LỊCH SỬ → mới gửi agent
+
+### Yêu cầu đã rõ
+1. Bỏ nút "Xuất CSV" ở **books.html (Quản lý sách)**.
+2. Bỏ nút "Xuất CSV" ở **stats.html (Thống kê)**.
+   (Nút Xuất CSV ở borrow.html — Mượn/Trả — GIỮ NGUYÊN vì người dùng không yêu cầu bỏ.)
+3. Thêm nút **"Xoá lịch sử"** trong Danh sách đặt trước (xử lý) — PHẠM VI CẦN
+   XÁC NHẬN (xem dưới).
+
+### Cần người dùng xác nhận 1 câu
+- "Xoá lịch sử" áp dụng cho ai và xoá những đặt trước nào?
+  - Phương án A (đề xuất): reader xoá lịch sử đặt trước CỦA MÌNH (các đặt trước
+    đã kết thúc: HUY / DA_MUON); librarian xoá lịch sử đã xử lý trong danh sách.
+  - Phương án B: chỉ thêm nút xoá từng dòng cho librarian/admin trong màn hình xử lý.
+
+### Nếu theo phương án A (cần Backend)
+- Thêm DELETE /api/reservations/me/{ma_dat} + DELETE /api/reservations/me
+  (chỉ xoá đặt trước đã kết thúc, giữ đặt trước active CHO_XU_LY/SAN_SANG).
+- Cập nhật api_docs.md + gửi log [BACKEND].
+
+### Frontend sau khi rõ phạm vi
+- Bỏ 2 nút Xuất CSV (books, stats).
+- Thêm nút/UI Xoá lịch sử đặt trước theo phạm vi đã chốt.
+- Gửi log [FRONTEND] cho Thư Ký.
+
+### Trạng thái cập nhật 2026-08-10 05:48:15
+- Xoá lịch sử đặt trước: Backend HOÀN THÀNH (log 05:13:10, 0.20.0, 94/94);
+  Frontend đã nối 2 nút xoá theo quét (05:14-05:15) — chờ log chính thức.
+- Bỏ Xuất CSV books/stats: CHƯA LÀM — vẫn còn nút (05:15:27).
+
+---
+
+## YC-2026-08-10-017 — Frontend: chặn gửi yêu cầu khi chưa chọn sách
+
+- Ngày tạo: 2026-08-10 05:06:54
+- Người yêu cầu: Người dùng (báo: không chọn sách vẫn bấm "Gửi yêu cầu" được)
+- Gửi cho: **Frontend Agent**
+- Trạng thái: CHỜ FRONTEND XỬ LÝ
+
+### Hiện trạng (Thư Ký kiểm tra code requests.js 20:14)
+- createRequest() ĐÃ kiểm tra items.length === 0 → hiện "Vui lòng chọn ít nhất
+  1 sách." và return (không gửi API).
+- NHƯNG nút "Gửi yêu cầu" vẫn ENABLE khi chưa chọn sách → UX cho phép bấm
+  (chỉ báo lỗi sau khi bấm). Có thể người dùng đang chạy bản JS cũ do cache.
+
+### Việc cần làm
+1. Vô hiệu hoá (disabled) nút "Gửi yêu cầu" khi chưa có ≥1 sách hợp lệ cho
+   MUON/DAT_TRUOC (theo dõi change trên .req-item-book + số lượng), enable
+   khi hợp lệ.
+2. Kiểm tra lại validation cho cả 2 luồng MUON và DAT_TRUOC (đảm bảo không
+   gửi payload items rỗng).
+3. Bump version query `?v=` của requests.js trong requests.html để tránh cache
+   cũ.
+4. Gửi log [FRONTEND] cho Thư Ký.
+
+### Trạng thái cập nhật 2026-08-10 05:48:15
+- CHƯA THỰC HIỆN — requests.js không đổi (20:14), nút vẫn enable.
+
 ### Cập nhật 2026-08-09 09:55 (Trợ Lý đính chính theo quyết định người dùng)
 - Mục 2 của YC-003: BỎ phần "quản lý tài khoản thủ thư" — tính năng này đã bị xoá toàn bộ (Frontend + Backend), KHÔNG làm lại vì không có trong đề bài.
 - UI admin còn lại (nếu làm): cấu hình thư viện, cấu hình AI, audit log + backup.

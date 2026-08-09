@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260809-2">
+  <link rel="stylesheet" href="css/style.css?v=20260809-4">
 </head>
 <body>
   <header class="app-header">
@@ -24,13 +24,13 @@
     </div>
     <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
       <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
-      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
+      <a href="reservations.html" data-roles="admin,librarian,reader">Đặt trước</a>
       <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
       <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
       <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
       <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
       <a href="books.html" class="active" data-roles="librarian">Quản lý sách</a>
-      <a href="readers.html" data-roles="librarian">Quản lý độc giả</a>
+      <a href="readers.html" data-roles="admin,librarian">Quản lý độc giả</a>
       <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
       <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
       <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
@@ -42,7 +42,19 @@
     <div id="page-message" class="alert" hidden></div>
 
     <div class="toolbar">
-      <button type="button" id="export-books-button" class="btn btn-secondary" data-roles="librarian,admin" hidden>Xuất CSV</button>
+      <div class="form-group">
+        <label for="book-sort">Sắp xếp theo</label>
+        <select id="book-sort">
+          <option value="">Mặc định</option>
+          <option value="ten_asc">Tên sách (A-Z)</option>
+          <option value="ten_desc">Tên sách (Z-A)</option>
+          <option value="tacGia_asc">Tác giả (A-Z)</option>
+          <option value="namXb_desc">Năm XB (mới nhất)</option>
+          <option value="namXb_asc">Năm XB (cũ nhất)</option>
+          <option value="soLuong_desc">Số lượng (nhiều nhất)</option>
+          <option value="soLuong_asc">Số lượng (ít nhất)</option>
+        </select>
+      </div>
       <button type="button" id="add-book-button" class="btn btn-primary" data-roles="librarian,admin" hidden>
         + Thêm sách
       </button>
@@ -119,8 +131,8 @@
     <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
   </footer>
 
-  <script src="js/api.js?v=20260809-2"></script>
-  <script src="js/auth.js?v=20260809-2"></script>
-  <script src="js/books.js?v=20260809-9"></script>
+  <script src="js/api.js?v=20260810-4"></script>
+  <script src="js/auth.js?v=20260809-14"></script>
+  <script src="js/books.js?v=20260810-2"></script>
 </body>
 </html>

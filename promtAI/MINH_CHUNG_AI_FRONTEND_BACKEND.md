@@ -241,6 +241,71 @@
 - Frontend: nối delete requests (20:12-20:14); VẪN mock: danh sách phạt
   (borrow.js) + reservations (YC-007); Backend chưa có DAT_TRUOC (YC-011).
 
+## 16. CẬP NHẬT 2026-08-09 23:19 — SVNET + role tiếng Việt + Sắp xếp (KT2)
+
+- Log 21:52:51 — phạt = TRỪ ĐIỂM SVNET (1 ngày = 2 điểm; migration 0009
+  Readers.diem_svnet mặc định 100); collect-fine trừ điểm; test 67/67.
+- Log 21:56:59 — role_display tiếng Việt (login/register/accounts); test 68/68.
+- Log 23:16:54 — GET /api/books hỗ trợ sort (ten/tacGia/namXb/soLuong) + order;
+  api_docs 0.13.0; test 75/75 → KT2 tiêu chí 4 hoàn thành.
+- Frontend: dropdown sort (22:40-22:41) nhưng sortBooksBackend còn FALSE
+  (YC-012); role_display đã dùng; git/.env.example/README/docs/QA đã có.
+- **KT2: 10/10 tiêu chí ĐẠT.**
+
+## 17. CẬP NHẬT 2026-08-10 02:17 — Hồ sơ cá nhân (Profile)
+
+- Log: [BACKEND] 02:15:52 — /api/profile/me (GET/PUT), password, avatar upload
+  (PNG/JPG ≤2MB, static/avatars, mount /static); audit UPDATE_PROFILE/
+  CHANGE_PASSWORD/UPDATE_AVATAR; api_docs 0.14.0; test 82/82 PASS.
+- Frontend (quét): profile.html + profile.js + default-avatar.svg nối API thật;
+  sortBooksBackend=true (đóng cảnh báo 13); borrow.js nối danh sách phạt thật
+  (đóng phần Frontend UC19).
+- Còn lại: reservations mock (YC-012), DAT_TRUOC (YC-011), AI Engine, đóng gói.
+
+## 18. CẬP NHẬT 2026-08-10 03:01 — Validation + Phạt ĐIỂM (0.16.0)
+
+- Log 02:42:50 — Users.email/so_dien_thoai (migration 0010) + app/validation.py
+  (ho_ten ≥2 từ, email @ictu.edu.vn, SĐT VN); api_docs 0.15.0; test 86/86.
+- Log 02:48:50 + 02:55:00 — backfill email/SĐT, email theo tên người, restart
+  server, xác minh live profile.
+- Log 02:56:16 — phạt = ĐIỂM (migration 0011: so_diem, overdue_fine_points_
+  per_day); FineOut trả so_diem; collect-fine trả so_diem_da_thu; api_docs
+  0.16.0; test 86/86; restart + xác minh PM003 = 4 điểm.
+- Lệch pha: Frontend fineOut vẫn map so_tien → hiển thị sai → YC-013.
+
+## 19. CẬP NHẬT 2026-08-10 03:07 — Frontend cập nhật phạt ĐIỂM
+
+- Log: [FRONTEND] 03:07:07 — fineOut soDiem/so_diem, collectFineOut
+  so_diem_da_thu/diem_con_lai, borrow.js + my-borrows.js hiển thị điểm.
+- YC-013 HOÀN THÀNH; cảnh báo 14 đóng; UC19/UC24 khép kín.
+
+## 20. CẬP NHẬT 2026-08-10 04:01 — Phân quyền độc giả 0.17.0
+
+- Log: [BACKEND] 03:59:25 — POST/PUT/DELETE /api/readers chỉ admin; GET
+  admin+librarian; thêm PUT /api/readers/{ma}/lock (admin+librarian); audit
+  UPDATE_READER_STATUS; api_docs 0.17.0; test 86/86; restart + xác minh live.
+- Frontend (quét): nối lockReader; nút Thêm chỉ admin; menu độc giả chỉ
+  librarian → YC-014.
+
+## 21. CẬP NHẬT 2026-08-10 04:53 — DAT_TRUOC + menu admin
+
+- Log: [BACKEND] 04:52:00 — loại yêu cầu DAT_TRUOC (migration 0012; POST
+  /api/requests chấp nhận ma_sach; approve tạo DatTruoc thật; api_docs 0.19.0;
+  test 90/90; restart + xác minh live S005) → YC-011 HOÀN THÀNH.
+- Frontend: menu độc giả admin+librarian (04:31:48) → YC-014 HOÀN THÀNH.
+- Còn: so_ngay_muon (YC-005/YC-015), reservations mock (YC-007/YC-012 phần 3).
+
+## 22. CẬP NHẬT 2026-08-10 05:48 — Xoá lịch sử đặt trước + Export reservations
+
+- Log 05:13:10 — DELETE /api/reservations/me + /me/{ma_dat} (chỉ HUY/DA_MUON;
+  reader; api_docs 0.20.0; test 94/94).
+- Log 05:22:45 — GET /api/export/reservations.csv; /api/admin/accounts chỉ tạo
+  thủ thư (role reader → 400); api_docs 0.21.0; test 95/95.
+- Frontend (quét): 2 nút "Xoá lịch sử đã xử lý" + deleteMyReservation(s);
+  admin-accounts chỉ thủ thư.
+- CHƯA: bỏ Xuất CSV books/stats (YC-016), disable Gửi yêu cầu (YC-017),
+  so_ngay_muon (YC-015), reservations mock (YC-007).
+
 ## 16. BẢNG MINH CHỨNG CHUẨN (prompt → phản hồi → chỉnh sửa → kiểm chứng)
 
 ### Minh chứng 1 — Frontend màn hình quản lý độc giả (UC14)

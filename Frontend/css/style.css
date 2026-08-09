@@ -486,6 +486,18 @@ a {
   flex-wrap: wrap;
 }
 
+.toolbar .form-group {
+  margin-bottom: 0;
+}
+
+.toolbar select {
+  width: 220px;
+}
+
+.search-bar .toolbar {
+  margin-bottom: 0;
+}
+
 .search-bar {
   display: flex;
   gap: 12px;
@@ -624,6 +636,75 @@ a {
   border-left-color: var(--color-success);
   background: var(--color-success-soft);
   color: var(--color-primary-dark);
+}
+
+.alert-warning {
+  border-color: var(--color-warning-soft-border);
+  border-left-color: var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.user-name-link {
+  cursor: pointer;
+  text-decoration: underline;
+  color: var(--color-text-light);
+}
+
+.user-name-link:hover {
+  color: var(--color-accent-blue-light);
+}
+
+/* ============ Hồ sơ cá nhân ============ */
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.profile-avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.avatar--lg {
+  width: 120px;
+  height: 120px;
+}
+
+.profile-meta h2 {
+  margin-bottom: var(--space-1);
+}
+
+.profile-meta p {
+  margin-bottom: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.profile-forms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.caption {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 @keyframes alert-in {
@@ -878,6 +959,10 @@ a {
 
   .toolbar .btn {
     flex: 1 1 auto;
+  }
+
+  .profile-layout {
+    grid-template-columns: 1fr;
   }
 
   .site-footer {

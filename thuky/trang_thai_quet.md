@@ -2,17 +2,19 @@
 File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh lần quét sau.
 
 ## Lần quét gần nhất
-- Thời gian: 2026-08-09 20:28:18
-- Git: KHÔNG có repository git tại D:\ung dung tri tue nhan ao\app → so sánh bằng timestamp.
-- Kết quả: Backend xong Demo (19:50:00), Thu phạt UC19 (20:05:33, migration 0008, 67/67), Xoá lịch sử yêu cầu (20:15, 0.12.0). Frontend nối delete requests (20:12-20:14); reservations/fines vẫn mock. Server ĐÃ restart (route mới trả 401 thay vì 405).
+- Thời gian: 2026-08-10 05:48:15
+- Git: CÓ repository git tại D:\ung dung tri tue nhan ao\app (từ 20:35) → có thể dùng git log/diff.
+- Kết quả: Backend xong Xoá lịch sử đặt trước (05:13:10, 0.20.0, 94/94) + Export reservations.csv + accounts chỉ thủ thư (05:22:45, 0.21.0, 95/95). Frontend nối xoá lịch sử + accounts thủ thư; NHƯNG bỏ Xuất CSV books/stats CHƯA làm, YC-017 chưa làm, so_ngay_muon chưa có, reservations mock còn.
 
 ## Backend (D:\ung dung tri tue nhan ao\app\Backend)
 - AGENTS.md — 07:54 — ĐÃ SỬA (prompt cập nhật theo YC-002)
 - .env — 06:58:43 — KHÔNG ĐỌC nội dung (tránh lộ bí mật)
 - alembic.ini — 06:58:43 — không đổi
-- api_docs.md — 20:18 — ĐÃ SỬA: bản 0.12.0 (collect-fine + DELETE /api/requests/me/*)
-- LOG_THU_KY.md — 20:18 — ĐÃ SỬA: chứa log 19:50:00, 20:05:33, 20:15 (đã ghi changelog)
-- README.md — 20:05 — ĐÃ SỬA (hướng dẫn seed demo)
+- api_docs.md — 05:29 — ĐÃ SỬA: bản 0.21.0 (xoá lịch sử đặt trước, export reservations, accounts thủ thư)
+- LOG_THU_KY.md — 05:22 — ĐÃ SỬA: chứa log 05:13:10 + 05:22:45 (đã ghi changelog)
+- README.md — 05:22 — ĐÃ SỬA
+- requirements.txt — 02:13 — ĐÃ SỬA (python-multipart)
+- .env.example — 20:34 — MỚI (KT2)
 - requirements-dev.txt — 09:47 — MỚI
 - requirements.txt — 06:58:42 — không đổi
 - alembic\env.py, script.py.mako — không đổi
@@ -24,6 +26,31 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - alembic\versions\0006_add_use_case_compat_tables.py — 17:28 — MỚI (TheLoai, Nxb, YeuCau; Books.theLoaiId/nxbId; Users.reader_id)
 - alembic\versions\0007_create_dat_truoc_table.py — 18:57 — MỚI (bảng DatTruoc, chức năng 6)
 - alembic\versions\0008_add_fine_collection_columns.py — 20:03 — MỚI (FineHistory.da_thu, ngay_thu — UC19)
+- alembic\versions\0009_add_svnet_points.py — 21:50 — MỚI (Readers.diem_svnet mặc định 100)
+- alembic\versions\0010_add_user_contact_columns.py — 02:40 — MỚI (Users.email + so_dien_thoai)
+- alembic\versions\0011_rename_fines_to_points.py — 02:54 — MỚI (so_tien → so_diem; overdue_fine_points_per_day)
+- app\validation.py — 02:39 — MỚI (ho_ten, email ICTU, SĐT VN)
+- app\routers\accounts.py, auth.py, profile.py — 02:39 — ĐÃ SỬA (validation + email/SĐT)
+- app\routers\admin.py, borrows.py, export.py — 02:53 — ĐÃ SỬA (phạt điểm)
+- app\models.py, app\schemas.py — 02:53 — ĐÃ SỬA
+- app\routers\readers.py — 03:56 — ĐÃ SỬA (POST/PUT chỉ admin; thêm PUT /lock)
+- app\schemas.py — 03:56 — ĐÃ SỬA (lockReader body)
+- alembic\versions\0012_extend_yeu_cau_loai.py — 04:46 — MỚI (YeuCau.loai thêm DAT_TRUOC)
+- app\routers\requests.py — 04:46 — ĐÃ SỬA (DAT_TRUOC create + approve → reservation)
+- app\routers\reservations.py — 05:11 — ĐÃ SỬA (DELETE /api/reservations/me/*)
+- app\routers\export.py — 05:21 — ĐÃ SỬA (GET /api/export/reservations.csv)
+- app\routers\accounts.py — 05:41 — ĐÃ SỬA (chỉ tạo thủ thư)
+- app\routers\requests.py + api_docs — 05:29 — ĐÃ SỬA (CHƯA có log; không thấy so_ngay_muon)
+- app\models.py, app\schemas.py — 04:46 — ĐÃ SỬA
+- tests\test_uc_compat.py, test_notifications.py, test_reservations.py — 04:46-04:49 — ĐÃ SỬA (90/90 PASS tổng)
+- tests\test_reservations.py — 05:11 — ĐÃ SỬA (94/94 PASS tổng)
+- tests\test_export.py, test_uc_compat.py — 05:21 — ĐÃ SỬA (95/95 PASS tổng)
+- app\routers\profile.py — 02:13 — MỚI (API /api/profile/me, password, avatar)
+- app\config.py, app\main.py, app\schemas.py — 02:13 — ĐÃ SỬA (StaticFiles /static, profile schemas)
+- tests\test_profile.py — 02:14 — MỚI (Profile, 82/82 PASS tổng)
+- tests\test_profile.py, test_fines.py, test_uc_compat.py, test_borrows.py, test_export.py, test_stats.py, test_reservations.py, test_notifications.py — 02:40-02:53 — ĐÃ SỬA (86/86 PASS tổng)
+- tests\test_readers.py, test_books_search.py, test_borrows.py — 03:56-03:57 — ĐÃ SỬA (phân quyền 0.17.0, 86/86)
+- static\avatars\ — thư mục avatar (trống khi chưa upload)
 - app\audit.py — 07:54 — MỚI (ghi audit log)
 - app\config.py — 08:03 — ĐÃ SỬA (BACKUP_DIR)
 - app\database.py — không đổi
@@ -45,6 +72,8 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - app\routers\stats.py — 19:23 — MỚI (API /api/stats/*, chức năng 7)
 - app\routers\export.py — 19:34 — MỚI (API /api/export/*.csv, chức năng 8)
 - app\routers\requests.py — 20:18 — ĐÃ SỬA (thêm DELETE /api/requests/me/*)
+- app\routers\books.py — 23:15 — ĐÃ SỬA (sort/order, chức năng 5/KT2)
+- app\routers\auth.py, admin.py, readers.py, borrows.py — 21:50-21:57 — ĐÃ SỬA (diem_svnet, role_display)
 - app\routers\borrows.py — 20:05 — ĐÃ SỬA (collect-fine + fines trong GET)
 - app\routers\borrows.py — 19:01 — ĐÃ SỬA (thêm 2 DELETE /api/borrows/me/*; admin không xử lý mượn/trả)
 - app\routers\auth.py, readers.py, borrows.py, admin.py, main.py, models.py, schemas.py — 17:28-17:38 — ĐÃ SỬA (Đợt A)
@@ -57,6 +86,7 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - tests\test_stats.py — 19:24 — MỚI (chức năng 7, 58/58 PASS tổng)
 - tests\test_export.py — 19:34 — MỚI (chức năng 8, 62/62 PASS tổng)
 - tests\test_fines.py — 20:04 — MỚI (UC19, 67/67 PASS tổng)
+- tests\test_books_sort.py — 23:15 — MỚI (sort/order, 75/75 PASS tổng)
 - scripts\seed_demo.py — 19:46 — MỚI (dữ liệu demo idempotent)
 - app\main.py, tests\conftest.py — 19:34 — ĐÃ SỬA (mount export)
 - Ghi chú: toàn bộ thay đổi Backend đã có log chính thức [BACKEND] 19:34:48 → không ghi thêm dòng quét trùng.
@@ -124,6 +154,39 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - js\requests.js — 20:14:41 — ĐÃ SỬA (18084 bytes; deleteMyRequest/deleteMyRequests)
 - js\api.js — 20:12:20 — ĐÃ SỬA (15648 bytes; thêm deleteMyRequest/deleteMyRequests)
 - reservations.html + js\reservations.js + js\reservation-mock.js — 20:22 — ĐÃ SỬA (VẪN mock fallback)
+- search.html — 22:41:20 — ĐÃ SỬA (dropdown sắp xếp)
+- js\search.js — 22:40:55 — ĐÃ SỬA (parseSort + gửi sort/order + client sort)
+- js\api.js — 22:40:47 — ĐÃ SỬA (queryMap sort/order + sortBooks + sortBooksBackend: false)
+- js\auth.js — 21:57:40 — ĐÃ SỬA (role_display tiếng Việt)
+- js\admin-accounts.js — 21:57:41 — ĐÃ SỬA (role_display)
+- Các html + css — 22:41 — ĐÃ SỬA (giao diện)
+- profile.html — 02:09:31 — MỚI (trang Hồ sơ)
+- js\profile.js — 02:09:32 — MỚI (10858 bytes; profileMe/update/password/avatar)
+- assets\default-avatar.svg — 02:09:10 — MỚI (avatar mặc định)
+- js\api.js — 02:08:52 — ĐÃ SỬA (19964 bytes; profile endpoints + sortBooksBackend=true)
+- js\auth.js — 02:08:56 — ĐÃ SỬA (6370 bytes)
+- js\borrow.js — 01:52:48 — ĐÃ SỬA (16466 bytes; bỏ MOCK_FINES, nối phạt thật)
+- Các html — 02:09:53 — ĐÃ SỬA (thêm link Hồ sơ)
+- js\api.js — 02:46:53 — ĐÃ SỬA (19977 bytes; email/SĐT, overdueFinePointsPerDay; fineOut VẪN soTien)
+- js\auth.js — 02:29:13 — ĐÃ SỬA; js\profile.js — 02:29:19 — ĐÃ SỬA (email/SĐT)
+- js\admin-config.js — 02:47:06 — ĐÃ SỬA (overdue_fine_points_per_day)
+- js\borrow.js — 02:47:12; js\my-borrows.js — 02:47:17 — ĐÃ SỬA (vẫn dùng fine.soTien → chờ YC-013)
+- Các html — 02:47:23 — ĐÃ SỬA
+- js\api.js, js\borrow.js, js\my-borrows.js — 03:07 — ĐÃ SỬA (soDiem/so_diem, so_diem_da_thu, diem_con_lai) — có log 03:07:07
+- js\api.js — 03:54:32 — ĐÃ SỬA (20908 bytes; thêm lockReader)
+- js\readers.js — 03:54:34 — ĐÃ SỬA (9888 bytes; lock qua lockReader, nút thêm admin)
+- readers.html — 03:54:39 — ĐÃ SỬA (menu librarian; nút Thêm admin) → YC-014
+- readers.html — 04:31:48 — ĐÃ SỬA (menu admin,librarian) → YC-014 xong
+- js\api.js — 04:31:43 — ĐÃ SỬA (20972 bytes)
+- js\borrow.js — 04:21:55 — ĐÃ SỬA (16739 bytes)
+- js\reservation-mock.js, js\reservations.js, reservations.html — 04:16-04:51 — ĐÃ SỬA (mock vẫn còn)
+- js\api.js — 05:14:54 — ĐÃ SỬA (21429 bytes; deleteMyReservation/deleteMyReservations)
+- js\reservations.js — 05:15:14 — ĐÃ SỬA (11551 bytes; nút xoá lịch sử)
+- reservations.html — 05:15:27 — ĐÃ SỬA (4789 bytes; 2 nút "Xoá lịch sử đã xử lý"; mock vẫn tải)
+- js\admin-accounts.js — 05:15:21 — ĐÃ SỬA (9090 bytes; chỉ tạo thủ thư)
+- books.html, stats.html — 05:15:27 — ĐÃ SỬA (VẪN CÒN nút Xuất CSV)
+- requests.html — 05:15:27 — ĐÃ SỬA (vẫn chưa disable nút Gửi yêu cầu)
+- readers.html — 05:39:15 — ĐÃ SỬA
 - js\auth.js — 17:41:22 — ĐÃ SỬA
 - Ghi chú: requests có log 18:01:49 + 18:07:45; các trang còn lại CHƯA có log riêng.
 

@@ -104,7 +104,7 @@ def test_filter_status_dang_muon_with_active_borrow(client_and_tokens):
             "loaiDocGia": "sinh_vien",
             "trangThaiThe": "hoat_dong",
         },
-        headers=_headers(admin),
+        headers=_headers(tokens["admin"]),
     )
     assert reader.status_code == 200, reader.text
 

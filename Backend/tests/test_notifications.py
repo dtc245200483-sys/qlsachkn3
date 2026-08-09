@@ -17,7 +17,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Thông báo",
-            "email": f"{username}@example.com",
+            "email": f"{username}@ictu.edu.vn",
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },
@@ -131,11 +131,11 @@ def test_san_sang_reservation_notification(client_and_tokens):
         json={"ma_sach": "TESTNTF3"},
         headers=_headers(reader_a["token"]),
     ).json()
-    fulfilled = client.put(
-        f"/api/reservations/{reservation['ma_dat']}/fulfill",
+    returned = client.put(
+        f"/api/borrows/PMNTF6/return",
         headers=_headers(staff),
     )
-    assert fulfilled.status_code == 200
+    assert returned.status_code == 200, returned.text
 
     mine = _notifications(client, reader_a["token"])
     ready = [n for n in mine if n["loai"] == "SACH_SAN_SANG"]

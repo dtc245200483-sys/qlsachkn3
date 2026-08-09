@@ -79,9 +79,47 @@ Bảng `Users` có thêm cột `is_active` để khoá/mở khoá tài khoản. 
 
 ## Thu phạt (UC19)
 
-- Migration `0008`: `FineHistory` thêm `da_thu` (bit, mặc định 0) + `ngay_thu` (nullable).
-- `POST /api/borrows/{ma}/collect-fine` (chỉ librarian): đánh dấu phạt đã thu cho phiếu `da_tra`; trả `{ message, so_tien_da_thu, ngay_thu }`.
-- `GET /api/borrows` trả kèm `fines` với `da_thu`/`ngay_thu` để Frontend hiển thị trạng thái thu.
+- Migration `0008`: `FineHistory` thêm `da_thu` + `ngay_thu`; `0009`: `Readers.diem_svnet`; `0011`: đổi toàn bộ phạt sang **điểm** — `LibraryConfig.overdue_fine_points_per_day` (mặc định 2), `FineHistory.so_diem`.
+- Phạt = `so_ngay_qua_han × overdue_fine_points_per_day` (điểm). `POST /api/borrows/{ma}/collect-fine` (chỉ librarian) trả `{ message, so_diem_da_thu, diem_con_lai, ngay_thu }` và trừ `diem_svnet`.
+- `GET /api/borrows` trả `fines` với `{ so_ngay_qua_han, so_diem, da_thu, ngay_thu }`; CSV `borrows.csv` cột `Điểm phạt`.
+
+## Nhãn role tiếng Việt
+
+Giá trị role gốc vẫn là `admin`/`librarian`/`reader` (không đổi để không vỡ logic). API login/register/accounts trả thêm `role_display`: `Quản trị viên`, `Thủ thư`, `Độc giả` — Frontend dùng field này để hiển thị tiếng Việt.
+
+## Sắp xếp sách (KT2 tiêu chí 4)
+
+`GET /api/books` hỗ trợ `sort` (`ten`/`tacGia`/`namXb`/`soLuong`, mặc định `ten`) và `order` (`asc`/`desc`, mặc định `asc`); kết hợp được với `q`, `theLoai`, `trangThai` (lọc trước, sắp xếp sau, tie-break `ma`).
+
+## Hồ sơ cá nhân (mở rộng)
+
+- `GET/PUT /api/profile/me` — xem/cập nhật hồ sơ của chính mình (`ho_ten`, `email`, `so_dien_thoai`, `loai_doc_gia` cho reader).
+- `PUT /api/profile/me/password` — đổi mật khẩu (body `mat_khau_cu`, `mat_khau_moi`, `xac_nhan` tùy chọn).
+- `POST /api/profile/me/avatar` — upload PNG/JPG ≤ 2MB, lưu `static/avatars/{username}.{ext}`, xem qua `/static/...`.
+- Audit: `UPDATE_PROFILE`, `CHANGE_PASSWORD`, `UPDATE_AVATAR`.
+
+## Hoàn thiện tài khoản & validation
+
+- Migration `0010`: `Users` thêm `email` (unique, nullable — chỉ unique khi khác NULL) + `so_dien_thoai` (nullable).
+- Validation dùng chung (register, profile, admin accounts): họ tên ≥ 2 từ (mỗi từ ≥ 2 ký tự, không số/ký tự đặc biệt); email bắt buộc định dạng ICTU `@ictu.edu.vn` (trùng → 409); SĐT Việt Nam `^(0|\+84)(3|5|7|8|9)\d{8}$`; sai → 422.
+- GET/PUT `/api/profile/me` và `/api/admin/accounts` trả/lưu `email` + `so_dien_thoai` cho mọi role (reader đồng bộ sang `Readers`).
+
+## Phân quyền quản lý độc giả
+
+`POST`/`PUT`/`DELETE /api/readers...` chỉ `admin`; `GET /api/readers` cho `admin` + `librarian`; `PUT /api/readers/{ma}/lock` (khoá/mở khoá thẻ) cho `admin` + `librarian` — thủ thư không sửa được thông tin độc giả.
+
+## Yêu cầu DAT_TRUOC
+
+Yêu cầu (request) hỗ trợ loai `DAT_TRUOC`: reader gửi `ma_sach` (hoặc `items` 1 sách); khi thủ thư duyệt, Backend tạo đặt trước thật (`DatTruoc` mã `RV...`, trạng thái `CHO_XU_LY`) — chỉ khi sách hết, đặt trùng → 409.
+
+## Xoá lịch sử đặt trước của reader
+
+`DELETE /api/reservations/me` (xoá toàn bộ `HUY`/`DA_MUON`) và `DELETE /api/reservations/me/{ma_dat}` (xoá 1 phiếu) — chỉ reader, giữ nguyên `CHO_XU_LY`/`SAN_SANG`; audit `DELETE_RESERVATION_HISTORY[_ALL]`.
+
+## Export CSV đặt trước + Admin accounts
+
+- `GET /api/export/reservations.csv` — xuất đặt trước (Mã đặt, Mã sách, Tên sách, Độc giả, Ngày đặt, Trạng thái), UTF-8 BOM; librarian/admin.
+- `POST /api/admin/accounts` chỉ nhận role `librarian`; gửi `reader` → `400 "Độc giả tự đăng ký qua /api/auth/register"`.
 
 ## Dữ liệu demo (seed)
 
@@ -100,6 +138,8 @@ Dữ liệu demo tạo ra (đánh dấu DEMO trong README/log, không đụng d�
 - Tài khoản đăng nhập demo: `docgia1/docgia1` (liên kết DG001), `docgia2/docgia2` (liên kết DG002) — tạo qua `POST /api/auth/register`.
 - Phiếu mượn: PM001 (đang mượn), PM002 (đã trả đúng hạn), PM003 (đã trả trễ 2 ngày → FineHistory), PM004 (đang mượn, hạn còn ≤ 3 ngày → thông báo `SAP_HET_HAN`).
 - Đặt trước: RV001 `SAN_SANG` (S002), RV002 `CHO_XU_LY` (S005 đang hết).
+
+Script còn **backfill email + SĐT cho tài khoản cũ** — email tự sinh theo tên người (bỏ dấu, nối liền, đuôi `@ictu.edu.vn`): Nguyễn Văn Huy → `nguyenvanhuy@ictu.edu.vn`, Trần Thị Thu Hà → `tranthithuha@ictu.edu.vn`, Lê Văn Nam → `levannam@ictu.edu.vn`, Nguyễn Văn An → `nguyenvanan@ictu.edu.vn`, Trần Thị Bích → `tranthibich@ictu.edu.vn`. Chạy lại không ghi đè SĐT đã có.
 - Chi tiết trong [api_docs.md](api_docs.md) mục 1–17.
 
 ## Tạo tài khoản đăng nhập

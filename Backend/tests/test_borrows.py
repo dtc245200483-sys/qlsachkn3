@@ -80,7 +80,7 @@ def _fine_count(ma_phieu: str) -> int:
 def test_borrow_success_creates_slip_and_decreases_stock(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin)
+    _make_reader(client, tokens["admin"])
     _make_book(client, admin, "TESTB1", 5)
 
     response = _borrow(client, admin, "PMTEST1", items=[{"ma_sach": "TESTB1", "so_luong": 2}])
@@ -103,7 +103,7 @@ def test_borrow_success_creates_slip_and_decreases_stock(client_and_tokens):
 def test_borrow_book_out_of_stock_fails(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG2")
+    _make_reader(client, tokens["admin"], "TESTDG2")
     _make_book(client, admin, "TESTB2", 0)
 
     response = _borrow(client, admin, "PMTEST2", ma_doc_gia="TESTDG2", items=[{"ma_sach": "TESTB2", "so_luong": 1}])
@@ -123,7 +123,7 @@ def test_borrow_book_out_of_stock_fails(client_and_tokens):
 def test_borrow_exceeds_max_books_at_once(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG3")
+    _make_reader(client, tokens["admin"], "TESTDG3")
     for i in range(4):
         _make_book(client, admin, f"TESTB4{i}", 5)
 
@@ -140,7 +140,7 @@ def test_borrow_exceeds_max_books_at_once(client_and_tokens):
 def test_borrow_locked_card_fails(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG4", trang_thai="khoa")
+    _make_reader(client, tokens["admin"], "TESTDG4", trang_thai="khoa")
     _make_book(client, admin, "TESTB5", 5)
 
     response = _borrow(client, admin, "PMTEST5", ma_doc_gia="TESTDG4", items=[{"ma_sach": "TESTB5", "so_luong": 1}])
@@ -155,7 +155,7 @@ def test_borrow_unknown_reader_and_duplicate_slip(client_and_tokens):
     unknown = _borrow(client, admin, "PMTEST6", ma_doc_gia="KHONGTONTAI", items=[{"ma_sach": "TESTB6", "so_luong": 1}])
     assert unknown.status_code == 404
 
-    _make_reader(client, admin, "TESTDG5")
+    _make_reader(client, tokens["admin"], "TESTDG5")
     first = _borrow(client, admin, "PMTEST7", ma_doc_gia="TESTDG5", items=[{"ma_sach": "TESTB6", "so_luong": 1}])
     assert first.status_code == 200
     duplicate = _borrow(client, admin, "PMTEST7", ma_doc_gia="TESTDG5", items=[{"ma_sach": "TESTB6", "so_luong": 1}])
@@ -165,7 +165,7 @@ def test_borrow_unknown_reader_and_duplicate_slip(client_and_tokens):
 def test_return_on_time_restores_stock_and_no_fine(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG6")
+    _make_reader(client, tokens["admin"], "TESTDG6")
     _make_book(client, admin, "TESTB7", 4)
     _borrow(client, admin, "PMTEST8", ma_doc_gia="TESTDG6", items=[{"ma_sach": "TESTB7", "so_luong": 2}])
 
@@ -182,7 +182,7 @@ def test_return_on_time_restores_stock_and_no_fine(client_and_tokens):
 def test_return_late_adds_fine_with_correct_formula(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG7")
+    _make_reader(client, tokens["admin"], "TESTDG7")
     _make_book(client, admin, "TESTB8", 3)
     _borrow(client, admin, "PMTEST9", ma_doc_gia="TESTDG7", items=[{"ma_sach": "TESTB8", "so_luong": 1}])
     _set_han_tra("PMTEST9", days_ago=5)
@@ -191,14 +191,14 @@ def test_return_late_adds_fine_with_correct_formula(client_and_tokens):
     assert returned.status_code == 200, returned.text
     fine = returned.json()["fine"]
     assert fine["so_ngay_qua_han"] == 5
-    assert fine["so_tien"] == 5 * 5000.0
+    assert fine["so_diem"] == 10
     assert _fine_count("PMTEST9") == 1
 
 
 def test_renew_once_succeeds_and_twice_fails(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG8")
+    _make_reader(client, tokens["admin"], "TESTDG8")
     _make_book(client, admin, "TESTB9", 3)
     slip = _borrow(client, admin, "PMTEST10", ma_doc_gia="TESTDG8", items=[{"ma_sach": "TESTB9", "so_luong": 1}]).json()
     old_han_tra = datetime.fromisoformat(slip["han_tra"])
@@ -217,7 +217,7 @@ def test_renew_once_succeeds_and_twice_fails(client_and_tokens):
 def test_renew_late_adds_fine(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    _make_reader(client, admin, "TESTDG9")
+    _make_reader(client, tokens["admin"], "TESTDG9")
     _make_book(client, admin, "TESTB10", 3)
     _borrow(client, admin, "PMTEST11", ma_doc_gia="TESTDG9", items=[{"ma_sach": "TESTB10", "so_luong": 1}])
     _set_han_tra("PMTEST11", days_ago=3)
@@ -227,7 +227,7 @@ def test_renew_late_adds_fine(client_and_tokens):
     data = renewed.json()
     assert data["so_lan_gia_han"] == 1
     assert data["fine"]["so_ngay_qua_han"] == 3
-    assert data["fine"]["so_tien"] == 3 * 5000.0
+    assert data["fine"]["so_diem"] == 6
     assert _fine_count("PMTEST11") == 1
 
 
@@ -237,7 +237,7 @@ def test_list_borrows_filters_and_permissions(client_and_tokens):
     librarian = tokens["librarian"]
     reader = tokens["reader"]
 
-    _make_reader(client, admin, "TESTDG10")
+    _make_reader(client, tokens["admin"], "TESTDG10")
     _make_book(client, admin, "TESTB11", 5)
     _borrow(client, librarian, "PMTEST12", ma_doc_gia="TESTDG10", items=[{"ma_sach": "TESTB11", "so_luong": 1}])
     _borrow(client, librarian, "PMTEST13", ma_doc_gia="TESTDG10", items=[{"ma_sach": "TESTB11", "so_luong": 1}])

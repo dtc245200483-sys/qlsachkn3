@@ -80,7 +80,7 @@
     var fines = (slip.fines || [])
       .map(function (f) {
         var fine = API.mapResponse("fineOut", f);
-        return fine ? fine.soNgayQuaHan + " ngày — " + fine.soTien + " đ" : "";
+        return fine ? fine.soNgayQuaHan + " ngày — " + fine.soDiem + " điểm" : "";
       })
       .filter(Boolean)
       .join("; ");

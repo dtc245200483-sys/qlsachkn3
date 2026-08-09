@@ -63,3 +63,224 @@ File đã sửa:
 - Frontend/js/reservations.js
 - Frontend/js/reservation-mock.js
 - Frontend/reservations.html (bump version ?v=20260809-8)
+---
+
+# PHIÊN BẢN 2026-08-09 21:58:09 - Prompt lượt đổi nhãn vai trò sang tiếng Việt
+
+Nhiệm vụ lượt này: Người dùng yêu cầu sửa chữ hiển thị vai trò reader, librarian (thủ thư), admin sang tiếng Việt tương đương: thủ thư, độc giả, quản trị viên.
+
+Yêu cầu:
+1. Sửa nhãn vai trò trong toàn bộ giao diện, không đổi giá trị role trong session/logic phân quyền (vẫn giữ admin/librarian/reader cho code).
+2. Cập nhật auth.js: roleLabel map admin → Quản trị viên, librarian → Thủ thư, reader → Độc giả, dùng chung cho badge vai trò mọi trang.
+3. Cập nhật admin-accounts.js: bảng tài khoản hiển thị đúng nhãn tiếng Việt cho cả admin/librarian/reader.
+4. Bump version query js/auth.js (20260809-11) + js/admin-accounts.js (20260809-3) trên các trang HTML.
+5. Test Chrome headless 3 tài khoản: reader → Độc giả, librarian → Thủ thư, admin → Quản trị viên.
+6. Gửi log Thư Ký + lưu prompt vào D:\ung dung tri tue nhan ao\app\promtAI\FRONTEND_AGENT_PROMPT.
+
+File đã sửa:
+- Frontend/js/auth.js
+- Frontend/js/admin-accounts.js
+- 14 file HTML (bump version auth.js/admin-accounts.js)
+---
+
+# PHIÊN BẢN 2026-08-09 22:41:56 - Prompt lượt bổ sung sắp xếp sách (chức năng 5)
+
+Nhiệm vụ lượt này: Bổ sung sắp xếp (KT2 tiêu chí 4, Frontend làm trước).
+
+Yêu cầu:
+1. Thêm dropdown "Sắp xếp theo" trên search.html (và books.html nếu tiện): Tên sách (A-Z/Z-A), Tác giả (A-Z), Năm XB (mới nhất/cũ nhất), Số lượng (nhiều nhất/ít nhất).
+2. Khi đổi lựa chọn: gọi GET /api/books kèm query sort=ten|tacGia|namXb|soLuong, order=asc|desc, kết hợp với q/theLoai/trangThai.
+3. Backend chưa hỗ trợ sort/order → sắp xếp tạm client-side, ghi config chờ sortBooks trong js/api.js (flag sortBooksBackend + API.sortBooks()); khi Backend cấp thì bỏ sắp xếp client.
+4. UI theo UI_DESIGN.md (dropdown rõ ràng, có nhãn).
+5. Gửi log: [FRONTEND] ... - Chức năng đề bài: 5 - Ảnh hưởng Backend: có - Ảnh hưởng AI Engine: không.
+
+File đã sửa:
+- Frontend/js/api.js (queryMap sort/order + sortBooksBackend + sortBooks)
+- Frontend/js/search.js
+- Frontend/js/books.js
+- Frontend/search.html
+- Frontend/books.html
+- Frontend/css/style.css (toolbar form-group/select)
+---
+
+# PHIÊN BẢN 2026-08-10 02:10:33 - Prompt lượt tạo Hồ sơ cá nhân (mở rộng)
+
+Nhiệm vụ lượt này: Tạo profile.html dùng cho 3 vai trò (reader, librarian, admin).
+
+Yêu cầu:
+1. Hiển thị avatar (mặc định nếu chưa có), họ tên, username, vai trò, email, SĐT, loại độc giả (nếu reader).
+2. Nút "Đổi ảnh đại diện": PNG/JPG, tối đa 2MB → upload Backend.
+3. Form cập nhật thông tin: họ tên, email, SĐT (reader thêm loại độc giả).
+4. Form đổi mật khẩu: mật khẩu cũ + mới (≥6) + xác nhận.
+5. Thêm link "Hồ sơ" vào menu/header mọi trang (mọi role) — bấm tên/avatar vào profile.html.
+6. Config chờ trong api.js: GET/PUT /api/profile/me, PUT /api/profile/me/password, POST /api/profile/me/avatar (multipart/form-data).
+7. Backend chưa có API → mock tạm + banner rõ chỗ chờ.
+8. Gửi log: [FRONTEND] ... - Chức năng đề bài: 1, 3 (mở rộng Profile) - Ảnh hưởng Backend: có - Ảnh hưởng AI Engine: không.
+
+File đã tạo/sửa:
+- Frontend/profile.html
+- Frontend/js/profile.js
+- Frontend/assets/default-avatar.svg
+- Frontend/js/api.js (profileMe/updateProfileMe/changeProfilePassword/uploadProfileAvatar + fieldMap + uploadFile)
+- Frontend/js/auth.js (link Hồ sơ + bấm tên vào profile)
+- Frontend/css/style.css (profile layout, avatar, user-name-link, alert-warning)
+---
+
+# PHIÊN BẢN 2026-08-10 02:29:45 - Prompt lượt gộp nhãn tên/vai trò trùng
+
+Nhiệm vụ lượt này: Người dùng thấy 2 nhãn "Độc giả" cạnh nhau (tên tài khoản trùng với vai trò), yêu cầu gộp thành 1.
+
+Yêu cầu:
+1. auth.js: ẩn #user-name khi tên trống hoặc trùng nhãn vai trò (Độc giả/Thủ thư/Quản trị viên); chỉ giữ badge vai trò.
+2. profile.js: ẩn #profile-name tương tự trên trang hồ sơ; khi người dùng đổi sang tên thật thì hiện lại.
+3. Không đổi dữ liệu tài khoản, không đổi logic phân quyền.
+4. Test Chrome headless reader + librarian.
+5. Gửi log Thư Ký + lưu prompt.
+
+File đã sửa:
+- Frontend/js/auth.js
+- Frontend/js/profile.js
+- 15 file HTML (bump auth.js ?v=20260809-14)
+---
+
+# PHIÊN BẢN 2026-08-10 02:33:44 - Prompt lượt cập nhật dữ liệu họ tên/email/SĐT
+
+Nhiệm vụ lượt này: Cập nhật data thủ thư, admin, độc giả phải có họ tên đầy đủ, email định dạng @ictu.edu.vn, số điện thoại ảo đúng số Việt Nam.
+
+Kết quả đã cập nhật:
+- admin: Nguyễn Văn Huy (chỉ họ tên — Users không có email/SĐT)
+- librarian: Trần Thị Thu Hà (chỉ họ tên — Users không có email/SĐT)
+- reader (DGREADER): Lê Văn Nam, DTC245200488@ictu.edu.vn, 0912345004
+- docgia1 (DG001): Nguyễn Văn An (khớp Reader)
+- docgia2 (DG002): Trần Thị Bích (khớp Reader)
+- DG001/DG002/DG003: đã có sẵn họ tên/email/SĐT chuẩn
+
+Cần Backend bổ sung (đã log cho Thư Ký): cột email/SĐT cho bảng Users (hoặc bảng hồ sơ nhân sự) để thủ thư/admin lưu được email + SĐT; cập nhật seed_demo.py cho khớp.
+---
+
+# PHIÊN BẢN 2026-08-10 02:36:41 - Prompt lượt xoá dữ liệu độc giả DG003
+
+Nhiệm vụ lượt này: Xoá data tài khoản/độc giả DG003.
+
+Kết quả:
+- Kiểm tra DG003 không có phiếu mượn (borrows) và đặt trước (reservations) tham chiếu.
+- DELETE /api/readers/DG003 (admin) thành công, HTTP 200.
+- Danh sách độc giả còn: DG001, DG002, DGREADER.
+- Lưu ý: Backend/scripts/seed_demo.py vẫn khai báo DG003 trong DEMO_READERS — nếu chạy lại seed sẽ tạo lại; cần Backend bỏ DG003 khỏi seed (đã log cho Thư Ký).
+---
+
+# PHIÊN BẢN 2026-08-10 02:47:50 - Prompt lượt ẩn cấu hình AI/backup + chuyển phạt sang điểm
+
+Nhiệm vụ lượt này (Frontend làm trước):
+1. admin-config.html: ẩn khu vực Cấu hình AI Engine (UC26) + Sao lưu & phục hồi CSDL (UC27), chỉ giữ Cấu hình thư viện (Backend vẫn giữ API).
+2. Cấu hình thư viện: nhãn "Phạt quá hạn (điểm/ngày)", field overdue_fine_points_per_day (mặc định 2), ghi chú "Trừ điểm sinh viên: 1 ngày quá hạn = 2 điểm".
+3. Đổi mọi nơi hiển thị phạt đồng → điểm: borrow.js (thông báo trả/gia hạn + bảng Thu phạt), my-borrows.js (lịch sử), nhãn bảng Phạt → Điểm phạt.
+4. api.js fieldMap libraryConfig: overdue_fine_per_day → overdue_fine_points_per_day (chờ Backend đổi theo).
+5. Lưu ý: header CSV export/report "Phạt" → "Điểm phạt" nằm ở Backend /api/export/report.csv — đã log cho Backend.
+
+File đã sửa:
+- Frontend/admin-config.html
+- Frontend/js/admin-config.js
+- Frontend/js/api.js
+- Frontend/js/borrow.js
+- Frontend/borrow.html
+- Frontend/js/my-borrows.js
+- Frontend/my-borrows.html
+---
+
+# PHIÊN BẢN 2026-08-10 03:07:07 - Prompt lượt cập nhật phạt bằng điểm (YC-2026-08-10-013)
+
+Nhiệm vụ lượt này: Backend 0.16.0 đã đổi phạt sang ĐIỂM — cập nhật:
+1. api.js fineOut: soDiem = "so_diem" (thay soTien).
+2. borrow.js + my-borrows.js: hiển thị soDiem (điểm).
+3. collect-fine dùng so_diem_da_thu / diem_con_lai — thêm fieldMap collectFineOut và hiển thị trong thông báo thu phạt.
+4. Test Chrome headless bảng Thu phạt hiển thị điểm.
+5. Gửi log [FRONTEND] khi xong.
+
+File đã sửa:
+- Frontend/js/api.js
+- Frontend/js/borrow.js
+- Frontend/js/my-borrows.js
+- 15 file HTML (bump api.js ?v=20260809-15, borrow.js -12, my-borrows.js -7)
+---
+
+# PHIÊN BẢN 2026-08-10 03:55:09 - Prompt lượt phân quyền quản lý độc giả
+
+Nhiệm vụ lượt này:
+1. readers.html + js/readers.js:
+   - Admin: đầy đủ Thêm, Sửa thông tin, Khoá/Mở khoá thẻ, Xoá.
+   - Librarian: ẩn "+ Thêm độc giả", "Sửa", "Xoá"; chỉ hiện "Khoá/Mở khoá thẻ" (gọi lockReader).
+2. js/api.js: thêm lockReader -> PUT /api/readers/{id}/lock (body {trangThaiThe: hoat_dong|khoa}) + fieldMap; giữ GET danh sách cho cả 2 vai.
+3. Gửi log [FRONTEND] — Chức năng đề bài: 3 - Ảnh hưởng Backend: có.
+
+File đã sửa:
+- Frontend/js/api.js (lockReader + fieldMap)
+- Frontend/js/readers.js (phân quyền + toggleLock dùng lockReader)
+- Frontend/readers.html (ẩn nút Thêm với librarian)
+- 15 file HTML (bump api.js ?v=20260809-16)
+---
+
+# PHIÊN BẢN 2026-08-10 05:10:07 - Prompt lượt xoá lịch sử đặt trước của độc giả
+
+Nhiệm vụ lượt này (Frontend làm trước):
+1. reservations.html reader: phiếu HUY/DA_MUON hiện nút "Xoá"; thêm nút "Xoá lịch sử đã xử lý" (xoá tất cả HUY/DA_MUON); KHÔNG xoá CHO_XU_LY/SAN_SANG.
+2. api.js: deleteMyReservation -> DELETE /api/reservations/me/{id}; deleteMyReservations -> DELETE /api/reservations/me.
+3. reservations.js: hàm xoá 1 phiếu + xoá toàn bộ (có confirm), reload sau khi xoá; reservation-mock.js fallback deleteOne/deleteAll.
+4. Gửi log [FRONTEND] — Chức năng đề bài: 6 (mở rộng UC10) - Ảnh hưởng Backend: có.
+
+File đã sửa:
+- Frontend/js/api.js
+- Frontend/js/reservations.js
+- Frontend/js/reservation-mock.js
+- Frontend/reservations.html
+- 15 file HTML (bump api.js ?v=20260810-3, reservation-mock.js ?v=20260810-3, reservations.js ?v=20260810-4)
+---
+
+# PHIÊN BẢN 2026-08-10 05:12:27 - Prompt lượt bổ sung Xoá đặt trước cho thủ thư
+
+Nhiệm vụ lượt này: Người dùng yêu cầu thêm Xoá cho phần "Danh sách đặt trước (xử lý)" của thủ thư.
+
+Kết quả:
+- Phiếu HUY/DA_MUON trong danh sách thủ thư hiện nút "Xoá".
+- Thêm nút "Xoá lịch sử đã xử lý" trong khu vực thủ thư (ẩn khi không có phiếu HUY/DA_MUON).
+- Dùng chung Reservation.deleteOne/deleteAll; mock đã xử lý librarian xoá toàn bộ.
+- Lưu ý Backend: endpoint hiện dùng là /api/reservations/me/{id} và /me — cần cho phép librarian hoặc bổ sung endpoint staff DELETE /api/reservations/{id}.
+---
+
+# PHIÊN BẢN 2026-08-10 05:17:04 - Prompt lượt Xuất CSV đặt trước + admin xem + tạo tài khoản chỉ thủ thư
+
+Nhiệm vụ lượt này:
+1. reservations.html/js: nút "Xuất CSV" (GET /api/export/reservations.csv); admin xem trang Đặt trước (nav admin,librarian,reader; section admin,librarian) nhưng chỉ XEM + XUẤT, ẩn Sẵn sàng/Xác nhận đã lấy/Huỷ/Xoá/Xoá lịch sử; thủ thư giữ đầy đủ; reader vẫn vào được phần của mình.
+2. admin-accounts.html/js: form Tạo tài khoản chỉ còn Vai trò "Thủ thư" (bỏ Độc giả — độc giả tự đăng ký); khi sửa tài khoản độc giả tự thêm lại option Độc giả + hiện mã độc giả.
+3. api.js: exportReservations -> GET /api/export/reservations.csv.
+4. Lưu ý Backend: admin đang bị 403 khi GET /api/reservations — cần cho admin GET (view) + API export reservations.csv cho admin/librarian.
+5. Gửi log [FRONTEND] — Chức năng đề bài: 6, 8 (mở rộng UC18/UC23) - Ảnh hưởng Backend: có.
+
+File đã sửa:
+- Frontend/js/api.js
+- Frontend/js/reservations.js
+- Frontend/reservations.html
+- Frontend/js/admin-accounts.js
+- Frontend/admin-accounts.html
+- 12 file HTML (nav reservations thêm admin)
+- 15 file HTML (bump api.js ?v=20260810-4)
+---
+
+# PHIÊN BẢN 2026-08-10 05:55:57 - Prompt lượt YC-016 + YC-017 + bỏ reservation mock
+
+Nhiệm vụ lượt này:
+1. YC-016: xoá nút Xuất CSV ở books.html + stats.html (cả button, hàm exportBooks/exportReport, listener); GIỮ ở borrow.html.
+2. YC-017: nút Gửi yêu cầu disabled khi chưa có ≥1 dòng sách hợp lệ (theo dõi change ô chọn sách + số lượng); enable khi hợp lệ; vẫn kiểm tra khi bấm (không gửi payload rỗng); bump requests.js.
+3. YC-007: bỏ script reservation-mock ở 6 trang; chuyển window.Reservation.* sang API trực tiếp (reservations.js, search.js, notifications-core.js); xoá file js/reservation-mock.js; bump các file JS đổi.
+4. Gửi log [FRONTEND] — Chức năng đề bài: 6, 8 - Ảnh hưởng Backend: có (so_ngay_muon chờ Backend) - Ảnh hưởng AI Engine: không.
+
+File đã sửa:
+- Frontend/books.html, js/books.js (bỏ Xuất CSV)
+- Frontend/stats.html, js/stats.js (bỏ Xuất CSV)
+- Frontend/js/requests.js (disable Gửi yêu cầu)
+- Frontend/js/reservations.js (API trực tiếp)
+- Frontend/js/search.js (createReservation trực tiếp)
+- Frontend/js/notifications-core.js + js/notifications.js + notifications.html (bỏ mock banner)
+- Frontend/reservations.html (bỏ mock banner)
+- Xoá Frontend/js/reservation-mock.js
+- 6 trang HTML bỏ script reservation-mock

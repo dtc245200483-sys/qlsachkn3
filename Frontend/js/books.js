@@ -48,12 +48,25 @@
     return role === "librarian" || role === "admin";
   }
 
+  function parseSort(value) {
+    if (!value) {
+      return { sort: "", order: "" };
+    }
+    var parts = String(value).split("_");
+    return { sort: parts[0] || "", order: parts[1] || "asc" };
+  }
+
   function loadBooks(opts) {
     if (!opts || opts.clear !== false) {
       clearMessage();
     }
     setLoading(true);
-    API.call("books")
+    var sortParsed = parseSort(document.getElementById("book-sort").value);
+    var built = API.buildQuery("books", {
+      sort: sortParsed.sort,
+      order: sortParsed.order
+    });
+    API.call("books", undefined, "GET", undefined, built.query)
       .then(function (res) {
         setLoading(false);
         if (!res.ok) {
@@ -66,7 +79,11 @@
           );
           return;
         }
-        renderBooks(res.data);
+        var list = res.data;
+        if (!API.config.sortBooksBackend) {
+          list = API.sortBooks(list, sortParsed.sort, sortParsed.order);
+        }
+        renderBooks(list);
       })
       .catch(function () {
         setLoading(false);
@@ -248,38 +265,6 @@
       });
   }
 
-  function exportBooks() {
-    var stamp = exportStamp();
-    var filename = "danh_sach_sach_" + stamp + ".csv";
-    API.downloadFile("exportBooks", filename).then(function (res) {
-      if (!res.ok) {
-        showMessage(
-          res.status === 404 || res.status === 405
-            ? "Chức năng xuất chưa sẵn sàng (Backend chưa có API export)."
-            : res.message || "Không thể tải file xuất dữ liệu."
-        );
-        return;
-      }
-      showMessage("Đã tải file " + filename + ".", "alert-success");
-    });
-  }
-
-  function exportStamp() {
-    var d = new Date();
-    function p(n) {
-      return n < 10 ? "0" + n : String(n);
-    }
-    return (
-      d.getFullYear() +
-      p(d.getMonth() + 1) +
-      p(d.getDate()) +
-      "_" +
-      p(d.getHours()) +
-      p(d.getMinutes()) +
-      p(d.getSeconds())
-    );
-  }
-
   function init() {
     Auth.requireAuth();
     Auth.applyRoleUI();
@@ -290,11 +275,6 @@
         openForm(null);
       });
     }
-    var exportButton = document.getElementById("export-books-button");
-    if (exportButton) {
-      exportButton.addEventListener("click", exportBooks);
-    }
-
     var form = document.getElementById("book-form");
     if (form) {
       form.addEventListener("submit", saveBook);
@@ -311,6 +291,13 @@
         if (e.target === modal) {
           closeForm();
         }
+      });
+    }
+
+    var sortSelect = document.getElementById("book-sort");
+    if (sortSelect) {
+      sortSelect.addEventListener("change", function () {
+        loadBooks({ clear: false });
       });
     }
 

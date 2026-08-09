@@ -36,7 +36,6 @@
           showMessage("Không thể tải thông báo.");
           return;
         }
-        document.getElementById("mock-banner").hidden = !res.reservationsMock;
         render(res.items);
       })
       .catch(function () {

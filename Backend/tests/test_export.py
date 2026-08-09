@@ -15,7 +15,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Xuất dữ liệu",
-            "email": f"{username}@example.com",
+            "email": f"{username}@ictu.edu.vn",
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },
@@ -107,13 +107,13 @@ def test_export_borrows_csv(client_and_tokens):
     lines = text.split("\r\n")
     assert (
         lines[0]
-        == "Mã phiếu,Mã độc giả,Ngày mượn,Hạn trả,Ngày trả,Trạng thái,Số ngày quá hạn,Phạt"
+        == "Mã phiếu,Mã độc giả,Ngày mượn,Hạn trả,Ngày trả,Trạng thái,Số ngày quá hạn,Điểm phạt"
     )
     active = next(line for line in lines if line.startswith("PMEXP1,"))
     assert "Đang mượn" in active
     returned = next(line for line in lines if line.startswith("PMEXP2,"))
     assert "Đã trả" in returned
-    assert ",3,15000.0" in returned
+    assert ",3,6" in returned
 
 
 def test_export_report_csv(client_and_tokens):
@@ -151,3 +151,52 @@ def test_export_permissions(client_and_tokens):
     assert client.get(
         "/api/export/books.csv", headers=_headers(tokens["admin"])
     ).status_code == 200
+
+
+def test_export_reservations_csv(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    admin = tokens["admin"]
+
+    book = client.post(
+        "/api/books",
+        json={
+            "ma": "TESTEXPRV1",
+            "ten": "Sách Đặt Trước",
+            "tacGia": "Tác giả",
+            "theLoai": "Test",
+            "nxb": "NXB Test",
+            "namXb": 2024,
+            "soLuong": 1,
+        },
+        headers=_headers(staff),
+    )
+    assert book.status_code == 200, book.text
+
+    borrower = _register(client, "tmp_backend_test_exprvbor").json()
+    _borrow(client, staff, "PMEXPRV1", borrower["reader_ma"], "TESTEXPRV1")
+
+    reader = _register(client, "tmp_backend_test_exprv").json()
+    reservation = client.post(
+        "/api/reservations",
+        json={"ma_sach": "TESTEXPRV1"},
+        headers=_headers(reader["token"]),
+    )
+    assert reservation.status_code == 200, reservation.text
+
+    for token in (staff, admin):
+        response = client.get("/api/export/reservations.csv", headers=_headers(token))
+        assert response.status_code == 200
+        assert response.content.startswith(b"\xef\xbb\xbf")
+        text = response.content.decode("utf-8-sig")
+        lines = text.split("\r\n")
+        assert lines[0] == "Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái"
+        assert any(
+            line.startswith("RV") and "TESTEXPRV1" in line and "Sách Đặt Trước" in line
+            for line in lines
+        )
+
+    assert client.get(
+        "/api/export/reservations.csv",
+        headers=_headers(tokens["reader"]),
+    ).status_code == 403

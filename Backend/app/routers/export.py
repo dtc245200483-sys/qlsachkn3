@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Book, BorrowDetail, BorrowSlip, FineHistory, Reader
+from ..models import Book, BorrowDetail, BorrowSlip, DatTruoc, FineHistory, Reader
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -73,7 +73,7 @@ def export_borrows(
             "Ngày trả",
             "Trạng thái",
             "Số ngày quá hạn",
-            "Phạt",
+            "Điểm phạt",
         ]
     ]
     for slip in slips:
@@ -84,7 +84,7 @@ def export_borrows(
             so_ngay_qua_han = max(0, (now.date() - slip.han_tra.date()).days)
             trang_thai = "Đang mượn"
         fine = (
-            db.query(func.coalesce(func.sum(FineHistory.so_tien), 0))
+            db.query(func.coalesce(func.sum(FineHistory.so_diem), 0))
             .filter(FineHistory.ma_phieu == slip.ma_phieu)
             .scalar()
         )
@@ -97,7 +97,7 @@ def export_borrows(
                 _fmt(slip.ngay_tra),
                 trang_thai,
                 so_ngay_qua_han,
-                float(fine or 0),
+                int(fine or 0),
             ]
         )
     filename = f"danh_sach_phieu_muon_{datetime.now():%Y%m%d_%H%M%S}.csv"
@@ -193,4 +193,28 @@ def export_report(
             )
 
     filename = f"bao_cao_thong_ke_{datetime.now():%Y%m%d_%H%M%S}.csv"
+    return _csv_response(filename, rows)
+
+
+@router.get("/reservations.csv")
+def export_reservations(
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("admin", "librarian")),
+) -> Response:
+    rows = [["Mã đặt", "Mã sách", "Tên sách", "Độc giả", "Ngày đặt", "Trạng thái"]]
+    reservations = db.query(DatTruoc).order_by(DatTruoc.ngay_dat.desc()).all()
+    for res in reservations:
+        book = db.get(Book, res.ma_sach)
+        reader = db.get(Reader, res.ma_doc_gia)
+        rows.append(
+            [
+                res.ma_dat,
+                res.ma_sach,
+                book.ten if book is not None else "",
+                reader.hoTen if reader is not None else res.ma_doc_gia,
+                _fmt(res.ngay_dat),
+                res.trang_thai,
+            ]
+        )
+    filename = f"danh_sach_dat_truoc_{datetime.now():%Y%m%d_%H%M%S}.csv"
     return _csv_response(filename, rows)

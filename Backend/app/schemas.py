@@ -13,6 +13,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     token: str
     role: str
+    role_display: str
     name: str
 
 
@@ -32,13 +33,13 @@ class LibraryConfigOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     max_borrow_days: int
-    overdue_fine_per_day: float
+    overdue_fine_points_per_day: int
     max_books_at_once: int
 
 
 class LibraryConfigUpdate(BaseModel):
     max_borrow_days: int = Field(..., ge=1, le=365)
-    overdue_fine_per_day: float = Field(..., ge=0)
+    overdue_fine_points_per_day: int = Field(..., ge=0)
     max_books_at_once: int = Field(..., ge=1, le=100)
 
 
@@ -92,6 +93,10 @@ class ReaderUpdate(BaseModel):
     trangThaiThe: Literal["hoat_dong", "khoa"] | None = None
 
 
+class LockReaderRequest(BaseModel):
+    trangThaiThe: Literal["hoat_dong", "khoa"]
+
+
 class ReaderOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -101,6 +106,7 @@ class ReaderOut(BaseModel):
     soDienThoai: str
     loaiDocGia: str
     trangThaiThe: str
+    diem_svnet: int
     ngayTao: datetime
 
 
@@ -117,13 +123,14 @@ class BorrowCreate(BaseModel):
 
 class BorrowDetailOut(BaseModel):
     ma_sach: str
+    ten_sach: str = ""
     so_luong: int
     ngay_tra_chi_tiet: datetime | None
 
 
 class FineOut(BaseModel):
     so_ngay_qua_han: int
-    so_tien: float
+    so_diem: int
     da_thu: bool = False
     ngay_thu: datetime | None = None
 
@@ -165,6 +172,7 @@ class RegisterRequest(BaseModel):
 class RegisterResponse(BaseModel):
     token: str
     role: str
+    role_display: str
     name: str
     reader_ma: str
 
@@ -183,9 +191,15 @@ class BorrowHistoryOut(BaseModel):
 
 class RequestCreate(BaseModel):
     ma_yeu_cau: str = Field(..., min_length=1, max_length=18)
-    loai: Literal["MUON", "TRA", "GIA_HAN"]
+    loai: Literal["MUON", "TRA", "GIA_HAN", "DAT_TRUOC"]
+    ma_sach: str | None = Field(None, min_length=1, max_length=20)
     ma_phieu: str | None = Field(None, min_length=1, max_length=20)
     items: list[BorrowItemCreate] | None = None
+    so_ngay_muon: int | None = Field(None, ge=1, le=365)
+
+
+class RequestApprove(BaseModel):
+    so_ngay_muon: int | None = Field(None, ge=1, le=365)
 
 
 class RequestOut(BaseModel):
@@ -194,6 +208,7 @@ class RequestOut(BaseModel):
     ma_doc_gia: str
     ma_phieu: str | None
     items: list[BorrowItemCreate]
+    so_ngay_muon: int | None = None
     trang_thai: str
     ngay_tao: datetime
 
@@ -202,12 +217,16 @@ class AccountCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6, max_length=128)
     ho_ten: str = Field(..., min_length=1, max_length=255)
+    email: str = Field(..., max_length=255)
+    so_dien_thoai: str = Field(..., max_length=20)
     role: Literal["librarian", "reader"]
     reader_id: str | None = Field(None, max_length=20)
 
 
 class AccountUpdate(BaseModel):
     ho_ten: str | None = Field(None, min_length=1, max_length=255)
+    email: str | None = Field(None, max_length=255)
+    so_dien_thoai: str | None = Field(None, max_length=20)
     password: str | None = Field(None, min_length=6, max_length=128)
     is_active: bool | None = None
     role: Literal["librarian", "reader"] | None = None
@@ -220,7 +239,10 @@ class AccountOut(BaseModel):
     id: int
     username: str
     ho_ten: str
+    email: str | None
+    so_dien_thoai: str | None
     role: str
+    role_display: str
     is_active: bool
     reader_id: str | None
     created_at: datetime
@@ -286,8 +308,36 @@ class NotificationOut(BaseModel):
 
 class CollectFineOut(BaseModel):
     message: str
-    so_tien_da_thu: float
+    so_diem_da_thu: int
+    diem_con_lai: int
     ngay_thu: datetime
+
+
+class ProfileOut(BaseModel):
+    username: str
+    ho_ten: str
+    role: str
+    email: str = ""
+    so_dien_thoai: str = ""
+    loai_doc_gia: str = ""
+    avatar_url: str = ""
+
+
+class ProfileUpdate(BaseModel):
+    ho_ten: str | None = Field(None, min_length=1, max_length=255)
+    email: str | None = Field(None, max_length=255)
+    so_dien_thoai: str | None = Field(None, max_length=20)
+    loai_doc_gia: Literal["sinh_vien", "giang_vien", "khac"] | None = None
+
+
+class ChangePasswordRequest(BaseModel):
+    mat_khau_cu: str = Field(..., min_length=1, max_length=128)
+    mat_khau_moi: str = Field(..., min_length=6, max_length=128)
+    xac_nhan: str | None = Field(None, max_length=128)
+
+
+class AvatarOut(BaseModel):
+    avatar_url: str
 
 
 class StatsBookOut(BaseModel):

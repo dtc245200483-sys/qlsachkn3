@@ -16,6 +16,8 @@ def list_books(
     q: str | None = Query(None, max_length=255),
     theLoai: str | None = Query(None, max_length=100),
     trangThai: str | None = Query(None, max_length=20),
+    sort: str | None = Query(None, max_length=20),
+    order: str | None = Query(None, max_length=10),
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ) -> list[BookBase]:
@@ -54,7 +56,29 @@ def list_books(
                 status_code=422,
                 detail="trangThai chỉ nhận 'con' hoặc 'dang_muon'.",
             )
-    return query.order_by(Book.ma.asc()).all()
+
+    sort_map = {
+        "ten": Book.ten,
+        "tacGia": Book.tacGia,
+        "namXb": Book.namXb,
+        "soLuong": Book.soLuong,
+    }
+    sort_key = sort or "ten"
+    if sort_key not in sort_map:
+        raise HTTPException(
+            status_code=422,
+            detail="sort chỉ nhận ten, tacGia, namXb hoặc soLuong.",
+        )
+    order_key = (order or "asc").lower()
+    if order_key not in ("asc", "desc"):
+        raise HTTPException(status_code=422, detail="order chỉ nhận asc hoặc desc.")
+
+    column = sort_map[sort_key]
+    if order_key == "desc":
+        query = query.order_by(column.desc(), Book.ma.asc())
+    else:
+        query = query.order_by(column.asc(), Book.ma.asc())
+    return query.all()
 
 
 @router.post("", response_model=BookBase)

@@ -46,14 +46,13 @@
 
   function load() {
     setLoading(true);
-    window.Reservation.list()
+    API.call("reservations")
       .then(function (res) {
         setLoading(false);
         if (!res.ok) {
           showMessage(res.message);
           return;
         }
-        document.getElementById("mock-banner").hidden = !res.mock;
         var items = (res.data || []).map(normalize);
         var user = Auth.currentUser();
         if (user && user.role === "reader") {
@@ -71,6 +70,13 @@
   function renderReader(list) {
     var tbody = document.getElementById("reader-reservation-tbody");
     tbody.innerHTML = "";
+    var hasProcessed = list.some(function (r) {
+      return r.trangThai === "HUY" || r.trangThai === "DA_MUON";
+    });
+    var deleteAllBtn = document.getElementById("delete-processed-reservations-button");
+    if (deleteAllBtn) {
+      deleteAllBtn.hidden = !hasProcessed;
+    }
     if (list.length === 0) {
       var emptyRow = document.createElement("tr");
       var emptyCell = document.createElement("td");
@@ -93,15 +99,30 @@
       values.forEach(function (v, index) {
         var td = document.createElement("td");
         if (index === 4) {
-          if (r.trangThai === "CHO_XU_LY" || r.trangThai === "SAN_SANG") {
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "btn btn-danger";
-            btn.textContent = "Huỷ";
-            btn.addEventListener("click", function () {
+          if (r.trangThai === "CHO_XU_LY") {
+            var actions = document.createElement("div");
+            actions.className = "row-actions";
+            var cancelBtn = document.createElement("button");
+            cancelBtn.type = "button";
+            cancelBtn.className = "btn btn-danger";
+            cancelBtn.textContent = "Huỷ";
+            cancelBtn.addEventListener("click", function () {
               cancel(r);
             });
-            td.appendChild(btn);
+            actions.appendChild(cancelBtn);
+            td.appendChild(actions);
+          } else if (r.trangThai === "HUY" || r.trangThai === "DA_MUON") {
+            var actions = document.createElement("div");
+            actions.className = "row-actions";
+            var deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "btn btn-danger";
+            deleteBtn.textContent = "Xoá";
+            deleteBtn.addEventListener("click", function () {
+              deleteOne(r);
+            });
+            actions.appendChild(deleteBtn);
+            td.appendChild(actions);
           } else {
             td.textContent = "—";
           }
@@ -117,6 +138,15 @@
   function renderLibrarian(list) {
     var tbody = document.getElementById("librarian-reservation-tbody");
     tbody.innerHTML = "";
+    var user = Auth.currentUser() || {};
+    var isAdmin = user.role === "admin";
+    var hasProcessed = list.some(function (r) {
+      return r.trangThai === "HUY" || r.trangThai === "DA_MUON";
+    });
+    var deleteAllBtn = document.getElementById("delete-processed-librarian-button");
+    if (deleteAllBtn) {
+      deleteAllBtn.hidden = isAdmin || !hasProcessed;
+    }
     if (list.length === 0) {
       var emptyRow = document.createElement("tr");
       var emptyCell = document.createElement("td");
@@ -141,29 +171,52 @@
       values.forEach(function (v, index) {
         var td = document.createElement("td");
         if (index === 6) {
-          var actions = document.createElement("div");
-          actions.className = "row-actions";
-          if (r.trangThai === "CHO_XU_LY") {
-            var ready = document.createElement("button");
-            ready.type = "button";
-            ready.className = "btn btn-primary";
-            ready.textContent = "Sẵn sàng";
-            ready.addEventListener("click", function () {
-              fulfill(r);
-            });
-            actions.appendChild(ready);
+          if (isAdmin) {
+            td.textContent = "—";
+          } else {
+            var actions = document.createElement("div");
+            actions.className = "row-actions";
+            if (r.trangThai === "HUY" || r.trangThai === "DA_MUON") {
+              var deleteBtn = document.createElement("button");
+              deleteBtn.type = "button";
+              deleteBtn.className = "btn btn-danger";
+              deleteBtn.textContent = "Xoá";
+              deleteBtn.addEventListener("click", function () {
+                deleteOne(r);
+              });
+              actions.appendChild(deleteBtn);
+            } else if (r.trangThai === "CHO_XU_LY") {
+              var ready = document.createElement("button");
+              ready.type = "button";
+              ready.className = "btn btn-primary";
+              ready.textContent = "Sẵn sàng";
+              ready.addEventListener("click", function () {
+                fulfill(r);
+              });
+              actions.appendChild(ready);
+            }
+            if (r.trangThai === "SAN_SANG") {
+              var confirmBtn = document.createElement("button");
+              confirmBtn.type = "button";
+              confirmBtn.className = "btn btn-primary";
+              confirmBtn.textContent = "Xác nhận đã lấy";
+              confirmBtn.addEventListener("click", function () {
+                confirmBorrow(r);
+              });
+              actions.appendChild(confirmBtn);
+            }
+            if (r.trangThai === "CHO_XU_LY" || r.trangThai === "SAN_SANG") {
+              var cancelBtn = document.createElement("button");
+              cancelBtn.type = "button";
+              cancelBtn.className = "btn btn-danger";
+              cancelBtn.textContent = "Huỷ";
+              cancelBtn.addEventListener("click", function () {
+                cancel(r);
+              });
+              actions.appendChild(cancelBtn);
+            }
+            td.appendChild(actions);
           }
-          if (r.trangThai === "CHO_XU_LY" || r.trangThai === "SAN_SANG") {
-            var cancelBtn = document.createElement("button");
-            cancelBtn.type = "button";
-            cancelBtn.className = "btn btn-danger";
-            cancelBtn.textContent = "Huỷ";
-            cancelBtn.addEventListener("click", function () {
-              cancel(r);
-            });
-            actions.appendChild(cancelBtn);
-          }
-          td.appendChild(actions);
         } else {
           td.textContent = v;
         }
@@ -173,12 +226,33 @@
     });
   }
 
+  function confirmBorrow(r) {
+    var ok = window.confirm(
+      'Xác nhận độc giả đã lấy sách "' + (r.tenSach || r.maSach) + '"? Hệ thống sẽ lập phiếu mượn.'
+    );
+    if (!ok) {
+      return;
+    }
+    API.call("confirmReservation", undefined, "PUT", { id: r.maDat })
+      .then(function (res) {
+        if (!res.ok) {
+          showMessage(res.message || "Lỗi khi xác nhận đặt trước.", "alert-error");
+          return;
+        }
+        showMessage("Đã xác nhận lấy sách — đặt trước hoàn thành.", "alert-success");
+        load();
+      })
+      .catch(function () {
+        showMessage("Đã xảy ra lỗi khi xác nhận đặt trước.", "alert-error");
+      });
+  }
+
   function cancel(r) {
     var ok = window.confirm('Huỷ đặt trước "' + (r.tenSach || r.maSach) + '"?');
     if (!ok) {
       return;
     }
-    window.Reservation.cancel(r.maDat).then(function (res) {
+    API.call("cancelReservation", undefined, "PUT", { id: r.maDat }).then(function (res) {
       if (!res.ok) {
         showMessage(res.message);
         return;
@@ -188,8 +262,40 @@
     });
   }
 
+  function deleteOne(r) {
+    var ok = window.confirm(
+      'Xoá đặt trước "' + (r.tenSach || r.maSach) + '" khỏi lịch sử?'
+    );
+    if (!ok) {
+      return;
+    }
+    API.call("deleteMyReservation", undefined, "DELETE", { id: r.maDat }).then(function (res) {
+      if (!res.ok) {
+        showMessage(res.message);
+        return;
+      }
+      showMessage("Đã xoá đặt trước khỏi lịch sử.", "alert-success");
+      load();
+    });
+  }
+
+  function deleteAllHistory() {
+    var ok = window.confirm("Xoá toàn bộ lịch sử đặt trước đã xử lý (Đã huỷ/Đã mượn)?");
+    if (!ok) {
+      return;
+    }
+    API.call("deleteMyReservations", undefined, "DELETE").then(function (res) {
+      if (!res.ok) {
+        showMessage(res.message);
+        return;
+      }
+      showMessage("Đã xoá lịch sử đặt trước đã xử lý.", "alert-success");
+      load();
+    });
+  }
+
   function fulfill(r) {
-    window.Reservation.fulfill(r.maDat).then(function (res) {
+    API.call("fulfillReservation", undefined, "PUT", { id: r.maDat }).then(function (res) {
       if (!res.ok) {
         showMessage(res.message);
         return;
@@ -199,17 +305,57 @@
     });
   }
 
+  function exportReservations() {
+    var stamp = exportStamp();
+    var filename = "danh_sach_dat_truoc_" + stamp + ".csv";
+    API.downloadFile("exportReservations", filename).then(function (res) {
+      if (!res.ok) {
+        showMessage(
+          res.status === 404 || res.status === 405
+            ? "Chức năng xuất chưa sẵn sàng (Backend chưa có API export reservations)."
+            : res.message || "Không thể tải file xuất dữ liệu."
+        );
+        return;
+      }
+      showMessage("Đã tải file " + filename + ".", "alert-success");
+    });
+  }
+
+  function exportStamp() {
+    var d = new Date();
+    function p(n) {
+      return n < 10 ? "0" + n : String(n);
+    }
+    return (
+      d.getFullYear() +
+      p(d.getMonth() + 1) +
+      p(d.getDate()) +
+      "_" +
+      p(d.getHours()) +
+      p(d.getMinutes()) +
+      p(d.getSeconds())
+    );
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var user = Auth.currentUser();
     if (!user) {
       window.location.replace("index.html");
       return;
     }
-    if (user.role === "admin") {
-      window.location.replace("search.html");
-      return;
-    }
     Auth.applyRoleUI();
+    var exportBtn = document.getElementById("export-reservations-button");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", exportReservations);
+    }
+    var deleteAllBtn = document.getElementById("delete-processed-reservations-button");
+    if (deleteAllBtn) {
+      deleteAllBtn.addEventListener("click", deleteAllHistory);
+    }
+    var deleteAllLibBtn = document.getElementById("delete-processed-librarian-button");
+    if (deleteAllLibBtn) {
+      deleteAllLibBtn.addEventListener("click", deleteAllHistory);
+    }
     load();
   });
 })();

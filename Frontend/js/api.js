@@ -5,7 +5,17 @@
  */
 window.API = (function () {
   var config = {
-    baseUrl: "http://localhost:8000",
+    /*
+     * Tự động lấy host đang mở web (máy tính: localhost; điện thoại cùng
+     * mạng Wi-Fi: IP máy tính) để gọi Backend cho đúng — không cần sửa tay.
+     */
+    baseUrl: (function () {
+      var host = window.location && window.location.hostname;
+      if (!host || host === "localhost") {
+        host = "localhost";
+      }
+      return "http://" + host + ":8000";
+    })(),
     endpoints: {
       login: "/api/auth/login",
       books: "/api/books",
@@ -16,6 +26,12 @@ window.API = (function () {
       createReader: "/api/readers",
       updateReader: "/api/readers/{id}",
       deleteReader: "/api/readers/{id}",
+      /*
+       * Khoá/mở khoá thẻ độc giả (chỉ librarian/admin theo phân quyền mới).
+       * Backend chưa có endpoint — config chờ: PUT /api/readers/{id}/lock
+       * body { trangThaiThe: "hoat_dong" | "khoa" }.
+       */
+      lockReader: "/api/readers/{id}/lock",
       createBorrow: "/api/borrows",
       borrows: "/api/borrows",
       returnBorrow: "/api/borrows/{id}/return",
@@ -28,6 +44,15 @@ window.API = (function () {
       createReservation: "/api/reservations",
       cancelReservation: "/api/reservations/{id}/cancel",
       fulfillReservation: "/api/reservations/{id}/fulfill",
+      /*
+       * Xoá lịch sử đặt trước của độc giả (UC10 mở rộng) — config chờ:
+       *   deleteMyReservation  -> DELETE /api/reservations/me/{id}
+       *   deleteMyReservations -> DELETE /api/reservations/me
+       * Chỉ xoá phiếu HUY / DA_MUON.
+       */
+      deleteMyReservation: "/api/reservations/me/{id}",
+      deleteMyReservations: "/api/reservations/me",
+      confirmReservation: "/api/reservations/{id}/borrow",
       /*
        * UC11 — Thông báo: Backend chưa có endpoint riêng nên Frontend hiện
        * TỰ TỔNG HỢP từ /api/borrows/me + /api/reservations. Khi Backend cấp,
@@ -54,6 +79,7 @@ window.API = (function () {
       exportBooks: "/api/export/books.csv",
       exportBorrows: "/api/export/borrows.csv",
       exportReport: "/api/export/report.csv",
+      exportReservations: "/api/export/reservations.csv",
       aiConfig: "/api/admin/config/ai",
       updateAiConfig: "/api/admin/config/ai",
       backup: "/api/admin/backup",
@@ -88,7 +114,18 @@ window.API = (function () {
       updatePublisher: "/api/admin/publishers/{id}",
       deletePublisher: "/api/admin/publishers/{id}",
       libraryConfig: "/api/admin/config/library",
-      updateLibraryConfig: "/api/admin/config/library"
+      updateLibraryConfig: "/api/admin/config/library",
+      /*
+       * Hồ sơ cá nhân (mở rộng) — Backend chưa có API (config chờ):
+       *   profileMe             -> GET  /api/profile/me
+       *   updateProfileMe       -> PUT  /api/profile/me
+       *   changeProfilePassword -> PUT  /api/profile/me/password
+       *   uploadProfileAvatar   -> POST /api/profile/me/avatar (multipart/form-data)
+       */
+      profileMe: "/api/profile/me",
+      updateProfileMe: "/api/profile/me",
+      changeProfilePassword: "/api/profile/me/password",
+      uploadProfileAvatar: "/api/profile/me/avatar"
     },
     fieldMap: {
       login: {
@@ -126,6 +163,9 @@ window.API = (function () {
         trangThaiThe: "trangThaiThe",
         ngayTao: "ngayTao"
       },
+      lockReader: {
+        trangThaiThe: "trangThaiThe"
+      },
       borrowSlipOut: {
         maPhieu: "ma_phieu",
         maDocGia: "ma_doc_gia",
@@ -138,6 +178,7 @@ window.API = (function () {
       },
       borrowDetailOut: {
         maSach: "ma_sach",
+        tenSach: "ten_sach",
         soLuong: "so_luong",
         ngayTraChiTiet: "ngay_tra_chi_tiet"
       },
@@ -154,7 +195,13 @@ window.API = (function () {
       },
       fineOut: {
         soNgayQuaHan: "so_ngay_qua_han",
-        soTien: "so_tien"
+        soDiem: "so_diem"
+      },
+      collectFineOut: {
+        message: "message",
+        soDiemDaThu: "so_diem_da_thu",
+        diemConLai: "diem_con_lai",
+        ngayThu: "ngay_thu"
       },
       register: {
         username: "username",
@@ -207,13 +254,32 @@ window.API = (function () {
         readerId: "reader_id",
         createdAt: "created_at"
       },
+      profileOut: {
+        username: "username",
+        hoTen: "ho_ten",
+        email: "email",
+        soDienThoai: "so_dien_thoai",
+        loaiDocGia: "loai_doc_gia",
+        role: "role",
+        avatarUrl: "avatar_url"
+      },
+      profileUpdate: {
+        hoTen: "ho_ten",
+        email: "email",
+        soDienThoai: "so_dien_thoai",
+        loaiDocGia: "loai_doc_gia"
+      },
+      profilePassword: {
+        matKhauCu: "mat_khau_cu",
+        matKhauMoi: "mat_khau_moi"
+      },
       catalogItem: {
         ma: "ma",
         ten: "ten"
       },
       libraryConfig: {
         maxBorrowDays: "max_borrow_days",
-        overdueFinePerDay: "overdue_fine_per_day",
+        overdueFinePointsPerDay: "overdue_fine_points_per_day",
         maxBooksAtOnce: "max_books_at_once"
       },
       reservationCreate: {
@@ -270,7 +336,9 @@ window.API = (function () {
       books: {
         q: "q",
         theLoai: "theLoai",
-        trangThai: "trangThai"
+        trangThai: "trangThai",
+        sort: "sort",
+        order: "order"
       },
       borrows: {
         docGia: "docGia",
@@ -284,6 +352,11 @@ window.API = (function () {
         role: "role"
       }
     },
+    /*
+     * Sắp xếp sách (chức năng 5) — Backend ĐÃ hỗ trợ sort/order
+     * (api_docs 0.13.0), dùng sắp xếp server-side.
+     */
+    sortBooksBackend: true
   };
 
   function missingConfig(name) {
@@ -456,6 +529,103 @@ window.API = (function () {
     return { ok: true, query: query };
   }
 
+  function sortBooks(list, sort, order) {
+    if (!Array.isArray(list) || !sort) {
+      return list;
+    }
+    var dir = order === "desc" ? -1 : 1;
+    var arr = list.slice();
+    arr.sort(function (a, b) {
+      if (sort === "ten") {
+        return String(a.ten || "").localeCompare(String(b.ten || ""), "vi") * dir;
+      }
+      if (sort === "tacGia") {
+        return String(a.tacGia || "").localeCompare(String(b.tacGia || ""), "vi") * dir;
+      }
+      if (sort === "namXb") {
+        return ((Number(a.namXb) || 0) - (Number(b.namXb) || 0)) * dir;
+      }
+      if (sort === "soLuong") {
+        return ((Number(a.soLuong) || 0) - (Number(b.soLuong) || 0)) * dir;
+      }
+      return 0;
+    });
+    return arr;
+  }
+
+  function uploadFile(name, file) {
+    var endpoint = config.endpoints[name];
+    if (!config.baseUrl || !endpoint) {
+      return Promise.resolve({
+        ok: false,
+        code: "API_CHUA_CO_TAI_LIEU",
+        message: 'Chưa có cấu hình endpoint "' + name + '" trong api.js.'
+      });
+    }
+    var form = new FormData();
+    form.append("file", file);
+    var options = {
+      method: "POST",
+      body: form,
+      headers: { Accept: "application/json" }
+    };
+    var session = null;
+    try {
+      var raw = sessionStorage.getItem("thuvien_session");
+      session = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      session = null;
+    }
+    if (session && session.token) {
+      options.headers.Authorization = "Bearer " + session.token;
+    }
+    return fetch(config.baseUrl + endpoint, options)
+      .then(function (res) {
+        return res.text().then(function (text) {
+          var data = null;
+          if (text) {
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              data = text;
+            }
+          }
+          if (!res.ok) {
+            var rawDetail = data && (data.message || data.detail);
+            var message;
+            if (Array.isArray(rawDetail)) {
+              message = rawDetail
+                .map(function (d) {
+                  return d && d.msg ? d.msg : JSON.stringify(d);
+                })
+                .join("; ");
+            } else if (rawDetail && typeof rawDetail === "object") {
+              message = JSON.stringify(rawDetail);
+            } else {
+              message = rawDetail ? String(rawDetail) : "Lỗi máy chủ: HTTP " + res.status;
+            }
+            return {
+              ok: false,
+              code: "HTTP_" + res.status,
+              status: res.status,
+              message: message,
+              data: data
+            };
+          }
+          return { ok: true, status: res.status, data: data };
+        });
+      })
+      .catch(function (err) {
+        return {
+          ok: false,
+          code: "NETWORK_ERROR",
+          message:
+            "Không kết nối được máy chủ. Kiểm tra baseUrl trong api.js và cấu hình CORS của Backend.",
+          error: err
+        };
+      });
+  }
+
   function downloadFile(name, filename) {
     var endpoint = config.endpoints[name];
     if (!config.baseUrl || !endpoint) {
@@ -513,6 +683,8 @@ window.API = (function () {
     mapResponse: mapResponse,
     canonicalRole: canonicalRole,
     buildQuery: buildQuery,
+    sortBooks: sortBooks,
+    uploadFile: uploadFile,
     downloadFile: downloadFile
   };
 })();

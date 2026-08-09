@@ -4,31 +4,31 @@
 
 | UC | Use Case | Actor | Backend | Frontend | Trạng thái |
 |---|---|---|---|---|---|
-| UC01 | Đăng ký / Đăng nhập | Độc giả | Đăng nhập ✅; đăng ký ❌ | Đăng nhập ✅; đăng ký ❌ | ⚠️ Đợt A |
-| UC02 | Tra cứu sách thường | Độc giả | ✅ books q/theLoai/trangThai | ✅ search.html | ✅ |
+| UC01 | Đăng ký / Đăng nhập | Độc giả | ✅ login + register | ✅ index + register.html | ✅ |
+| UC02 | Tra cứu sách thường | Độc giả | ✅ books q/theLoai/trangThai + sort/order | ✅ search.html + dropdown sort | ✅ |
 | UC03 | Tra cứu bằng Chatbot AI | Độc giả | ❌ | ❌ | ⏳ Đợt D (lõi AI-1) |
 | UC04 | Xem tóm tắt sách AI | Độc giả | ❌ | ❌ | ⏳ Đợt D (lõi AI-2) |
 | UC05 | Gợi ý sách liên quan AI | Độc giả | ❌ | ❌ | ⏳ Đợt D (lõi AI-3) |
-| UC06 | Đặt mượn trước | Độc giả | ❌ | ❌ | ⏳ Đợt C (lõi chức năng 6) |
+| UC06 | Đặt mượn trước | Độc giả | ✅ /api/reservations (19:02:38) | ✅ reservations.html + DAT_TRUOC UI | ✅ (chờ DAT_TRUOC Backend) |
 | UC07 | Yêu cầu mượn sách | Độc giả | ✅ + xoá lịch sử (20:15) | ✅ requests.html | ✅ |
 | UC08 | Yêu cầu trả sách | Độc giả | ✅ + xoá lịch sử (20:15) | ✅ requests.html | ✅ |
 | UC09 | Gia hạn mượn | Độc giả | ✅ + xoá lịch sử (20:15) | ✅ requests.html | ✅ |
-| UC10 | Xem lịch sử mượn/trả & phạt | Độc giả | ❌ borrows/me | ❌ | ⏳ Đợt A (mở rộng) |
+| UC10 | Xem lịch sử mượn/trả & phạt | Độc giả | ✅ /api/borrows/me | ✅ my-borrows.html | ✅ |
 | UC11 | Nhận thông báo | Độc giả | ✅ (19:16:09) | ✅ notifications.html | ✅ |
 | UC12 | Đăng nhập quyền thủ thư | Thủ thư | ✅ | ✅ | ✅ |
 | UC13 | Quản lý sách CRUD | Thủ thư | ✅ | ✅ books.html | ✅ |
 | UC14 | Quản lý độc giả | Thủ thư | ✅ | ✅ readers.html | ✅ |
 | UC15 | Xử lý phiếu mượn | Thủ thư | ✅ (chỉ librarian) | ✅ borrow.html | ✅ |
 | UC16 | Xử lý phiếu trả | Thủ thư | ✅ | ✅ borrow.html | ✅ |
-| UC17 | Xử lý gia hạn | Thủ thư | ✅ (cần thêm: từ chối nếu có đặt trước) | ✅ | ⚠️ bổ sung cùng Đợt C |
-| UC18 | Xử lý đặt trước | Thủ thư | ❌ | ❌ | ⏳ Đợt C (lõi chức năng 6) |
-| UC19 | Tính & thu phạt quá hạn | Thủ thư | ✅ (20:05:33, collect-fine) | ✅ nút thu; ⚠️ danh sách phạt còn mock | ✅ phần lớn; chờ Frontend nối list thật |
+| UC17 | Xử lý gia hạn | Thủ thư | ✅ (từ chối khi có đặt trước — 19:02:38) | ✅ borrow.html + requests | ✅ |
+| UC18 | Xử lý đặt trước | Thủ thư | ✅ /api/reservations (19:02:38) | ✅ reservations.html | ✅ |
+| UC19 | Tính & thu phạt quá hạn | Thủ thư | ✅ (0.16.0 — trừ điểm SVNET) | ✅ nút thu + danh sách phạt thật (01:52) + hiển thị điểm (03:07) | ✅ |
 | UC20 | Thống kê & xuất báo cáo | Thủ thư | ✅ (19:34:48) | ✅ stats.html + nút Xuất CSV | ✅ HOÀN THÀNH |
 | UC21 | Kiểm duyệt nội dung AI | Thủ thư | ❌ | ❌ | 🟡 tuỳ chọn, Đợt D |
 | UC22 | Đăng nhập quyền admin | Admin | ✅ | ✅ | ✅ |
-| UC23 | Quản lý tài khoản & phân quyền | Admin | ❌ đã xoá — khôi phục + mở rộng | ❌ | ⏳ Đợt A (mở rộng — đã chốt giữ) |
+| UC23 | Quản lý tài khoản & phân quyền | Admin | ✅ /api/admin/accounts (0.6.0) | ✅ admin-accounts.html | ✅ |
 | UC24 | Cấu hình quy định mượn/trả | Admin | ✅ | ✅ admin-config.html | ✅ |
-| UC25 | Quản lý danh mục thể loại/NXB | Admin | ❌ | ❌ | ⏳ Đợt A (mở rộng) |
+| UC25 | Quản lý danh mục thể loại/NXB | Admin | ✅ /api/admin/categories + publishers | ✅ admin-catalog.html | ✅ |
 | UC26 | Cấu hình & giám sát AI | Admin | ✅ config/ai; ❌ giám sát | ✅ admin-config.html (key che) | ✅ cấu hình; ⏳ giám sát (Đợt D) |
 | UC27 | Sao lưu & phục hồi | Admin | ✅ backup + restore | ✅ admin-config.html (hiện .bak) | ✅ |
 | UC28 | Báo cáo tổng hợp | Admin | ✅ (19:34:48) | ✅ stats.html + nút Xuất CSV | ✅ HOÀN THÀNH |
@@ -143,3 +143,72 @@
 - CÒN LẠI: DAT_TRUOC Backend, Frontend nối danh sách phạt thật + bỏ mock
   reservations (YC-007), AI-1/2/3 + kiểm duyệt/giám sát AI (Đợt D), tài liệu
   KT1/KT2 + git + minh chứng (Bước 10) — tương ứng Ý 3, Ý 4.
+
+## CẬP NHẬT 2026-08-09 23:19 — Sắp xếp sách + Xác nhận KT2 10/10
+
+- UC02 (Tra cứu): tìm/lọc ✅ (10:43:48) + SẮP XẾP ✅ — Backend sort/order
+  (23:16:54, api_docs 0.13.0, test 75/75); Frontend dropdown sort (22:40-22:41);
+  chờ Frontend bật sortBooksBackend = true (YC-012).
+- KT2 10/10:
+  1. Cấu trúc ✅ (Backend/Frontend/AI_Engine/thuky/hỗ trợ/promtAI/docs/QA/README)
+  2. Đăng nhập/phân quyền ✅ (3 role + role_display + admin/librarian tách biệt)
+  3. CRUD ✅ (sách, độc giả, danh mục, tài khoản)
+  4. Tìm/lọc/sắp xếp ✅ (q/theLoai/trangThai + sort/order)
+  5. Thống kê/báo cáo ✅ (/api/stats + /api/export + stats.html)
+  6. UI ✅ (14+ trang, WCAG, phân quyền theo role)
+  7. CSDL + dữ liệu mẫu ✅ (migration 0001-0009 + seed_demo.py)
+  8. Xử lý lỗi ✅ (401/403/404/409/422 + thông báo UI)
+  9. Minh chứng AI ✅ (thuky/MINH_CHUNG + promtAI bản sao)
+  10. README/.env.example/git ✅ (root README + Backend README + .env.example
+      + .git/.gitignore)
+
+## CẬP NHẬT 2026-08-10 02:17 — Mở rộng Hồ sơ cá nhân (Profile)
+
+- Backend: log 02:15:52 — /api/profile/me (GET/PUT), /api/profile/me/password,
+  /api/profile/me/avatar (upload PNG/JPG ≤2MB, static/avatars, /static);
+  api_docs 0.14.0; test 82/82 PASS.
+- Frontend: profile.html + profile.js + default-avatar.svg (02:08-02:09),
+  nối API thật; sortBooksBackend=true; borrow.js nối danh sách phạt thật.
+- Trạng thái mục mở rộng: Profile ✅; UC19 ✅ (Frontend đã nối list thật);
+  UC02 sắp xếp ✅ (Frontend đã bật backend sort).
+- Còn chờ: reservations bỏ mock (YC-012 phần 3), DAT_TRUOC Backend (YC-011),
+  AI-1/2/3 + kiểm duyệt/giám sát (Ý 3), tài liệu/đóng gói (Ý 4).
+
+## CẬP NHẬT 2026-08-10 03:01 — Validation + Phạt ĐIỂM (0.16.0)
+
+- Backend: Users.email/SĐT (0010) + validation ICTU (0.15.0); phạt quá hạn =
+  ĐIỂM (0011, 2 điểm/ngày, FineOut.so_diem, collect-fine.so_diem_da_thu);
+  api_docs 0.16.0; test 86/86; server đã restart + xác minh live.
+- Frontend: profile email/SĐT + admin-config overdue_fine_points_per_day đã
+  theo; NHƯNG fineOut còn map so_tien → hiển thị sai → YC-013.
+
+## CẬP NHẬT 2026-08-10 03:07 — Frontend theo kịp phạt ĐIỂM
+
+- Log [FRONTEND] 03:07:07: fineOut soDiem/so_diem, collectFineOut
+  so_diem_da_thu/diem_con_lai, borrow.js + my-borrows.js hiển thị điểm →
+  UC19 + UC24 khép kín (Backend 0.16.0 + Frontend).
+
+## CẬP NHẬT 2026-08-10 04:01 — Phân quyền độc giả 0.17.0
+
+- Backend: POST/PUT/DELETE /api/readers chỉ admin; GET admin+librarian; thêm
+  PUT /api/readers/{ma}/lock (admin+librarian); api_docs 0.17.0; 86/86.
+- Frontend: nối lockReader (03:54); nút Thêm chỉ admin; menu độc giả chỉ
+  librarian → YC-014 chờ xác nhận.
+
+## CẬP NHẬT 2026-08-10 04:53 — DAT_TRUOC + menu admin
+
+- Backend: log 04:52:00 — loại yêu cầu DAT_TRUOC (migration 0012, approve tạo
+  reservation thật, api_docs 0.19.0, test 90/90) → YC-011 xong.
+- Frontend: menu Quản lý độc giả data-roles="admin,librarian" (04:31:48) →
+  YC-014 xong.
+- Còn: so_ngay_muon (YC-005/YC-015), reservations mock (YC-007/YC-012).
+
+## CẬP NHẬT 2026-08-10 05:48 — Xoá lịch sử đặt trước + Export reservations
+
+- Backend: 05:13:10 — DELETE /api/reservations/me + /me/{ma_dat} (chỉ HUY/
+  DA_MUON; api_docs 0.20.0; 94/94); 05:22:45 — GET /api/export/reservations.csv
+  + accounts chỉ tạo thủ thư (0.21.0; 95/95).
+- Frontend (quét): 2 nút "Xoá lịch sử đã xử lý" (reader + librarian) + api.js
+  nối delete; admin-accounts chỉ thủ thư.
+- CHƯA: bỏ Xuất CSV books/stats, disable nút Gửi yêu cầu, so_ngay_muon,
+  bỏ mock reservations.

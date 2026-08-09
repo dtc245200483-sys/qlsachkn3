@@ -3,6 +3,16 @@ window.Auth = (function () {
   var SESSION_KEY = "thuvien_session";
   var loginMessageTimer = null;
 
+  var ROLE_LABELS = {
+    admin: "Quản trị viên",
+    librarian: "Thủ thư",
+    reader: "Độc giả"
+  };
+
+  function roleLabel(role) {
+    return ROLE_LABELS[role] || role || "";
+  }
+
   function currentUser() {
     try {
       var raw = sessionStorage.getItem(SESSION_KEY);
@@ -114,9 +124,24 @@ window.Auth = (function () {
     var roleEl = document.getElementById("user-role");
     if (nameEl) {
       nameEl.textContent = user.name || "";
+      var roleLabelText = ROLE_LABELS[user.role];
+      nameEl.hidden = !user.name || user.name === roleLabelText;
+      nameEl.classList.add("user-name-link");
+      nameEl.setAttribute("role", "link");
+      nameEl.setAttribute("tabindex", "0");
+      nameEl.setAttribute("title", "Mở hồ sơ cá nhân");
+      nameEl.addEventListener("click", function () {
+        window.location.href = "profile.html";
+      });
+      nameEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          window.location.href = "profile.html";
+        }
+      });
     }
     if (roleEl) {
-      roleEl.textContent = user.role || "";
+      roleEl.textContent = roleLabel(user.role);
     }
 
     var role = user.role || "";
@@ -129,6 +154,15 @@ window.Auth = (function () {
         });
       el.hidden = allowed.indexOf(role) === -1;
     });
+
+    var nav = document.querySelector(".admin-nav");
+    if (nav && !nav.querySelector('a[href="profile.html"]')) {
+      var profileLink = document.createElement("a");
+      profileLink.href = "profile.html";
+      profileLink.setAttribute("data-roles", "admin,librarian,reader");
+      profileLink.textContent = "Hồ sơ";
+      nav.appendChild(profileLink);
+    }
   }
 
   function initLoginPage() {

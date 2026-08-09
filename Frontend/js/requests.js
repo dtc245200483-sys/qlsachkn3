@@ -83,6 +83,7 @@
       });
       select.value = current;
     });
+    updateSubmitState();
   }
 
   function addReqItem() {
@@ -104,6 +105,7 @@
     });
     bookGroup.appendChild(label);
     bookGroup.appendChild(select);
+    select.addEventListener("change", updateSubmitState);
     var qtyGroup = document.createElement("div");
     qtyGroup.className = "form-group borrow-item-qty-group";
     var qtyLabel = document.createElement("label");
@@ -112,6 +114,7 @@
     qty.type = "number";
     qty.min = "1";
     qty.value = "1";
+    qty.addEventListener("input", updateSubmitState);
     qtyGroup.appendChild(qtyLabel);
     qtyGroup.appendChild(qty);
     var remove = document.createElement("button");
@@ -120,6 +123,7 @@
     remove.textContent = "Xoá dòng";
     remove.addEventListener("click", function () {
       row.remove();
+      updateSubmitState();
     });
     row.appendChild(bookGroup);
     row.appendChild(qtyGroup);
@@ -152,8 +156,11 @@
           option.textContent = slip.maPhieu + " — hạn " + new Date(slip.hanTra).toLocaleDateString("vi-VN");
           select.appendChild(option);
         });
+        updateSubmitState();
       })
-      .catch(function () {});
+      .catch(function () {
+        updateSubmitState();
+      });
   }
 
   function updateFields() {
@@ -167,6 +174,32 @@
       loadBooksCon();
     }
     loadMyActiveBorrows();
+    updateSubmitState();
+  }
+
+  function hasValidBookLine() {
+    var valid = false;
+    document.querySelectorAll("#req-items .borrow-item-row").forEach(function (row) {
+      var bookSel = row.querySelector(".req-item-book");
+      var qtyInput = row.querySelector(".borrow-item-qty-group input");
+      if (bookSel && bookSel.value && qtyInput && parseInt(qtyInput.value, 10) >= 1) {
+        valid = true;
+      }
+    });
+    return valid;
+  }
+
+  function updateSubmitState() {
+    var btn = document.getElementById("create-request-button");
+    if (!btn) {
+      return;
+    }
+    var loai = document.getElementById("req-loai").value;
+    var needsBooks = loai === "MUON" || loai === "DAT_TRUOC";
+    var valid = needsBooks
+      ? hasValidBookLine()
+      : !!document.getElementById("req-borrow").value;
+    btn.disabled = !valid;
   }
 
   function createRequest() {
@@ -523,11 +556,13 @@
       document.getElementById("req-loai").addEventListener("change", updateFields);
       document.getElementById("add-req-item").addEventListener("click", addReqItem);
       document.getElementById("create-request-button").addEventListener("click", createRequest);
+      document.getElementById("req-borrow").addEventListener("change", updateSubmitState);
       document.getElementById("clear-my-requests").addEventListener("click", deleteAllRequests);
       document.getElementById("req-ma").value = newRequestMa();
       loadBooksCon();
       addReqItem();
       updateFields();
+      updateSubmitState();
       loadMyRequests();
     } else {
       document.getElementById("approve-confirm").addEventListener("click", confirmApprove);

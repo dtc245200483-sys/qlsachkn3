@@ -11,6 +11,7 @@ Idempotent: chạy lại không đè/không trùng dữ liệu.
 
 import os
 import sys
+import unicodedata
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,6 +36,18 @@ from app.models import (  # noqa: E402
 )
 
 BASE_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+VIET_MAP = str.maketrans({"đ": "d", "Đ": "D"})
+
+
+def _ascii_name(name: str) -> str:
+    normalized = unicodedata.normalize("NFD", name)
+    return "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn").translate(VIET_MAP)
+
+
+def _email_from_name(name: str) -> str:
+    """Email ICTU lấy theo tên người: 'Nguyễn Văn An' -> nguyenvanan@ictu.edu.vn."""
+    return "".join(_ascii_name(name).lower().split()) + "@ictu.edu.vn"
 
 DEMO_BOOKS = [
     {
@@ -80,7 +93,7 @@ DEMO_BOOKS = [
         "theLoai": "Lịch sử",
         "nxb": "NXB Chính trị quốc gia",
         "namXb": 2019,
-        "soLuong": 0,
+        "soLuong": 2,
     },
 ]
 
@@ -88,7 +101,7 @@ DEMO_READERS = [
     {
         "ma": "DG001",
         "hoTen": "Nguyễn Văn An",
-        "email": "DTC245200483@ictu.edu.vn",
+        "email": "nguyenvanan@ictu.edu.vn",
         "soDienThoai": "0912345001",
         "loaiDocGia": "sinh_vien",
         "trangThaiThe": "hoat_dong",
@@ -96,7 +109,7 @@ DEMO_READERS = [
     {
         "ma": "DG002",
         "hoTen": "Trần Thị Bích",
-        "email": "DTC245200484@ictu.edu.vn",
+        "email": "tranthibich@ictu.edu.vn",
         "soDienThoai": "0912345002",
         "loaiDocGia": "sinh_vien",
         "trangThaiThe": "hoat_dong",
@@ -104,7 +117,7 @@ DEMO_READERS = [
     {
         "ma": "DG003",
         "hoTen": "Lê Minh Cường",
-        "email": "DTC245200485@ictu.edu.vn",
+        "email": "leminhcuong@ictu.edu.vn",
         "soDienThoai": "0912345003",
         "loaiDocGia": "giang_vien",
         "trangThaiThe": "hoat_dong",
@@ -128,30 +141,33 @@ DEMO_RESERVATIONS = [
         "ngay_xu_ly_offset": -1,
         "trang_thai": "SAN_SANG",
     },
-    {
-        "ma_dat": "RV002",
-        "ma_sach": "S005",
-        "ma_doc_gia": "DG002",
-        "ngay_dat_offset": -1,
-        "ngay_xu_ly_offset": None,
-        "trang_thai": "CHO_XU_LY",
-    },
 ]
 
 DEMO_ACCOUNTS = [
     {
         "username": "docgia1",
         "password": "docgia1",
-        "email": "DTC245200486@ictu.edu.vn",
+        "ho_ten": "Nguyễn Văn An",
+        "email": "nguyenvanan@ictu.edu.vn",
         "reader_ma": "DG001",
     },
     {
         "username": "docgia2",
         "password": "docgia2",
-        "email": "DTC245200487@ictu.edu.vn",
+        "ho_ten": "Trần Thị Bích",
+        "email": "tranthibich@ictu.edu.vn",
         "reader_ma": "DG002",
     },
 ]
+
+# SĐT mặc định cho các tài khoản cũ chưa có (email tự sinh theo tên người).
+DEMO_USER_CONTACTS_PHONES = {
+    "admin": "0912345001",
+    "librarian": "0912345002",
+    "reader": "0912345003",
+    "docgia1": "0912345004",
+    "docgia2": "0912345005",
+}
 
 
 def _now() -> datetime:
@@ -208,7 +224,10 @@ def seed_books(db) -> list[str]:
 def seed_readers(db) -> list[str]:
     created = []
     for data in DEMO_READERS:
-        if db.get(Reader, data["ma"]) is not None:
+        existing = db.get(Reader, data["ma"])
+        if existing is not None:
+            if existing.email != data["email"]:
+                existing.email = data["email"]
             continue
         db.add(
             Reader(
@@ -228,7 +247,7 @@ def seed_readers(db) -> list[str]:
 
 def seed_slips_and_fines(db) -> tuple[list[str], list[str]]:
     cfg = db.get(LibraryConfig, 1)
-    fine_per_day = float(cfg.overdue_fine_per_day) if cfg else 5000.0
+    fine_per_day = cfg.overdue_fine_points_per_day if cfg else 2
     now = _now()
     created_slips: list[str] = []
     created_fines: list[str] = []
@@ -268,15 +287,12 @@ def seed_slips_and_fines(db) -> tuple[list[str], list[str]]:
                     ma_phieu=ma_phieu,
                     ma_doc_gia=ma_doc_gia,
                     so_ngay_qua_han=so_ngay_qua_han,
-                    so_tien=so_ngay_qua_han * fine_per_day,
+                    so_diem=so_ngay_qua_han * fine_per_day,
                     ngay_tinh=ngay_tra,
                 )
             )
             created_fines.append(ma_phieu)
         created_slips.append(ma_phieu)
-
-    if db.get(Book, "S005") is not None and db.get(DatTruoc, "RV002") is None:
-        db.get(Book, "S005").soLuong = 0
 
     db.commit()
     return created_slips, created_fines
@@ -333,7 +349,7 @@ def seed_accounts(db) -> list[str]:
                 json={
                     "username": account["username"],
                     "password": account["password"],
-                    "hoTen": account["username"],
+                    "hoTen": account["ho_ten"],
                     "email": account["email"],
                     "soDienThoai": "0912345004",
                     "loaiDocGia": "sinh_vien",
@@ -357,6 +373,32 @@ def seed_accounts(db) -> list[str]:
         _delete_orphan_reader(db, auto_ma)
         results.append(f"CREATED {account['username']} -> {account['reader_ma']}")
     return results
+
+
+def seed_user_contacts(db) -> list[str]:
+    """Điền email theo tên người + SĐT cho tài khoản cũ (idempotent, không ghi đè SĐT đã có)."""
+    updated = []
+    for username, phone in DEMO_USER_CONTACTS_PHONES.items():
+        user = db.query(User).filter(User.username == username).first()
+        if user is None:
+            continue
+        email = _email_from_name(user.ho_ten)
+        changed = False
+        if user.email != email:
+            user.email = email
+            changed = True
+        if not (user.so_dien_thoai or "").strip():
+            user.so_dien_thoai = phone
+            changed = True
+        if user.reader_id:
+            reader = db.get(Reader, user.reader_id)
+            if reader is not None and reader.email != email:
+                reader.email = email
+                changed = True
+        if changed:
+            updated.append(username)
+    db.commit()
+    return updated
 
 
 def verify() -> None:
@@ -397,6 +439,7 @@ def main() -> None:
         created_slips, created_fines = seed_slips_and_fines(db)
         created_res = seed_reservations(db)
         account_results = seed_accounts(db)
+        updated_contacts = seed_user_contacts(db)
     finally:
         db.close()
 
@@ -407,6 +450,7 @@ def main() -> None:
     print(f"Đặt trước tạo mới: {created_res or 'không (đã có RV001–RV002)'}")
     for result in account_results:
         print(f"Tài khoản: {result}")
+    print(f"Email/SĐT đã điền cho tài khoản cũ: {updated_contacts or 'không (đã có đủ)'}")
 
     if "--verify" in sys.argv:
         verify()

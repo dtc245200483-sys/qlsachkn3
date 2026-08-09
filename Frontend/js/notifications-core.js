@@ -25,7 +25,7 @@ window.Notif = (function () {
   }
 
   function build() {
-    return Promise.all([API.call("myBorrows"), loadReservations()]).then(
+    return Promise.all([API.call("myBorrows"), API.call("reservations")]).then(
       function (results) {
         var items = [];
         var borrowRes = results[0];
@@ -91,20 +91,12 @@ window.Notif = (function () {
           items: items,
           unreadCount: items.filter(function (it) {
             return !it.read;
-          }).length,
-          reservationsMock: !!(resvRes && resvRes.mock)
+          }).length
         };
       }
     ).catch(function () {
-      return { ok: false, items: [], unreadCount: 0, reservationsMock: false };
+      return { ok: false, items: [], unreadCount: 0 };
     });
-  }
-
-  function loadReservations() {
-    if (typeof window.Reservation !== "undefined") {
-      return window.Reservation.list();
-    }
-    return Promise.resolve({ ok: false, data: [] });
   }
 
   function markRead(item) {

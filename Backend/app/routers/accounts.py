@@ -7,6 +7,7 @@ from ..deps import require_roles
 from ..models import Reader, User
 from ..schemas import AccountCreate, AccountOut, AccountUpdate
 from ..security import hash_password
+from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
 
 router = APIRouter(prefix="/api/admin/accounts", tags=["admin-accounts"])
 
@@ -19,20 +20,24 @@ def create_account(
 ) -> AccountOut:
     if db.query(User).filter(User.username == body.username).first() is not None:
         raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại.")
-    reader_id = None
-    if body.role == "reader" and body.reader_id:
-        if db.get(Reader, body.reader_id) is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
-        if db.query(User).filter(User.reader_id == body.reader_id).first() is not None:
-            raise HTTPException(status_code=409, detail="Độc giả đã có tài khoản.")
-        reader_id = body.reader_id
+    if body.role != "librarian":
+        raise HTTPException(
+            status_code=400,
+            detail="Độc giả tự đăng ký qua /api/auth/register",
+        )
+    ho_ten = validate_ho_ten(body.ho_ten)
+    email = validate_email(body.email)
+    so_dien_thoai = validate_phone(body.so_dien_thoai)
+    ensure_email_unique(db, email)
 
     new_user = User(
         username=body.username,
         password_hash=hash_password(body.password),
-        ho_ten=body.ho_ten,
+        ho_ten=ho_ten,
+        email=email,
+        so_dien_thoai=so_dien_thoai,
         role=body.role,
-        reader_id=reader_id,
+        reader_id=None,
         is_active=True,
     )
     db.add(new_user)
@@ -79,7 +84,8 @@ def update_account(
     if "reader_id" in data:
         new_reader_id = data["reader_id"]
         if new_reader_id:
-            if db.get(Reader, new_reader_id) is None:
+            reader = db.get(Reader, new_reader_id)
+            if reader is None:
                 raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
             linked = (
                 db.query(User)
@@ -88,15 +94,44 @@ def update_account(
             )
             if linked is not None:
                 raise HTTPException(status_code=409, detail="Độc giả đã có tài khoản.")
+            if "email" in data:
+                ensure_email_unique(db, validate_email(data["email"]), exclude_reader_ma=new_reader_id)
         target.reader_id = new_reader_id
+    if "role" in data and data["role"] == "reader":
+        raise HTTPException(
+            status_code=400,
+            detail="Độc giả tự đăng ký qua /api/auth/register",
+        )
+    if "ho_ten" in data:
+        target.ho_ten = validate_ho_ten(data["ho_ten"])
+    if "email" in data:
+        email = validate_email(data["email"])
+        reader = db.get(Reader, target.reader_id) if target.reader_id else None
+        ensure_email_unique(
+            db,
+            email,
+            exclude_user_id=target.id,
+            exclude_reader_ma=reader.ma if reader is not None else None,
+        )
+        target.email = email
+        if reader is not None:
+            reader.email = email
+    if "so_dien_thoai" in data:
+        so_dien_thoai = validate_phone(data["so_dien_thoai"])
+        target.so_dien_thoai = so_dien_thoai
+        reader = db.get(Reader, target.reader_id) if target.reader_id else None
+        if reader is not None:
+            reader.soDienThoai = so_dien_thoai
     if "role" in data:
         target.role = data["role"]
-    if "ho_ten" in data:
-        target.ho_ten = data["ho_ten"]
     if "password" in data:
         target.password_hash = hash_password(data["password"])
     if "is_active" in data:
         target.is_active = data["is_active"]
+        if target.reader_id:
+            linked_reader = db.get(Reader, target.reader_id)
+            if linked_reader is not None:
+                linked_reader.trangThaiThe = "hoat_dong" if data["is_active"] else "khoa"
 
     write_audit_log(
         db,

@@ -13,6 +13,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(Unicode(50), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Unicode(255), nullable=False)
     ho_ten: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    email: Mapped[str | None] = mapped_column(Unicode(255), nullable=True)
+    so_dien_thoai: Mapped[str | None] = mapped_column(Unicode(20), nullable=True)
     role: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     reader_id: Mapped[str | None] = mapped_column(
         Unicode(20),
@@ -28,7 +30,21 @@ class User(Base):
 
     __table_args__ = (
         CheckConstraint("role IN ('admin', 'librarian', 'reader')", name="ck_users_role"),
+        Index(
+            "uq_users_email",
+            "email",
+            unique=True,
+            mssql_where=text("email IS NOT NULL"),
+        ),
     )
+
+    @property
+    def role_display(self) -> str:
+        return {
+            "admin": "Quản trị viên",
+            "librarian": "Thủ thư",
+            "reader": "Độc giả",
+        }.get(self.role, self.role)
 
 
 class Book(Base):
@@ -62,13 +78,16 @@ class LibraryConfig(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
     max_borrow_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    overdue_fine_per_day: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    overdue_fine_points_per_day: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     max_books_at_once: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (
         CheckConstraint("id = 1", name="ck_library_config_singleton"),
         CheckConstraint("max_borrow_days > 0", name="ck_library_config_max_borrow_days"),
-        CheckConstraint("overdue_fine_per_day >= 0", name="ck_library_config_fine"),
+        CheckConstraint(
+            "overdue_fine_points_per_day >= 0",
+            name="ck_library_config_points",
+        ),
         CheckConstraint("max_books_at_once > 0", name="ck_library_config_max_books"),
     )
 
@@ -117,6 +136,7 @@ class Reader(Base):
     soDienThoai: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     loaiDocGia: Mapped[str] = mapped_column(Unicode(50), nullable=False)
     trangThaiThe: Mapped[str] = mapped_column(Unicode(20), nullable=False)
+    diem_svnet: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
     ngayTao: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -181,7 +201,7 @@ class FineHistory(Base):
     ma_phieu: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     ma_doc_gia: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     so_ngay_qua_han: Mapped[int] = mapped_column(Integer, nullable=False)
-    so_tien: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    so_diem: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     da_thu: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     ngay_thu: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     ngay_tinh: Mapped[datetime] = mapped_column(
@@ -192,7 +212,7 @@ class FineHistory(Base):
 
     __table_args__ = (
         CheckConstraint("so_ngay_qua_han >= 0", name="ck_fine_history_days"),
-        CheckConstraint("so_tien >= 0", name="ck_fine_history_amount"),
+        CheckConstraint("so_diem >= 0", name="ck_fine_history_points"),
         Index("ix_fine_history_ma_phieu", "ma_phieu"),
     )
 
@@ -229,6 +249,7 @@ class YeuCau(Base):
     ma_doc_gia: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     ma_phieu: Mapped[str | None] = mapped_column(Unicode(20), nullable=True)
     items: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+    so_ngay_muon: Mapped[int | None] = mapped_column(Integer, nullable=True)
     trang_thai: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     ngay_tao: Mapped[datetime] = mapped_column(
         DateTime,
@@ -237,7 +258,14 @@ class YeuCau(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("loai IN ('MUON', 'TRA', 'GIA_HAN')", name="ck_yeu_cau_loai"),
+        CheckConstraint(
+            "loai IN ('MUON', 'TRA', 'GIA_HAN', 'DAT_TRUOC')",
+            name="ck_yeu_cau_loai",
+        ),
+        CheckConstraint(
+            "so_ngay_muon IS NULL OR so_ngay_muon >= 1",
+            name="ck_yeu_cau_so_ngay_muon",
+        ),
         CheckConstraint(
             "trang_thai IN ('CHO_XU_LY', 'DA_DUYET', 'TU_CHOI')",
             name="ck_yeu_cau_trang_thai",

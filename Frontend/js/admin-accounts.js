@@ -86,7 +86,12 @@
 
   function row(account) {
     var tr = document.createElement("tr");
-    var roleText = account.role === "librarian" ? "Thủ thư" : "Độc giả";
+    var roleLabels = {
+      admin: "Quản trị viên",
+      librarian: "Thủ thư",
+      reader: "Độc giả"
+    };
+    var roleText = roleLabels[account.role] || account.role || "—";
     var values = [
       account.id,
       account.username,
@@ -148,6 +153,21 @@
     var username = document.getElementById("account-username");
     var password = document.getElementById("account-password");
     form.reset();
+    var roleSelect = form.elements.role;
+    var readerOption = roleSelect.querySelector('option[value="reader"]');
+    var showReaderOption = !!account && account.role === "reader";
+    if (showReaderOption && !readerOption) {
+      var opt = document.createElement("option");
+      opt.value = "reader";
+      opt.textContent = "Độc giả";
+      roleSelect.appendChild(opt);
+    } else if (!showReaderOption && readerOption) {
+      readerOption.remove();
+    }
+    var readerGroup = document.getElementById("account-reader-group");
+    if (readerGroup) {
+      readerGroup.hidden = !showReaderOption;
+    }
     if (account) {
       title.textContent = "Sửa tài khoản";
       username.value = account.username;

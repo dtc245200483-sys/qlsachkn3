@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Book, BorrowSlip, YeuCau
-from ..schemas import BorrowItemCreate, RequestCreate, RequestOut
+from ..models import Book, BorrowSlip, DatTruoc, LibraryConfig, Reader, YeuCau
+from ..schemas import BorrowItemCreate, RequestApprove, RequestCreate, RequestOut
 from .borrows import _perform_create_borrow, _perform_renew_borrow, _perform_return_borrow
+from .reservations import _available_count, _generate_ma_dat
 
 router = APIRouter(prefix="/api/requests", tags=["requests"])
 
@@ -22,6 +23,7 @@ def _request_out(req: YeuCau) -> RequestOut:
         ma_doc_gia=req.ma_doc_gia,
         ma_phieu=req.ma_phieu,
         items=items,
+        so_ngay_muon=req.so_ngay_muon,
         trang_thai=req.trang_thai,
         ngay_tao=req.ngay_tao,
     )
@@ -42,14 +44,53 @@ def create_request(
         raise HTTPException(status_code=409, detail="Mã yêu cầu đã tồn tại.")
 
     if body.loai == "MUON":
+        reader = db.get(Reader, user.reader_id)
+        if reader is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ độc giả.")
+        if reader.trangThaiThe != "hoat_dong":
+            raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
         if not body.items:
             raise HTTPException(status_code=400, detail="Yêu cầu mượn phải có danh sách sách.")
+        seen = set()
+        for item in body.items:
+            if item.ma_sach in seen:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Trùng sách {item.ma_sach} trong yêu cầu — hãy gộp số lượng.",
+                )
+            seen.add(item.ma_sach)
         for item in body.items:
             if db.get(Book, item.ma_sach) is None:
                 raise HTTPException(
                     status_code=404,
                     detail=f"Không tìm thấy sách {item.ma_sach}.",
                 )
+        effective_items = body.items or []
+        if body.so_ngay_muon is not None:
+            cfg = db.get(LibraryConfig, 1)
+            if cfg is None:
+                raise HTTPException(status_code=500, detail="Chưa có cấu hình thư viện.")
+            if body.so_ngay_muon > cfg.max_borrow_days:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Số ngày mượn vượt quá tối đa {cfg.max_borrow_days} ngày.",
+                )
+    elif body.loai == "DAT_TRUOC":
+        ma_sach = (body.ma_sach or "").strip()
+        if not ma_sach:
+            if body.items and len(body.items) == 1:
+                ma_sach = body.items[0].ma_sach
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Yêu cầu đặt trước phải có đúng 1 sách.",
+                )
+        if db.get(Book, ma_sach) is None:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {ma_sach}.")
+        reader = db.get(Reader, user.reader_id)
+        if reader is not None and reader.trangThaiThe != "hoat_dong":
+            raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
+        effective_items = [BorrowItemCreate(ma_sach=ma_sach, so_luong=1)]
     else:
         if not body.ma_phieu:
             raise HTTPException(status_code=400, detail="Thiếu mã phiếu mượn.")
@@ -62,9 +103,10 @@ def create_request(
             raise HTTPException(status_code=400, detail="Phiếu mượn không ở trạng thái đang mượn.")
         if body.loai == "GIA_HAN" and slip.so_lan_gia_han >= 1:
             raise HTTPException(status_code=400, detail="Phiếu mượn đã gia hạn tối đa 1 lần.")
+        effective_items = []
 
     items_json = json.dumps(
-        [item.model_dump() for item in (body.items or [])],
+        [item.model_dump() for item in effective_items],
         ensure_ascii=False,
     )
     req = YeuCau(
@@ -73,6 +115,7 @@ def create_request(
         ma_doc_gia=user.reader_id,
         ma_phieu=body.ma_phieu,
         items=items_json,
+        so_ngay_muon=body.so_ngay_muon if body.loai == "MUON" else None,
         trang_thai="CHO_XU_LY",
         ngay_tao=datetime.now(),
     )
@@ -114,6 +157,7 @@ def list_requests(
 @router.put("/{ma}/approve", response_model=RequestOut)
 def approve_request(
     ma: str,
+    body: RequestApprove | None = None,
     db: Session = Depends(get_db),
     user=Depends(require_roles("librarian")),
 ) -> RequestOut:
@@ -125,14 +169,64 @@ def approve_request(
 
     if req.loai == "MUON":
         items = [BorrowItemCreate(**item) for item in json.loads(req.items)]
+        so_ngay_muon = None
+        if body is not None and body.so_ngay_muon is not None:
+            so_ngay_muon = body.so_ngay_muon
+        elif req.so_ngay_muon is not None:
+            so_ngay_muon = req.so_ngay_muon
         slip = _perform_create_borrow(
             db,
             user,
             ma_phieu="PM" + req.ma_yeu_cau,
             ma_doc_gia=req.ma_doc_gia,
             items=items,
+            so_ngay_muon=so_ngay_muon,
         )
         req.ma_phieu = slip.ma_phieu
+    elif req.loai == "DAT_TRUOC":
+        items = json.loads(req.items or "[]")
+        if len(items) != 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Yêu cầu đặt trước phải có đúng 1 sách.",
+            )
+        ma_sach = items[0]["ma_sach"]
+        book = db.get(Book, ma_sach)
+        if book is None:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {ma_sach}.")
+        if _available_count(db, book) > 0:
+            raise HTTPException(status_code=400, detail="Sách còn, không cần đặt trước")
+        active = (
+            db.query(DatTruoc)
+            .filter(
+                DatTruoc.ma_sach == ma_sach,
+                DatTruoc.ma_doc_gia == req.ma_doc_gia,
+                DatTruoc.trang_thai.in_(["CHO_XU_LY", "SAN_SANG"]),
+            )
+            .first()
+        )
+        if active is not None:
+            raise HTTPException(status_code=409, detail="Bạn đã đặt trước sách này.")
+        ma_dat = _generate_ma_dat(db)
+        db.add(
+            DatTruoc(
+                ma_dat=ma_dat,
+                ma_sach=ma_sach,
+                ma_doc_gia=req.ma_doc_gia,
+                ngay_dat=datetime.now(),
+                trang_thai="CHO_XU_LY",
+                ngay_xu_ly=None,
+            )
+        )
+        write_audit_log(
+            db,
+            user,
+            "CREATE_RESERVATION",
+            "RESERVATION",
+            entity_id=ma_dat,
+            details=f"ma_sach={ma_sach}; via_request={req.ma_yeu_cau}",
+        )
+        req.ma_phieu = None
     elif req.loai == "TRA":
         _perform_return_borrow(db, user, req.ma_phieu)
     else:

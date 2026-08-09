@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Book, BorrowDetail, BorrowSlip, DatTruoc, Reader
+from ..models import Book, BorrowDetail, BorrowSlip, DatTruoc, LibraryConfig, Reader
 from ..schemas import ReservationCreate, ReservationOut
 
 router = APIRouter(prefix="/api/reservations", tags=["reservations"])
@@ -145,10 +145,15 @@ def cancel_reservation(
         raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
     if user.role == "reader" and res.ma_doc_gia != user.reader_id:
         raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
-    if res.trang_thai != "CHO_XU_LY":
+    if user.role == "reader" and res.trang_thai != "CHO_XU_LY":
         raise HTTPException(
             status_code=400,
             detail="Chỉ huỷ được đặt trước đang chờ xử lý.",
+        )
+    if res.trang_thai not in ("CHO_XU_LY", "SAN_SANG"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ huỷ được đặt trước đang chờ hoặc sẵn sàng.",
         )
     res.trang_thai = "HUY"
     res.ngay_xu_ly = datetime.now()
@@ -158,6 +163,142 @@ def cancel_reservation(
         "CANCEL_RESERVATION",
         "RESERVATION",
         entity_id=ma_dat,
+    )
+    db.commit()
+    db.refresh(res)
+    return _out(db, res)
+
+
+@router.delete("/me/{ma_dat}")
+def delete_my_reservation_history(
+    ma_dat: str,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("reader")),
+):
+    if not user.reader_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Tài khoản chưa liên kết với độc giả.",
+        )
+    res = db.get(DatTruoc, ma_dat)
+    if res is None or res.ma_doc_gia != user.reader_id:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
+    if res.trang_thai in ("CHO_XU_LY", "SAN_SANG"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ xoá được đặt trước đã xử lý (HUY/DA_MUON).",
+        )
+    write_audit_log(
+        db,
+        user,
+        "DELETE_RESERVATION_HISTORY",
+        "RESERVATION",
+        entity_id=ma_dat,
+        details=f"trang_thai={res.trang_thai}",
+    )
+    db.delete(res)
+    db.commit()
+    return {"message": "Đã xoá lịch sử đặt trước.", "so_phieu_da_xoa": 1}
+
+
+@router.delete("/me")
+def delete_all_my_reservation_history(
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("reader")),
+):
+    if not user.reader_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Tài khoản chưa liên kết với độc giả.",
+        )
+    targets = (
+        db.query(DatTruoc)
+        .filter(
+            DatTruoc.ma_doc_gia == user.reader_id,
+            DatTruoc.trang_thai.in_(["HUY", "DA_MUON"]),
+        )
+        .all()
+    )
+    count = len(targets)
+    for res in targets:
+        db.delete(res)
+    write_audit_log(
+        db,
+        user,
+        "DELETE_RESERVATION_HISTORY_ALL",
+        "RESERVATION",
+        entity_id="ALL",
+        details=f"so_phieu_da_xoa={count}",
+    )
+    db.commit()
+    return {
+        "message": "Đã xoá lịch sử các đặt trước đã xử lý.",
+        "so_phieu_da_xoa": count,
+    }
+
+
+@router.put("/{ma_dat}/borrow", response_model=ReservationOut)
+def borrow_from_reservation(
+    ma_dat: str,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("librarian")),
+) -> ReservationOut:
+    res = db.get(DatTruoc, ma_dat)
+    if res is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
+    if res.trang_thai != "SAN_SANG":
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ lập phiếu mượn khi đặt trước ở trạng thái sẵn sàng.",
+        )
+    reader = db.get(Reader, res.ma_doc_gia)
+    if reader is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
+    if reader.trangThaiThe != "hoat_dong":
+        raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
+    book = db.get(Book, res.ma_sach)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sách.")
+    if book.soLuong <= 0:
+        raise HTTPException(status_code=400, detail="Sách không còn bản để mượn.")
+    cfg = db.get(LibraryConfig, 1)
+    if cfg is None:
+        raise HTTPException(status_code=500, detail="Chưa có cấu hình thư viện.")
+
+    now = datetime.now()
+    ma_phieu = "PM" + res.ma_dat[2:]
+    suffix = 0
+    while db.get(BorrowSlip, ma_phieu) is not None:
+        suffix += 1
+        ma_phieu = "PM" + res.ma_dat[2:] + str(suffix)
+
+    slip = BorrowSlip(
+        ma_phieu=ma_phieu,
+        ma_doc_gia=res.ma_doc_gia,
+        ngay_muon=now,
+        han_tra=now + timedelta(days=cfg.max_borrow_days),
+        trang_thai="dang_muon",
+        so_lan_gia_han=0,
+    )
+    db.add(slip)
+    db.add(
+        BorrowDetail(
+            ma_phieu=ma_phieu,
+            ma_sach=res.ma_sach,
+            so_luong=1,
+            ngay_tra_chi_tiet=None,
+        )
+    )
+    book.soLuong -= 1
+    res.trang_thai = "DA_MUON"
+    res.ngay_xu_ly = now
+    write_audit_log(
+        db,
+        user,
+        "BORROW_FROM_RESERVATION",
+        "RESERVATION",
+        entity_id=res.ma_dat,
+        details=f"ma_phieu={ma_phieu}",
     )
     db.commit()
     db.refresh(res)
@@ -177,6 +318,14 @@ def fulfill_reservation(
         raise HTTPException(
             status_code=400,
             detail="Chỉ chuyển SAN_SANG từ trạng thái chờ xử lý.",
+        )
+    book = db.get(Book, res.ma_sach)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sách.")
+    if _available_count(db, book) <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Chưa có sách để sẵn sàng — chờ độc giả trả sách về.",
         )
     res.trang_thai = "SAN_SANG"
     res.ngay_xu_ly = datetime.now()

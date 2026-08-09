@@ -9,6 +9,7 @@ from ..database import get_db
 from ..models import Reader, User
 from ..schemas import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 from ..security import create_access_token, hash_password, verify_password
+from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -48,15 +49,22 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
         details=f"username={user.username}",
     )
     db.commit()
-    return LoginResponse(token=token, role=user.role, name=user.ho_ten)
+    return LoginResponse(
+        token=token,
+        role=user.role,
+        role_display=user.role_display,
+        name=user.ho_ten,
+    )
 
 
 @router.post("/register", response_model=RegisterResponse)
 def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterResponse:
     if db.query(User).filter(User.username == body.username).first() is not None:
         raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại.")
-    if db.query(Reader).filter(Reader.email == body.email).first() is not None:
-        raise HTTPException(status_code=409, detail="Email đã được sử dụng.")
+    ho_ten = validate_ho_ten(body.hoTen)
+    email = validate_email(body.email)
+    so_dien_thoai = validate_phone(body.soDienThoai)
+    ensure_email_unique(db, email)
 
     reader_ma = None
     for _ in range(5):
@@ -73,9 +81,9 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
 
     reader = Reader(
         ma=reader_ma,
-        hoTen=body.hoTen,
-        email=body.email,
-        soDienThoai=body.soDienThoai,
+        hoTen=ho_ten,
+        email=email,
+        soDienThoai=so_dien_thoai,
         loaiDocGia=body.loaiDocGia,
         trangThaiThe="hoat_dong",
         ngayTao=datetime.now(),
@@ -84,7 +92,9 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
     user = User(
         username=body.username,
         password_hash=hash_password(body.password),
-        ho_ten=body.hoTen,
+        ho_ten=ho_ten,
+        email=email,
+        so_dien_thoai=so_dien_thoai,
         role="reader",
         reader_id=reader_ma,
         is_active=True,
@@ -103,6 +113,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
     return RegisterResponse(
         token=token,
         role=user.role,
-        name=user.ho_ten,
+        role_display=user.role_display,
+        name=ho_ten,
         reader_ma=reader_ma,
     )

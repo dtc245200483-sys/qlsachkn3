@@ -111,6 +111,62 @@ Chỉ nối thêm khi phát hiện lệch pha mới, không xoá/sửa dòng cũ
 - YC-007: reservations VẪN còn mock fallback (reservation-mock.js + banner) —
   chưa có log Frontend xác nhận bỏ.
 
+## 2026-08-09 23:19:29
+- Cảnh báo 13 (nhẹ): Backend đã hỗ trợ sort/order (log 23:16:54, 75/75) nhưng
+  Frontend api.js vẫn để sortBooksBackend = FALSE (sắp xếp client-side) →
+  tính năng vẫn chạy, nhưng cần Frontend bật backend sort + gửi log (YC-012).
+- Ghi nhận KT2: .env.example, .git + .gitignore, README root, docs/, QA/ đã có.
+
+## 2026-08-10 02:17:44
+- Cảnh báo 13: ĐÃ HẾT — Frontend api.js đã đổi sortBooksBackend = true (02:08:52).
+- Cảnh báo 12 (CẬP NHẬT): Frontend borrow.js ĐÃ nối danh sách phạt thật
+  (bỏ MOCK_FINES, 01:52:48) → phần Frontend của UC19 xong; chỉ còn DAT_TRUOC
+  Backend chưa có (YC-011).
+- YC-007/YC-012 phần 3: reservations VẪN còn mock fallback (reservation-mock.js
+  + banner) — chưa có log Frontend xác nhận bỏ.
+- Profile: Frontend đã nối /api/profile/me + password + avatar (02:08-02:09)
+  — khớp Backend 02:15:52 (api_docs 0.14.0, test 82/82).
+
+## 2026-08-10 03:01:24
+- Cảnh báo 14 (mới, hiển thị sai): Backend 0.16.0 (log 02:56:16) đổi phạt sang
+  ĐIỂM — FineOut trả so_diem, collect-fine trả so_diem_da_thu — nhưng Frontend
+  api.js fineOut vẫn map soTien:"so_tien", borrow.js/my-borrows.js hiển thị
+  fine.soTien → sẽ hiện "undefined điểm". Cần Frontend cập nhật → YC-013.
+- Ghi nhận: server đã restart (02:48:50 + 02:56:16, xác minh live PM003=4 điểm);
+  validation email ICTU + SĐT đã áp dụng (0.15.0).
+- DAT_TRUOC (YC-011) và reservations mock (YC-012 phần 3) vẫn chờ.
+
+## 2026-08-10 03:07:46
+- Cảnh báo 14: ĐÃ HẾT — log [FRONTEND] 03:07:07 + xác minh: api.js fineOut
+  soDiem:"so_diem", collectFineOut so_diem_da_thu/diem_con_lai; borrow.js +
+  my-borrows.js hiển thị điểm → YC-013 HOÀN THÀNH.
+
+## 2026-08-10 04:01:20
+- Cảnh báo 15 (nhẹ, UI): Backend 0.17.0 (log 03:59:25) — thêm/sửa/xoá độc giả
+  chỉ admin, lock cho librarian+admin; Frontend đã nối lockReader nhưng menu
+  "Quản lý độc giả" chỉ hiện cho librarian (data-roles="librarian") trong khi
+  nút "+ Thêm độc giả" chỉ admin → admin không thấy menu (phải vào URL thủ công).
+  Cần Frontend xác nhận thiết kế → YC-014.
+- DAT_TRUOC (YC-011) + reservations mock (YC-012 phần 3) vẫn chờ.
+
+## 2026-08-10 04:53:07
+- Cảnh báo 15: ĐÃ HẾT — readers.html menu đổi data-roles="admin,librarian"
+  (04:31:48) → YC-014 HOÀN THÀNH.
+- YC-011 (DAT_TRUOC): HOÀN THÀNH — Backend log 04:52:00 (migration 0012,
+  api_docs 0.19.0, test 90/90, restart + xác minh live).
+- YC-005 (so_ngay_muon): VẪN CHỜ — Backend chưa có (rg không thấy).
+- YC-007/YC-012 phần 3: VẪN CHỜ — reservations.html vẫn tải reservation-mock.js.
+
+## 2026-08-10 05:48:15
+- YC-016 (Xoá lịch sử đặt trước): Backend xong (05:13:10, 0.20.0, 94/94);
+  Frontend đã nối 2 nút xoá (05:14-05:15) → phần này khép theo quét (chưa log).
+- YC-016 (Bỏ Xuất CSV ở books/stats): CHƯA XONG — books.html + stats.html
+  vẫn còn nút "Xuất CSV" (05:15:27).
+- YC-017 (disable nút Gửi yêu cầu): CHƯA XONG — requests.js không đổi.
+- YC-015 (so_ngay_muon): CHƯA XONG — không thấy trong Backend.
+- Ghi nhận: admin-accounts.js chỉ tạo thủ thư (khớp Backend 05:22:45);
+  reservations mock vẫn còn (YC-007).
+
 ## 2026-08-09 09:55
 - Đính chính theo quyết định người dùng: tính năng "quản lý tài khoản thủ thư" đã bị XOÁ (không có trong đề bài) — /api/admin/librarians trả 404, Frontend admin-librarians.html/js đã gỡ → phạm vi UI admin chỉ còn 3 nhóm (cấu hình thư viện, cấu hình AI, audit + backup).
 - Lưu ý vận hành: code Backend đã có /api/readers (09:49:03) nhưng server đang chạy chưa reload → cần restart để API thực tế khớp code.

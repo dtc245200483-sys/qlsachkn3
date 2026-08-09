@@ -51,6 +51,11 @@
     return !!user && user.role === "admin";
   }
 
+  function canManage() {
+    var user = Auth.currentUser();
+    return !!user && user.role === "admin";
+  }
+
   function loadReaders(opts) {
     if (!opts || opts.clear !== false) {
       clearMessage();
@@ -135,13 +140,16 @@
     var actions = document.createElement("div");
     actions.className = "row-actions";
 
-    var editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.className = "btn btn-secondary";
-    editBtn.textContent = "Sửa";
-    editBtn.addEventListener("click", function () {
-      openForm(reader);
-    });
+    if (canManage()) {
+      var editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-secondary";
+      editBtn.textContent = "Sửa";
+      editBtn.addEventListener("click", function () {
+        openForm(reader);
+      });
+      actions.appendChild(editBtn);
+    }
 
     var lockBtn = document.createElement("button");
     lockBtn.type = "button";
@@ -151,7 +159,6 @@
       toggleLock(reader);
     });
 
-    actions.appendChild(editBtn);
     actions.appendChild(lockBtn);
 
     if (canDelete()) {
@@ -251,7 +258,7 @@
 
   function toggleLock(reader) {
     var next = reader.trangThaiThe === "hoat_dong" ? "khoa" : "hoat_dong";
-    API.call("updateReader", { trangThaiThe: next }, "PUT", { id: reader.ma })
+    API.call("lockReader", { trangThaiThe: next }, "PUT", { id: reader.ma })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);
@@ -309,7 +316,7 @@
     }
 
     var addButton = document.getElementById("add-reader-button");
-    if (addButton) {
+    if (addButton && canManage()) {
       addButton.addEventListener("click", function () {
         openForm(null);
       });

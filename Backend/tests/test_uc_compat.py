@@ -57,16 +57,16 @@ def _set_han_tra(ma_phieu: str, days_ago: int) -> None:
 
 def test_register_reader_and_login(client_and_tokens):
     client, _ = client_and_tokens
-    registered = _register(client, "tmp_backend_test_reg1", "tmp_backend_test_reg1@example.com")
+    registered = _register(client, "tmp_backend_test_reg1", "tmp_backend_test_reg1@ictu.edu.vn")
     assert registered.status_code == 200, registered.text
     data = registered.json()
     assert data["role"] == "reader"
     assert data["reader_ma"].startswith("DG")
 
-    dup_username = _register(client, "tmp_backend_test_reg1", "tmp_backend_test_reg1b@example.com")
+    dup_username = _register(client, "tmp_backend_test_reg1", "tmp_backend_test_reg1b@ictu.edu.vn")
     assert dup_username.status_code == 409
 
-    dup_email = _register(client, "tmp_backend_test_reg2", "tmp_backend_test_reg1@example.com")
+    dup_email = _register(client, "tmp_backend_test_reg2", "tmp_backend_test_reg1@ictu.edu.vn")
     assert dup_email.status_code == 409
 
     me = client.get("/api/borrows/me", headers=_headers(data["token"]))
@@ -78,7 +78,7 @@ def test_request_muon_approve_flow(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
     librarian = tokens["librarian"]
-    reader = _register(client, "tmp_backend_test_reg3", "tmp_backend_test_reg3@example.com").json()
+    reader = _register(client, "tmp_backend_test_reg3", "tmp_backend_test_reg3@ictu.edu.vn").json()
     reader_ma = reader["reader_ma"]
     _make_book(client, admin, "TESTUCB1", 3)
 
@@ -118,7 +118,7 @@ def test_request_tra_approve_flow(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
     librarian = tokens["librarian"]
-    reader = _register(client, "tmp_backend_test_reg4", "tmp_backend_test_reg4@example.com").json()
+    reader = _register(client, "tmp_backend_test_reg4", "tmp_backend_test_reg4@ictu.edu.vn").json()
     reader_ma = reader["reader_ma"]
     _make_book(client, admin, "TESTUCB2", 3)
     client.post(
@@ -152,7 +152,7 @@ def test_request_gia_han_approve_and_second_fails(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
     librarian = tokens["librarian"]
-    reader = _register(client, "tmp_backend_test_reg5", "tmp_backend_test_reg5@example.com").json()
+    reader = _register(client, "tmp_backend_test_reg5", "tmp_backend_test_reg5@ictu.edu.vn").json()
     reader_ma = reader["reader_ma"]
     _make_book(client, admin, "TESTUCB3", 3)
     client.post(
@@ -186,7 +186,7 @@ def test_request_reject(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["admin"]
     librarian = tokens["librarian"]
-    reader = _register(client, "tmp_backend_test_reg6", "tmp_backend_test_reg6@example.com").json()
+    reader = _register(client, "tmp_backend_test_reg6", "tmp_backend_test_reg6@ictu.edu.vn").json()
     _make_book(client, admin, "TESTUCB7", 2)
     client.post(
         "/api/requests",
@@ -205,7 +205,7 @@ def test_request_reject(client_and_tokens):
 def test_reader_history_includes_fine(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["librarian"]
-    reader = _register(client, "tmp_backend_test_reg7", "tmp_backend_test_reg7@example.com").json()
+    reader = _register(client, "tmp_backend_test_reg7", "tmp_backend_test_reg7@ictu.edu.vn").json()
     reader_ma = reader["reader_ma"]
     _make_book(client, admin, "TESTUCB4", 3)
     client.post(
@@ -225,7 +225,7 @@ def test_reader_history_includes_fine(client_and_tokens):
     assert slip["fines"] == [
         {
             "so_ngay_qua_han": 5,
-            "so_tien": 25000.0,
+            "so_diem": 10,
             "da_thu": False,
             "ngay_thu": None,
         }
@@ -235,26 +235,15 @@ def test_reader_history_includes_fine(client_and_tokens):
 def test_admin_accounts_crud_and_lock(client_and_tokens):
     client, tokens = client_and_tokens
     admin = tokens["admin"]
-    reader_record = client.post(
-        "/api/readers",
-        json={
-            "ma": "TESTACCTDG",
-            "hoTen": "Độc giả liên kết",
-            "email": "tmp_backend_test_link@example.com",
-            "soDienThoai": "0911111112",
-            "loaiDocGia": "sinh_vien",
-            "trangThaiThe": "hoat_dong",
-        },
-        headers=_headers(admin),
-    )
-    assert reader_record.status_code == 200, reader_record.text
 
     created = client.post(
         "/api/admin/accounts",
         json={
             "username": "tmp_backend_test_acct1",
             "password": "Pass@123",
-            "ho_ten": "Tài khoản 1",
+            "ho_ten": "Tài khoản Một",
+            "email": "tmp_backend_test_acct1@ictu.edu.vn",
+            "so_dien_thoai": "0912345001",
             "role": "librarian",
         },
         headers=_headers(admin),
@@ -262,26 +251,29 @@ def test_admin_accounts_crud_and_lock(client_and_tokens):
     assert created.status_code == 200, created.text
     account_id = created.json()["id"]
 
-    reader_acct = client.post(
+    reader_rejected = client.post(
         "/api/admin/accounts",
         json={
             "username": "tmp_backend_test_acct2",
             "password": "Pass@123",
-            "ho_ten": "Tài khoản 2",
+            "ho_ten": "Tài khoản Hai",
+            "email": "tmp_backend_test_acct2@ictu.edu.vn",
+            "so_dien_thoai": "0912345002",
             "role": "reader",
-            "reader_id": "TESTACCTDG",
         },
         headers=_headers(admin),
     )
-    assert reader_acct.status_code == 200, reader_acct.text
-    assert reader_acct.json()["reader_id"] == "TESTACCTDG"
+    assert reader_rejected.status_code == 400
+    assert "tự đăng ký" in reader_rejected.json()["detail"]
 
     duplicate = client.post(
         "/api/admin/accounts",
         json={
             "username": "tmp_backend_test_acct1",
             "password": "Pass@123",
-            "ho_ten": "Trùng",
+            "ho_ten": "Người Trùng",
+            "email": "tmp_backend_test_acct1@ictu.edu.vn",
+            "so_dien_thoai": "0912345001",
             "role": "librarian",
         },
         headers=_headers(admin),
@@ -400,12 +392,171 @@ def test_restore_validates_file(client_and_tokens):
     assert response.status_code == 404
 
 
+def test_role_display_vietnamese(client_and_tokens):
+    client, tokens = client_and_tokens
+    admin = tokens["admin"]
+
+    login_admin = client.post(
+        "/api/auth/login",
+        json={"username": "tmp_backend_test_admin", "password": "Test@12345"},
+    )
+    assert login_admin.status_code == 200
+    assert login_admin.json()["role"] == "admin"
+    assert login_admin.json()["role_display"] == "Quản trị viên"
+
+    login_librarian = client.post(
+        "/api/auth/login",
+        json={"username": "tmp_backend_test_librarian", "password": "Test@12345"},
+    )
+    assert login_librarian.json()["role_display"] == "Thủ thư"
+
+    login_reader = client.post(
+        "/api/auth/login",
+        json={"username": "tmp_backend_test_reader", "password": "Test@12345"},
+    )
+    assert login_reader.json()["role_display"] == "Độc giả"
+
+    registered = _register(client, "tmp_backend_test_roledisp", "tmp_backend_test_roledisp@ictu.edu.vn").json()
+    assert registered["role_display"] == "Độc giả"
+
+    accounts = client.get("/api/admin/accounts", headers=_headers(admin)).json()
+    by_username = {a["username"]: a for a in accounts}
+    assert by_username["tmp_backend_test_librarian"]["role_display"] == "Thủ thư"
+    assert by_username["tmp_backend_test_reader"]["role_display"] == "Độc giả"
+
+
+def _han_tra_days(client, token, reader_ma, ma_phieu):
+    slips = client.get(
+        "/api/borrows",
+        params={"docGia": reader_ma},
+        headers=_headers(token),
+    ).json()
+    slip = next(s for s in slips if s["ma_phieu"] == ma_phieu)
+    return (datetime.fromisoformat(slip["han_tra"]) - datetime.fromisoformat(slip["ngay_muon"])).days
+
+
+def test_muon_request_so_ngay_muon_used_on_approve(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ycso1", "tmp_backend_test_ycso1@ictu.edu.vn").json()
+    _make_book(client, staff, "TESTYCSO1", 3)
+
+    created = client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCSO1",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTYCSO1", "so_luong": 1}],
+            "so_ngay_muon": 10,
+        },
+        headers=_headers(reader["token"]),
+    )
+    assert created.status_code == 200, created.text
+    assert created.json()["so_ngay_muon"] == 10
+
+    approved = client.put("/api/requests/YCSO1/approve", headers=_headers(staff))
+    assert approved.status_code == 200, approved.text
+    assert _han_tra_days(client, staff, reader["reader_ma"], "PMYCSO1") == 10
+
+
+def test_muon_request_so_ngay_muon_exceeds_max_fails(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ycso2", "tmp_backend_test_ycso2@ictu.edu.vn").json()
+    _make_book(client, staff, "TESTYCSO2", 3)
+
+    response = client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCSO2",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTYCSO2", "so_luong": 1}],
+            "so_ngay_muon": 20,
+        },
+        headers=_headers(reader["token"]),
+    )
+    assert response.status_code == 400
+    assert "vượt quá tối đa 14 ngày" in response.json()["detail"]
+
+
+def test_approve_muon_body_overrides_request_days(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ycso3", "tmp_backend_test_ycso3@ictu.edu.vn").json()
+    _make_book(client, staff, "TESTYCSO3", 3)
+
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCSO3",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTYCSO3", "so_luong": 1}],
+            "so_ngay_muon": 5,
+        },
+        headers=_headers(reader["token"]),
+    )
+    approved = client.put(
+        "/api/requests/YCSO3/approve",
+        json={"so_ngay_muon": 8},
+        headers=_headers(staff),
+    )
+    assert approved.status_code == 200, approved.text
+    assert _han_tra_days(client, staff, reader["reader_ma"], "PMYCSO3") == 8
+
+
+def test_approve_muon_without_days_uses_max(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ycso4", "tmp_backend_test_ycso4@ictu.edu.vn").json()
+    _make_book(client, staff, "TESTYCSO4", 3)
+
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCSO4",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTYCSO4", "so_luong": 1}],
+        },
+        headers=_headers(reader["token"]),
+    )
+    approved = client.put("/api/requests/YCSO4/approve", headers=_headers(staff))
+    assert approved.status_code == 200, approved.text
+    assert _han_tra_days(client, staff, reader["reader_ma"], "PMYCSO4") == 14
+
+
+def test_approve_muon_body_exceeds_max_fails(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ycso5", "tmp_backend_test_ycso5@ictu.edu.vn").json()
+    _make_book(client, staff, "TESTYCSO5", 3)
+
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCSO5",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTYCSO5", "so_luong": 1}],
+        },
+        headers=_headers(reader["token"]),
+    )
+    approved = client.put(
+        "/api/requests/YCSO5/approve",
+        json={"so_ngay_muon": 20},
+        headers=_headers(staff),
+    )
+    assert approved.status_code == 400
+    assert "vượt quá tối đa 14 ngày" in approved.json()["detail"]
+
+    listed = client.get("/api/requests", headers=_headers(reader["token"])).json()
+    assert any(r["ma_yeu_cau"] == "YCSO5" and r["trang_thai"] == "CHO_XU_LY" for r in listed)
+
+
 def _reader_with_returned_and_active_slips(client, tokens, prefix: str):
     global _hist_seq
     _hist_seq += 1
     admin = tokens["librarian"]
     username = f"tmp_backend_test_hist{_hist_seq}"
-    reader = _register(client, username, f"{username}@example.com").json()
+    reader = _register(client, username, f"{username}@ictu.edu.vn").json()
     assert "reader_ma" in reader, reader
     book_ma = f"TESTUCB{prefix}"
     _make_book(client, admin, book_ma, 4)
@@ -482,7 +633,7 @@ def test_reader_delete_all_returned_history(client_and_tokens):
 def test_reader_cannot_delete_other_reader_history(client_and_tokens):
     client, tokens = client_and_tokens
     _reader_with_returned_and_active_slips(client, tokens, "D")
-    other = _register(client, "tmp_backend_test_hist_other", "tmp_backend_test_hist_other@example.com").json()
+    other = _register(client, "tmp_backend_test_hist_other", "tmp_backend_test_hist_other@ictu.edu.vn").json()
     assert "token" in other, other
 
     response = client.delete("/api/borrows/me/PMHISTD1", headers=_headers(other["token"]))

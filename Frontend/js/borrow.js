@@ -5,11 +5,7 @@
   var messageTimer = null;
   var availableBooks = [];
 
-  var MOCK_FINES = [
-    { ma_phieu: "PMFINE1", ma_doc_gia: "DGREADER", so_ngay_qua_han: 3, so_tien: 15000 },
-    { ma_phieu: "PMFINE2", ma_doc_gia: "DG002", so_ngay_qua_han: 1, so_tien: 5000 }
-  ];
-  var finesMockUsed = true;
+  var finesList = [];
 
   function showMessage(text, type) {
     var el = document.getElementById("page-message");
@@ -279,7 +275,7 @@
     var detailsText = (slip.details || [])
       .map(function (d) {
         var detail = API.mapResponse("borrowDetailOut", d);
-        return detail ? detail.maSach + " x" + detail.soLuong : "";
+        return detail ? (detail.tenSach || detail.maSach) + " x" + detail.soLuong : "";
       })
       .filter(Boolean)
       .join(", ");
@@ -338,7 +334,7 @@
         var text = mapped && mapped.message ? mapped.message : "Đã trả sách.";
         var fine = mapped && mapped.fine ? API.mapResponse("fineOut", mapped.fine) : null;
         if (fine && Number(fine.soNgayQuaHan) > 0) {
-          text += " — Quá hạn " + fine.soNgayQuaHan + " ngày, phạt " + fine.soTien + " đồng.";
+          text += " — Quá hạn " + fine.soNgayQuaHan + " ngày, phạt " + fine.soDiem + " điểm.";
         }
         showMessage(text, "alert-success");
         loadActiveBorrows();
@@ -363,7 +359,7 @@
         }
         var fine = mapped && mapped.fine ? API.mapResponse("fineOut", mapped.fine) : null;
         if (fine && Number(fine.soNgayQuaHan) > 0) {
-          text += " (phạt quá hạn " + fine.soNgayQuaHan + " ngày, " + fine.soTien + " đồng)";
+          text += " (phạt quá hạn " + fine.soNgayQuaHan + " ngày, " + fine.soDiem + " điểm)";
         }
         showMessage(text, "alert-success");
         loadActiveBorrows();
@@ -407,10 +403,40 @@
   }
 
   function loadFines() {
-    document.getElementById("fine-banner").hidden = !finesMockUsed;
+    var banner = document.getElementById("fine-banner");
+    if (banner) {
+      banner.hidden = true;
+    }
+    API.call("borrows", undefined, "GET", undefined, { trangThai: "da_tra" })
+      .then(function (res) {
+        if (!res.ok) {
+          showMessage(res.message);
+          return;
+        }
+        finesList = [];
+        (res.data || []).forEach(function (slip) {
+          (slip.fines || []).forEach(function (f) {
+            if (!f.da_thu) {
+              finesList.push({
+                ma_phieu: slip.ma_phieu,
+                ma_doc_gia: slip.ma_doc_gia,
+                so_ngay_qua_han: f.so_ngay_qua_han,
+                so_diem: f.so_diem
+              });
+            }
+          });
+        });
+        renderFines();
+      })
+      .catch(function () {
+        showMessage("Đã xảy ra lỗi khi tải danh sách phạt.");
+      });
+  }
+
+  function renderFines() {
     var tbody = document.getElementById("fine-tbody");
     tbody.innerHTML = "";
-    if (MOCK_FINES.length === 0) {
+    if (finesList.length === 0) {
       var emptyRow = document.createElement("tr");
       var emptyCell = document.createElement("td");
       emptyCell.className = "empty-row";
@@ -420,9 +446,9 @@
       tbody.appendChild(emptyRow);
       return;
     }
-    MOCK_FINES.forEach(function (f) {
+    finesList.forEach(function (f) {
       var tr = document.createElement("tr");
-      var values = [f.ma_phieu, f.ma_doc_gia, f.so_ngay_qua_han, f.so_tien + " \u0111"];
+      var values = [f.ma_phieu, f.ma_doc_gia, f.so_ngay_qua_han, f.so_diem + " \u0111i\u1ec3m"];
       values.forEach(function (v) {
         var td = document.createElement("td");
         td.textContent = v;
@@ -443,10 +469,6 @@
   }
 
   function collectFine(f) {
-    /*
-     * UC19 — Backend chưa có API thu phạt (dự kiến POST /api/borrows/{id}/collect-fine).
-     * Hiện đang dùng dữ liệu mẫu; khi Backend cấp API, bỏ phần mock này.
-     */
     API.call("collectFine", undefined, "POST", { id: f.ma_phieu })
       .then(function (res) {
         if (!res.ok) {
@@ -457,11 +479,17 @@
           );
           return;
         }
-        showMessage("Đã thu phạt phiếu " + f.ma_phieu + ".", "alert-success");
-        MOCK_FINES = MOCK_FINES.filter(function (x) {
+        var mapped = API.mapResponse("collectFineOut", res.data);
+        var text = "Đã thu phạt phiếu " + f.ma_phieu + ".";
+        if (mapped) {
+          text +=
+            " Trừ " + mapped.soDiemDaThu + " điểm, điểm còn lại " + mapped.diemConLai + ".";
+        }
+        showMessage(text, "alert-success");
+        finesList = finesList.filter(function (x) {
           return x.ma_phieu !== f.ma_phieu;
         });
-        loadFines();
+        renderFines();
       })
       .catch(function () {
         showMessage("Đã xảy ra lỗi khi thu phạt.");

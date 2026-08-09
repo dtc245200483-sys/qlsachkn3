@@ -63,7 +63,7 @@ def update_library_config(
     if cfg is None:
         raise HTTPException(status_code=404, detail="Chưa có cấu hình thư viện.")
     cfg.max_borrow_days = body.max_borrow_days
-    cfg.overdue_fine_per_day = body.overdue_fine_per_day
+    cfg.overdue_fine_points_per_day = body.overdue_fine_points_per_day
     cfg.max_books_at_once = body.max_books_at_once
     write_audit_log(
         db,

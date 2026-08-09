@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+AVATAR_DIR = os.path.join(STATIC_DIR, "avatars")
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "mssql+pyodbc://@localhost\\QUANGHUNG/LibraryDB"

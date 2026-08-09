@@ -1,6 +1,6 @@
 # Tài liệu API Backend — Hệ thống quản lý thư viện có tích hợp AI
 
-Phiên bản: 0.12.0 (2026-08-09) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C (đặt trước, thông báo UC11, thống kê UC20/28, xuất dữ liệu, thu phạt UC19, xoá lịch sử yêu cầu của reader).
+Phiên bản: 0.21.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C + Hồ sơ cá nhân + Validation + Phạt bằng ĐIỂM + Phân quyền độc giả + Đặt trước + DAT_TRUOC + Xoá lịch sử đặt trước + **Export CSV đặt trước + Admin accounts chỉ tạo thủ thư**.
 
 ## Thông tin chung
 
@@ -36,7 +36,8 @@ Phiên bản: 0.12.0 (2026-08-09) — phạm vi: chức năng 1–8 + YC-2026-08
 | Thêm sách | POST | `/api/books` | `librarian`, `admin` |
 | Sửa sách | PUT | `/api/books/{ma}` | `librarian`, `admin` |
 | Xoá sách | DELETE | `/api/books/{ma}` | `librarian`, `admin` |
-| Quản lý độc giả | GET/POST/PUT/DELETE | `/api/readers[/{ma}]` | GET/POST/PUT: `librarian`, `admin`; DELETE: `admin` |
+| Quản lý độc giả | GET/POST/PUT/DELETE | `/api/readers[/{ma}]` | GET: `librarian`, `admin`; POST/PUT/DELETE: chỉ `admin` |
+| Khoá/mở khoá thẻ độc giả | PUT | `/api/readers/{ma}/lock` | `librarian`, `admin` |
 | Lập phiếu mượn | POST | `/api/borrows` | `librarian` |
 | Trả sách | PUT | `/api/borrows/{ma}/return` | `librarian` |
 | Gia hạn | PUT | `/api/borrows/{ma}/renew` | `librarian` |
@@ -61,8 +62,11 @@ Phiên bản: 0.12.0 (2026-08-09) — phạm vi: chức năng 1–8 + YC-2026-08
 | Quản lý NXB | GET/POST/PUT/DELETE | `/api/admin/publishers[/{ma}]` | `admin` |
 | Danh sách đặt trước | GET | `/api/reservations?trangThai=` | `reader` (của mình), `librarian` (tất cả) |
 | Đặt trước sách | POST | `/api/reservations` | `reader` |
-| Huỷ đặt trước | PUT | `/api/reservations/{ma_dat}/cancel` | `reader` (của mình), `librarian` |
+| Huỷ đặt trước | PUT | `/api/reservations/{ma_dat}/cancel` | `reader` (đang chờ của mình), `librarian` (chờ/sẵn sàng) |
 | Đánh dấu sách sẵn sàng | PUT | `/api/reservations/{ma_dat}/fulfill` | `librarian` |
+| Xác nhận đã lấy (lập phiếu mượn) | PUT | `/api/reservations/{ma_dat}/borrow` | `librarian` |
+| Xoá 1 đặt trước đã xử lý | DELETE | `/api/reservations/me/{ma_dat}` | `reader` |
+| Xoá toàn bộ đặt trước đã xử lý | DELETE | `/api/reservations/me` | `reader` |
 | Thông báo của tôi | GET | `/api/notifications` | `reader` |
 | Sách mượn nhiều nhất | GET | `/api/stats/top-books?limit=` | `librarian`, `admin` |
 | Độc giả hoạt động nhất | GET | `/api/stats/top-readers` | `librarian`, `admin` |
@@ -70,6 +74,11 @@ Phiên bản: 0.12.0 (2026-08-09) — phạm vi: chức năng 1–8 + YC-2026-08
 | Xuất danh sách sách | GET | `/api/export/books.csv` | `librarian`, `admin` |
 | Xuất danh sách phiếu mượn | GET | `/api/export/borrows.csv` | `librarian`, `admin` |
 | Xuất báo cáo thống kê | GET | `/api/export/report.csv` | `librarian`, `admin` |
+| Xuất danh sách đặt trước | GET | `/api/export/reservations.csv` | `librarian`, `admin` |
+| Xem hồ sơ của tôi | GET | `/api/profile/me` | Mọi role đã đăng nhập |
+| Cập nhật hồ sơ của tôi | PUT | `/api/profile/me` | Mọi role đã đăng nhập |
+| Đổi mật khẩu của tôi | PUT | `/api/profile/me/password` | Mọi role đã đăng nhập |
+| Upload ảnh đại diện | POST | `/api/profile/me/avatar` | Mọi role đã đăng nhập |
 
 ## 1. Đăng nhập — POST `/api/auth/login`
 
@@ -77,7 +86,7 @@ Phiên bản: 0.12.0 (2026-08-09) — phạm vi: chức năng 1–8 + YC-2026-08
 { "username": "admin", "password": "mat-khau" }
 ```
 
-Response 200: `{ "token", "role", "name" }`. Lỗi: `401` sai tài khoản/mật khẩu hoặc tài khoản bị khoá.
+Response 200: `{ "token", "role", "role_display", "name" }` — `role_display` là nhãn tiếng Việt: `admin → Quản trị viên`, `librarian → Thủ thư`, `reader → Độc giả`. Lỗi: `401` sai tài khoản/mật khẩu hoặc tài khoản bị khoá.
 
 ## 2. Đăng ký độc giả — POST `/api/auth/register`
 
@@ -92,7 +101,14 @@ Response 200: `{ "token", "role", "name" }`. Lỗi: `401` sai tài khoản/mật
 }
 ```
 
-Response 200: `{ "token", "role": "reader", "name", "reader_ma" }` — tự tạo `Reader` + tài khoản `User` và liên kết `reader_id`. Lỗi: `409` trùng username/email.
+Response 200: `{ "token", "role": "reader", "role_display": "Độc giả", "name", "reader_ma" }` — tự tạo `Reader` + tài khoản `User` và liên kết `reader_id`. Lỗi: `409` trùng username/email.
+
+Validation chung (áp dụng register, profile, admin accounts):
+
+- `hoTen` — bắt buộc, ≥ 2 từ, mỗi từ ≥ 2 ký tự, không chứa số/ký tự đặc biệt.
+- `email` — bắt buộc, đúng định dạng ICTU: `^[A-Za-z0-9._%+-]+@ictu\.edu\.vn$`; trùng email (Users hoặc Readers) → `409`.
+- `soDienThoai` — bắt buộc, SĐT Việt Nam: `^(0|\+84)(3|5|7|8|9)\d{8}$`.
+- Vi phạm → `422` kèm thông báo rõ.
 
 ## 3. Tra cứu sách — GET `/api/books`
 
@@ -103,8 +119,10 @@ Query params tùy chọn (kết hợp được):
 | `q` | Tìm chứa chuỗi trong `ten` HOẶC `tacGia`, không phân biệt hoa thường | `?q=python` |
 | `theLoai` | Lọc chính xác thể loại | `?theLoai=Công nghệ` |
 | `trangThai` | `con` (soLuong > 0) hoặc `dang_muon` (soLuong = 0 hoặc đang có phiếu mượn chưa trả) | `?trangThai=con` |
+| `sort` | Sắp xếp theo `ten`, `tacGia`, `namXb`, `soLuong` (mặc định `ten`) | `?sort=namXb` |
+| `order` | `asc` hoặc `desc` (mặc định `asc`) | `?order=desc` |
 
-Không truyền param → trả toàn bộ như cũ. Sách có field tùy chọn `theLoaiId`, `nxbId` (liên kết danh mục), vẫn giữ `theLoai`/`nxb` text để UI cũ hoạt động.
+Lọc (`q`, `theLoai`, `trangThai`) chạy trước, sắp xếp sau; kèm tie-break theo `ma` để thứ tự ổn định. Không truyền param → trả toàn bộ như cũ (mặc định `ten asc`). Sách có field tùy chọn `theLoaiId`, `nxbId` (liên kết danh mục), vẫn giữ `theLoai`/`nxb` text để UI cũ hoạt động.
 
 ## 4–6. CRUD sách
 
@@ -114,11 +132,12 @@ Không truyền param → trả toàn bộ như cũ. Sách có field tùy chọn
 
 ## 7. Quản lý độc giả — `/api/readers`
 
-Fields: `ma, hoTen, email, soDienThoai, loaiDocGia (sinh_vien/giang_vien/khac), trangThaiThe (hoat_dong/khoa), ngayTao`.
+Fields: `ma, hoTen, email, soDienThoai, loaiDocGia (sinh_vien/giang_vien/khac), trangThaiThe (hoat_dong/khoa), diem_svnet (mặc định 100), ngayTao`.
 
 - `GET /api/readers?q=` — danh sách + tìm theo mã/họ tên (`librarian`, `admin`).
-- `POST /api/readers` — tạo (`librarian`, `admin`); trùng mã hoặc email → `409`.
-- `PUT /api/readers/{ma}` — sửa/khoá-mở khoá thẻ (`librarian`, `admin`).
+- `POST /api/readers` — tạo (chỉ `admin`); trùng mã hoặc email → `409`.
+- `PUT /api/readers/{ma}` — sửa thông tin (chỉ `admin`).
+- `PUT /api/readers/{ma}/lock` — **khoá/mở khoá thẻ** (body `{ "trangThaiThe": "hoat_dong"|"khoa" }`) — `librarian` + `admin`; khoá thẻ sẽ **khoá luôn tài khoản đăng nhập liên kết** (`Users.is_active = false`), mở khoá thì đăng nhập lại bình thường.
 - `DELETE /api/readers/{ma}` — xoá (chỉ `admin`).
 
 `Readers` (dữ liệu độc giả) tách biệt với `Users` (tài khoản đăng nhập), liên kết qua `Users.reader_id`.
@@ -139,9 +158,9 @@ Quy tắc: thẻ `hoat_dong`; sách còn > 0 và đủ; tổng ≤ `max_books_at
 
 ### 8.2 Trả — PUT `/api/borrows/{ma}/return`
 
-Tăng lại `soLuong`, ghi `ngay_tra`, chuyển `da_tra`; nếu quá hạn thêm `FineHistory`: `so_tien = so_ngay_qua_han * overdue_fine_per_day`.
+Tăng lại `soLuong`, ghi `ngay_tra`, chuyển `da_tra`; nếu quá hạn thêm `FineHistory`: `so_diem = so_ngay_qua_han * overdue_fine_points_per_day` (đơn vị **điểm**, mặc định 2 điểm/ngày).
 
-Response: `{ "message", "ngay_tra", "fine": { "so_ngay_qua_han", "so_tien" } | null }`.
+Response: `{ "message", "ngay_tra", "fine": { "so_ngay_qua_han", "so_diem" } | null }`.
 
 ### 8.3 Gia hạn — PUT `/api/borrows/{ma}/renew`
 
@@ -149,22 +168,23 @@ Response: `{ "message", "ngay_tra", "fine": { "so_ngay_qua_han", "so_tien" } | n
 
 ### 8.4 Danh sách — GET `/api/borrows?docGia=&trangThai=`
 
-Mỗi phiếu trả về kèm mảng `fines` với `{ so_ngay_qua_han, so_tien, da_thu, ngay_thu }` — Frontend hiển thị nút "Thu phạt" chỉ khi `da_thu = false`.
+Mỗi phiếu trả về kèm mảng `fines` với `{ so_ngay_qua_han, so_diem, da_thu, ngay_thu }` — Frontend hiển thị nút "Thu phạt" chỉ khi `da_thu = false`.
 
-### 8.5 Thu phạt — POST `/api/borrows/{ma}/collect-fine`
+### 8.5 Thu phạt (trừ điểm SVNET) — POST `/api/borrows/{ma}/collect-fine`
 
 Role: chỉ `librarian` (admin/reader → `403`).
 
 - Phiếu phải `da_tra`; nếu chưa trả → `400` `"Phiếu chưa trả, không thể thu phạt."`.
 - Phải có `FineHistory` chưa thu (`da_thu = false`); không có → `400` `"Không có phạt để thu."`.
-- Đánh dấu tất cả phạt chưa thu của phiếu thành đã thu, ghi `ngay_thu`.
+- Phạt tính bằng **điểm**: `so_diem = so_ngay_qua_han × overdue_fine_points_per_day` (mặc định 2 điểm/ngày); khi thu, `so_diem_da_thu = tổng so_diem` của các phạt chưa thu, trừ vào `Readers.diem_svnet` (mặc định 100, không âm), đánh dấu phạt đã thu, ghi `ngay_thu`.
 
 Response 200:
 
 ```json
 {
-  "message": "Đã thu phạt.",
-  "so_tien_da_thu": 15000.0,
+  "message": "Đã trừ điểm SVNET.",
+  "so_diem_da_thu": 4,
+  "diem_con_lai": 96,
   "ngay_thu": "2026-08-09T20:00:00"
 }
 ```
@@ -188,18 +208,18 @@ Ràng buộc:
 
 Audit log: `DELETE_BORROW_HISTORY`, `DELETE_BORROW_HISTORY_ALL`.
 
-## 10. Yêu cầu mượn/trả/gia hạn — `/api/requests`
+## 10. Yêu cầu mượn/trả/gia hạn/đặt trước — `/api/requests`
 
-- `POST /api/requests` (reader): `MUON` cần `items`; `TRA`/`GIA_HAN` cần `ma_phieu` thuộc về mình và đang `dang_muon` (GIA_HAN chỉ khi chưa gia hạn).
+- `POST /api/requests` (reader): loai `MUON` cần `items`; `DAT_TRUOC` cần `ma_sach` (hoặc `items` có đúng 1 sách) + thẻ `hoat_dong`; `TRA`/`GIA_HAN` cần `ma_phieu` thuộc về mình và đang `dang_muon` (GIA_HAN chỉ khi chưa gia hạn).
 - `GET /api/requests?maDocGia=&trangThai=` — reader chỉ thấy của mình.
-- `PUT /api/requests/{ma}/approve` (librarian): MUON → tạo phiếu (`ma_phieu = "PM" + ma_yeu_cau`); TRA → trả + tính phạt; GIA_HAN → gia hạn.
+- `PUT /api/requests/{ma}/approve` (librarian): MUON → tạo phiếu (`ma_phieu = "PM" + ma_yeu_cau`); TRA → trả + tính phạt; GIA_HAN → gia hạn; **DAT_TRUOC → tạo đặt trước thật** (tái dùng logic `/api/reservations`): chỉ khi sách đang hết (soLuong = 0 hoặc đang mượn hết) → nếu còn → `400 "Sách còn, không cần đặt trước"`; đặt trùng active → `409`; tạo `DatTruoc` mã `RV...` trạng thái `CHO_XU_LY`, yêu cầu chuyển `DA_DUYET` (ma_phieu = null), audit `CREATE_RESERVATION` + `APPROVE_REQUEST`.
 - `PUT /api/requests/{ma}/reject` — chuyển `TU_CHOI`.
 
 Trạng thái: `CHO_XU_LY` → `DA_DUYET` hoặc `TU_CHOI`.
 
 ## 11. Cấu hình thư viện — `/api/admin/config/library`
 
-GET: `admin`/`librarian`. PUT (chỉ `admin`): `{ "max_borrow_days", "overdue_fine_per_day", "max_books_at_once" }`.
+GET: `admin`/`librarian`. PUT (chỉ `admin`): `{ "max_borrow_days", "overdue_fine_points_per_day", "max_books_at_once" }` — điểm phạt mặc định 2/ngày.
 
 ## 12. Cấu hình AI — `/api/admin/config/ai`
 
@@ -221,9 +241,11 @@ Chỉ `admin`. Body `{ "file_path": "C:\\...\\LibraryDB_....bak" }`. Thực hi�
 
 Chỉ `admin`.
 
-- `POST` — `{ "username", "password", "ho_ten", "role": "librarian"|"reader", "reader_id"?: "..." }`.
-- `GET ?role=` — danh sách tài khoản thủ thư + độc giả.
-- `PUT /{id}` — sửa `ho_ten`, `password`, `is_active` (khoá/mở khoá), `role`, `reader_id`.
+Mỗi tài khoản trả về `role_display` (tiếng Việt): `librarian → Thủ thư`, `reader → Độc giả`.
+
+- `POST` — `{ "username", "password", "ho_ten", "email", "so_dien_thoai", "role": "librarian" }` — **chỉ nhận role `librarian`**; gửi `reader` → `400 "Độc giả tự đăng ký qua /api/auth/register"`. Email/SĐT bắt buộc + validation chung.
+- `GET ?role=` — danh sách tài khoản thủ thư + độc giả (mỗi tài khoản trả thêm `email`, `so_dien_thoai`).
+- `PUT /{id}` — sửa `ho_ten`, `email`, `so_dien_thoai`, `password`, `is_active` (khoá/mở khoá), `role`, `reader_id` (cùng validation).
 - `DELETE /{id}` — xoá.
 
 ## 17. Danh mục thể loại/NXB — `/api/admin/categories`, `/api/admin/publishers`
@@ -271,6 +293,13 @@ Role: chỉ `librarian`. Chỉ khi `CHO_XU_LY` → `SAN_SANG`; trạng thái kh�
 - Khi gia hạn: **từ chối `400`** nếu có đặt trước `CHO_XU_LY`/`SAN_SANG` cho bất kỳ sách nào trong phiếu (UC17).
 
 Audit log: `CREATE_RESERVATION`, `CANCEL_RESERVATION`, `FULFILL_RESERVATION`, `RESERVATION_READY`.
+
+### 18.5 Xoá lịch sử đặt trước (reader tự xoá)
+
+- `DELETE /api/reservations/me/{ma_dat}` — xoá 1 đặt trước **đã xử lý** (`HUY`/`DA_MUON`) của mình; không tồn tại/không thuộc mình → `404`; đang `CHO_XU_LY`/`SAN_SANG` → `400`.
+- `DELETE /api/reservations/me` — xoá toàn bộ đặt trước `HUY`/`DA_MUON` của mình, trả `{ "so_phieu_da_xoa": n }`; giữ nguyên `CHO_XU_LY`/`SAN_SANG`.
+
+Audit log: `DELETE_RESERVATION_HISTORY`, `DELETE_RESERVATION_HISTORY_ALL`.
 
 ## 19. Thông báo cho độc giả — GET `/api/notifications` (UC11)
 
@@ -354,7 +383,7 @@ Header: `Mã,Tên,Tác giả,Thể loại,NXB,Năm,Số lượng`.
 
 ### 21.2 Danh sách phiếu mượn — GET `/api/export/borrows.csv`
 
-Header: `Mã phiếu,Mã độc giả,Ngày mượn,Hạn trả,Ngày trả,Trạng thái,Số ngày quá hạn,Phạt` — trạng thái hiển thị `Đang mượn`/`Đã trả`, phạt lấy từ `FineHistory`.
+Header: `Mã phiếu,Mã độc giả,Ngày mượn,Hạn trả,Ngày trả,Trạng thái,Số ngày quá hạn,Điểm phạt` — trạng thái hiển thị `Đang mượn`/`Đã trả`, điểm phạt lấy từ `FineHistory.so_diem`.
 
 ### 21.3 Báo cáo thống kê — GET `/api/export/report.csv`
 
@@ -364,9 +393,62 @@ Gộp 3 phần, mỗi phần có tiêu đề và header rõ ràng:
 - `ĐỘC GIẢ HOẠT ĐỘNG` → `Mã độc giả,Họ tên,Số phiếu mượn`.
 - `SÁCH QUÁ HẠN` → `Mã phiếu,Mã sách,Tên sách,Mã độc giả,Họ tên,Số ngày quá hạn`.
 
+### 21.4 Danh sách đặt trước — GET `/api/export/reservations.csv`
+
+Header: `Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái` — dữ liệu từ `DatTruoc` kèm tên sách/tên độc giả, UTF-8 BOM, filename `danh_sach_dat_truoc_<thời gian>.csv`; `librarian`/`admin`, reader → 403.
+
+## 22. Hồ sơ cá nhân — `/api/profile/me`
+
+Mọi role đã đăng nhập, chỉ thao tác thông tin **của mình**.
+
+### 22.1 Xem hồ sơ — GET `/api/profile/me`
+
+Response 200 (khớp `profileOut` Frontend):
+
+```json
+{
+  "username": "docgia1",
+  "ho_ten": "Nguyễn Văn An",
+  "role": "reader",
+  "email": "DTC245200486@ictu.edu.vn",
+  "so_dien_thoai": "0912345004",
+  "loai_doc_gia": "sinh_vien",
+  "avatar_url": "/static/avatars/docgia1.png"
+}
+```
+
+`email`, `so_dien_thoai`, `loai_doc_gia` lấy từ `Readers` khi tài khoản có `reader_id`; admin/librarian lấy `email`/`so_dien_thoai` từ `Users` (tài khoản cũ chưa có → rỗng, cập nhật qua PUT sẽ lưu).
+
+### 22.2 Cập nhật — PUT `/api/profile/me`
+
+Body tùy chọn: `ho_ten`, `email`, `so_dien_thoai`, `loai_doc_gia` (`sinh_vien`/`giang_vien`/`khac`).
+
+- Cả 3 role: cập nhật `ho_ten`, `email`, `so_dien_thoai` theo validation chung; reader thêm `loai_doc_gia`.
+- Email trùng (Users hoặc Readers) → `409`.
+
+Audit log: `UPDATE_PROFILE`.
+
+### 22.3 Đổi mật khẩu — PUT `/api/profile/me/password`
+
+```json
+{
+  "mat_khau_cu": "mat-khau-cu",
+  "mat_khau_moi": "mat-khau-moi-6-ky-tu",
+  "xac_nhan": "mat-khau-moi-6-ky-tu"
+}
+```
+
+`xac_nhan` tùy chọn (Frontend tự kiểm tra phía client; nếu gửi và khác `mat_khau_moi` → `400`). Sai mật khẩu cũ → `400`; mật khẩu mới ≥ 6 ký tự. Audit log: `CHANGE_PASSWORD`.
+
+### 22.4 Upload ảnh đại diện — POST `/api/profile/me/avatar`
+
+Multipart field `file`, chỉ PNG/JPG, tối đa **2MB** (sai loại/quá lớn → `400`). Lưu tại `Backend/static/avatars/{username}.png|.jpg`, xoá ảnh cũ khi đổi; ảnh xem được qua `/static/avatars/...` (StaticFiles đã mount).
+
+Response: `{ "avatar_url": "/static/avatars/docgia1.png" }`. Audit log: `UPDATE_AVATAR`.
+
 ## Cấu hình sẵn để dán vào `Frontend/js/api.js`
 
-(Dành cho màn hình đăng nhập + quản lý sách hiện tại; các API mới mục 7–21 sẽ được Frontend thêm khi dựng UI tương ứng.)
+(Dành cho màn hình đăng nhập + quản lý sách hiện tại; các API mới mục 7–22 sẽ được Frontend thêm khi dựng UI tương ứng.)
 
 ```javascript
 var config = {
