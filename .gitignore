@@ -1,0 +1,19 @@
+# Môi trường và bí mật
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Dữ liệu sao lưu
+*.bak
+Backend/backups/
+
+# IDE / hệ điều hành
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
