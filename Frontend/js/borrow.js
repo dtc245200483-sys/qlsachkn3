@@ -370,38 +370,6 @@
       });
   }
 
-  function exportBorrows() {
-    var stamp = exportStamp();
-    var filename = "danh_sach_phieu_muon_" + stamp + ".csv";
-    API.downloadFile("exportBorrows", filename).then(function (res) {
-      if (!res.ok) {
-        showMessage(
-          res.status === 404 || res.status === 405
-            ? "Chức năng xuất chưa sẵn sàng (Backend chưa có API export)."
-            : res.message || "Không thể tải file xuất dữ liệu."
-        );
-        return;
-      }
-      showMessage("Đã tải file " + filename + ".", "alert-success");
-    });
-  }
-
-  function exportStamp() {
-    var d = new Date();
-    function p(n) {
-      return n < 10 ? "0" + n : String(n);
-    }
-    return (
-      d.getFullYear() +
-      p(d.getMonth() + 1) +
-      p(d.getDate()) +
-      "_" +
-      p(d.getHours()) +
-      p(d.getMinutes()) +
-      p(d.getSeconds())
-    );
-  }
-
   function loadFines() {
     var banner = document.getElementById("fine-banner");
     if (banner) {
@@ -504,7 +472,6 @@
 
     document.getElementById("add-borrow-item").addEventListener("click", addItemRow);
     document.getElementById("create-borrow-button").addEventListener("click", createBorrow);
-    document.getElementById("export-borrows-button").addEventListener("click", exportBorrows);
     loadFines();
 
     loadReaders();

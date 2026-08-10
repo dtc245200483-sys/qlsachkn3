@@ -39,7 +39,7 @@ def _cleanup_test_data() -> None:
             text(
                 "DELETE FROM DatTruoc WHERE ma_dat LIKE 'RV%' "
                 "AND (ma_doc_gia LIKE 'TEST%' OR ma_doc_gia IN "
-                "(SELECT ma FROM Readers WHERE email LIKE 'tmp_backend_test_%@ictu.edu.vn'))"
+                "(SELECT ma FROM Readers WHERE email LIKE 'DTC100%@ictu.edu.vn'))"
             )
         )
         db.execute(
@@ -68,7 +68,7 @@ def _cleanup_test_data() -> None:
         db.execute(
             text(
                 "DELETE FROM Readers WHERE ma LIKE 'TEST%' "
-                "OR email LIKE 'tmp_backend_test_%@ictu.edu.vn'"
+                "OR email LIKE 'DTC100%@ictu.edu.vn'"
             )
         )
         db.execute(text("DELETE FROM TheLoai WHERE ma LIKE 'TEST%'"))

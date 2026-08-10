@@ -408,6 +408,14 @@ var config = {
   Frontend đã nối 2 nút xoá theo quét (05:14-05:15) — chờ log chính thức.
 - Bỏ Xuất CSV books/stats: CHƯA LÀM — vẫn còn nút (05:15:27).
 
+### Trạng thái cập nhật 2026-08-10 06:45:01
+- stats: ĐÃ BỎ (06:42, có log Frontend 06:45:01).
+- books: VẪN CÒN nút Xuất CSV (06:10:05) — CHƯA XONG.
+
+### Trạng thái cập nhật 2026-08-10 06:54:40
+- **HOÀN THÀNH** — Frontend bỏ toàn bộ nút/hàm Xuất CSV (books, stats, borrow,
+  reservations; log 06:54:40); Backend /api/export/* giữ nguyên.
+
 ---
 
 ## YC-2026-08-10-017 — Frontend: chặn gửi yêu cầu khi chưa chọn sách
@@ -435,6 +443,39 @@ var config = {
 
 ### Trạng thái cập nhật 2026-08-10 05:48:15
 - CHƯA THỰC HIỆN — requests.js không đổi (20:14), nút vẫn enable.
+
+### Trạng thái cập nhật 2026-08-10 06:45:01
+- HOÀN THÀNH theo code — requests.js 06:04:31 có updateSubmitState (disable +
+  enable theo chọn sách); chờ log chính thức.
+
+### Trạng thái cập nhật 2026-08-10 06:54:40
+- HOÀN THÀNH (đã có log Frontend 06:54:40 xác nhận phần UI; requests.js đã disable).
+
+---
+
+## YC-2026-08-10-018 — Log bổ sung Backend 0.25.0 + bỏ Xuất CSV books + xác nhận export reservations
+
+- Ngày tạo: 2026-08-10 06:45:01
+- Người yêu cầu: Thư Ký (quét: Backend đổi nhiều nhưng không có log; books.html còn nút CSV)
+- Gửi cho: **Backend Agent** + **Frontend Agent**
+- Trạng thái: CHỜ XỬ LÝ
+
+### Backend
+1. Gửi log [BACKEND] tổng hợp cho các thay đổi 05:29-06:31: so_ngay_muon
+   (migration 0013), bỏ loại "khac" (0014), validation tài khoản, export đặt
+   trước chỉ thủ thư, Email DTC, thông báo lỗi đăng nhập tiếng Việt,
+   api_docs 0.25.0 + số test PASS.
+
+### Frontend
+2. Bỏ nút "Xuất CSV" ở books.html (theo yêu cầu người dùng — chỉ giữ
+   borrow.html).
+3. Xác nhận nút "Xuất CSV" ở reservations.html (librarian) có giữ không
+   (Backend đã có /api/export/reservations.csv; giữ hay bỏ tuỳ yêu cầu).
+4. Gửi log [FRONTEND] xác nhận YC-017 (disable nút gửi) + bỏ UC trên UI admin.
+
+### Trạng thái cập nhật 2026-08-10 06:54:40
+- Phần Backend (gửi log): HOÀN THÀNH — đã nhận 4 log 05:59→06:32.
+- Phần Frontend: HOÀN THÀNH — đã bỏ toàn bộ nút Xuất CSV (gồm books + reservations).
 
 ### Cập nhật 2026-08-09 09:55 (Trợ Lý đính chính theo quyết định người dùng)
 - Mục 2 của YC-003: BỎ phần "quản lý tài khoản thủ thư" — tính năng này đã bị xoá toàn bộ (Frontend + Backend), KHÔNG làm lại vì không có trong đề bài.

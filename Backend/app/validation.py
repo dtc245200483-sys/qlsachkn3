@@ -6,8 +6,27 @@ from sqlalchemy.orm import Session
 from .models import Reader, User
 
 NAME_PART_RE = re.compile(r"^[^\W\d_]+$")
-EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@ictu\.edu\.vn$")
-PHONE_RE = re.compile(r"^(0|\+84)(3|5|7|8|9)\d{8}$")
+EMAIL_RE = re.compile(r"^dtc\d+@ictu\.edu\.vn$")
+PHONE_RE = re.compile(r"^0\d{9}$")
+
+
+def validate_username(value: str) -> str:
+    value = (value or "").strip()
+    if len(value) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Tên đăng nhập phải từ 6 ký tự trở lên.",
+        )
+    return value
+
+
+def validate_password(value: str) -> str:
+    if value is None or len(value) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Mật khẩu phải từ 6 ký tự trở lên.",
+        )
+    return value
 
 
 def validate_ho_ten(value: str) -> str:
@@ -18,7 +37,7 @@ def validate_ho_ten(value: str) -> str:
     if len(parts) < 2:
         raise HTTPException(
             status_code=422,
-            detail="Họ tên phải có ít nhất 2 từ (VD: Nguyễn Văn An).",
+            detail="Họ tên phải đầy đủ (tên + họ).",
         )
     for part in parts:
         if len(part) < 2:
@@ -41,7 +60,7 @@ def validate_email(value: str) -> str:
     if not EMAIL_RE.match(value):
         raise HTTPException(
             status_code=422,
-            detail="Email phải đúng định dạng ICTU (VD: DTC245200483@ictu.edu.vn).",
+            detail="Email sai định dạng — phải bắt đầu bằng DTC + số (VD: DTC245200483@ictu.edu.vn).",
         )
     return value
 
@@ -53,7 +72,7 @@ def validate_phone(value: str) -> str:
     if not PHONE_RE.match(value):
         raise HTTPException(
             status_code=422,
-            detail="Số điện thoại Việt Nam không hợp lệ (VD: 0912345001).",
+            detail="Số điện thoại phải là 10 chữ số và bắt đầu bằng 0.",
         )
     return value
 

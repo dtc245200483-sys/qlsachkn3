@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from app.database import SessionLocal
 from app.models import BorrowSlip
+from tests.helpers import next_test_email
 
 
 def _headers(token: str) -> dict:
@@ -15,7 +16,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Xuất dữ liệu",
-            "email": f"{username}@ictu.edu.vn",
+            "email": next_test_email(),
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },
@@ -184,17 +185,21 @@ def test_export_reservations_csv(client_and_tokens):
     )
     assert reservation.status_code == 200, reservation.text
 
-    for token in (staff, admin):
-        response = client.get("/api/export/reservations.csv", headers=_headers(token))
-        assert response.status_code == 200
-        assert response.content.startswith(b"\xef\xbb\xbf")
-        text = response.content.decode("utf-8-sig")
-        lines = text.split("\r\n")
-        assert lines[0] == "Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái"
-        assert any(
-            line.startswith("RV") and "TESTEXPRV1" in line and "Sách Đặt Trước" in line
-            for line in lines
-        )
+    response = client.get("/api/export/reservations.csv", headers=_headers(staff))
+    assert response.status_code == 200
+    assert response.content.startswith(b"\xef\xbb\xbf")
+    text = response.content.decode("utf-8-sig")
+    lines = text.split("\r\n")
+    assert lines[0] == "Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái"
+    assert any(
+        line.startswith("RV") and "TESTEXPRV1" in line and "Sách Đặt Trước" in line
+        for line in lines
+    )
+
+    assert client.get(
+        "/api/export/reservations.csv",
+        headers=_headers(admin),
+    ).status_code == 403
 
     assert client.get(
         "/api/export/reservations.csv",

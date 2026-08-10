@@ -19,10 +19,56 @@
     }, 6000);
   }
 
+  function validate(form) {
+    var username = form.elements.username.value.trim();
+    var hoTen = form.elements.hoTen.value.trim();
+    var email = form.elements.email.value.trim();
+    var sdt = form.elements.soDienThoai.value.trim();
+    var password = form.elements.password.value;
+    var confirm = document.getElementById("reg-password-confirm").value;
+
+    if (!username) {
+      return "Chưa nhập tên đăng nhập.";
+    }
+    if (username.length < 6) {
+      return "Tên đăng nhập phải từ 6 ký tự trở lên.";
+    }
+    if (!hoTen) {
+      return "Chưa nhập họ tên.";
+    }
+    if (!email) {
+      return "Chưa nhập email.";
+    }
+    if (!/^[^@\s]+@ictu\.edu\.vn$/i.test(email)) {
+      return "Email sai định dạng — phải là email @ictu.edu.vn.";
+    }
+    if (!sdt) {
+      return "Chưa nhập số điện thoại.";
+    }
+    if (!/^0\d{9}$/.test(sdt)) {
+      return "Số điện thoại phải là 10 chữ số và bắt đầu bằng 0.";
+    }
+    if (!password) {
+      return "Chưa nhập mật khẩu.";
+    }
+    if (password.length < 6) {
+      return "Mật khẩu phải từ 6 ký tự trở lên.";
+    }
+    if (confirm !== password) {
+      return "Xác nhận mật khẩu không khớp.";
+    }
+    return "";
+  }
+
   function submit(e) {
     e.preventDefault();
     var form = document.getElementById("register-form");
     var button = document.getElementById("register-button");
+    var error = validate(form);
+    if (error) {
+      showMessage(error);
+      return;
+    }
     var built = window.API.serializeForm(form, "register");
     if (!built.ok) {
       showMessage(built.message);

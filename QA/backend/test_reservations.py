@@ -1,3 +1,6 @@
+from conftest import unique
+
+
 def test_list_invalid_status(client, headers):
     resp = client.get(
         "/api/reservations",
@@ -35,6 +38,24 @@ def test_reserve_duplicate_fails(client, headers):
     assert resp.status_code == 409
 
 
+def test_cancel_other_reader_forbidden(client, headers):
+    # RVQA03 thuộc reader1; reader2 không được hủy
+    resp = client.put("/api/reservations/RVQA03/cancel", headers=headers("reader2"))
+    assert resp.status_code == 404
+
+
+def test_reader_cancel_san_sang_fails(client, headers):
+    # RVQA03 đã SAN_SANG, reader không huỷ được
+    resp = client.put("/api/reservations/RVQA03/cancel", headers=headers("reader1"))
+    assert resp.status_code == 400
+
+
+def test_librarian_cancel_san_sang(client, headers):
+    resp = client.put("/api/reservations/RVQA03/cancel", headers=headers("librarian"))
+    assert resp.status_code == 200
+    assert resp.json()["trang_thai"] == "HUY"
+
+
 def test_reserve_success_and_duplicate(client, headers):
     # Hủy RVQA02 trước, rồi đặt lại QAS003
     resp = client.put("/api/reservations/RVQA02/cancel", headers=headers("reader1"))
@@ -57,32 +78,46 @@ def test_reserve_success_and_duplicate(client, headers):
     assert resp2.status_code == 409
 
 
-def test_cancel_other_reader_forbidden(client, headers):
-    # RVQA03 thuộc reader1; reader2 không được hủy
-    resp = client.put("/api/reservations/RVQA03/cancel", headers=headers("reader2"))
-    assert resp.status_code == 404
+def test_delete_reservation_history(client, headers):
+    # RVQA02 đã HUY -> reader xoá được
+    assert client.delete("/api/reservations/me/RVQA02", headers=headers("reader1")).status_code == 200
+    # Đặt trước đang chờ (mới tạo ở test trước) -> không xoá được
+    active = [r for r in client.get("/api/reservations", headers=headers("reader1")).json() if r["trang_thai"] == "CHO_XU_LY"]
+    assert active
+    assert client.delete(f"/api/reservations/me/{active[0]['ma_dat']}", headers=headers("reader1")).status_code == 400
+    # Phiếu của reader2 -> reader1 không xoá được
+    assert client.delete("/api/reservations/me/RVQA01", headers=headers("reader1")).status_code == 404
 
 
-def test_cancel_non_pending_fails(client, headers):
-    # RVQA03 đã SAN_SANG, không hủy được
-    resp = client.put("/api/reservations/RVQA03/cancel", headers=headers("reader1"))
-    assert resp.status_code == 400
-
-
-def test_fulfill_by_librarian(client, headers):
-    resp = client.put("/api/reservations/RVQA01/fulfill", headers=headers("librarian"))
+def test_fulfill_and_confirm_borrow_flow(client, headers):
+    # Tìm đặt trước CHO_XU_LY của reader1 (QAS003)
+    active = [r for r in client.get("/api/reservations", headers=headers("reader1")).json() if r["trang_thai"] == "CHO_XU_LY" and r["ma_sach"] == "QAS003"]
+    assert active
+    ma_dat = active[0]["ma_dat"]
+    # Chưa có sách -> fulfill phải báo lỗi
+    assert client.put(f"/api/reservations/{ma_dat}/fulfill", headers=headers("librarian")).status_code == 400
+    # Admin bổ sung tồn kho
+    book = client.get("/api/books", headers=headers("librarian")).json()
+    book = next(b for b in book if b["ma"] == "QAS003")
+    book["soLuong"] = 2
+    assert client.put("/api/books/QAS003", json=book, headers=headers("admin")).status_code == 200
+    # Fulfill -> SAN_SANG
+    resp = client.put(f"/api/reservations/{ma_dat}/fulfill", headers=headers("librarian"))
     assert resp.status_code == 200, resp.text
     assert resp.json()["trang_thai"] == "SAN_SANG"
-    # fulfill lần 2 -> 400
-    resp2 = client.put("/api/reservations/RVQA01/fulfill", headers=headers("librarian"))
-    assert resp2.status_code == 400
+    # Fulfill lần 2 -> 400
+    assert client.put(f"/api/reservations/{ma_dat}/fulfill", headers=headers("librarian")).status_code == 400
+    # Xác nhận đã lấy -> DA_MUON + tạo phiếu mượn
+    resp = client.put(f"/api/reservations/{ma_dat}/borrow", headers=headers("librarian"))
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["trang_thai"] == "DA_MUON"
+    books = client.get("/api/books", headers=headers("librarian")).json()
+    assert next(b["soLuong"] for b in books if b["ma"] == "QAS003") == 1
 
 
 def test_fulfill_permissions(client, headers):
-    resp = client.put("/api/reservations/RVQA03/fulfill", headers=headers("reader1"))
-    assert resp.status_code == 403
-    resp = client.put("/api/reservations/RVQA03/fulfill", headers=headers("admin"))
-    assert resp.status_code == 403
+    assert client.put("/api/reservations/RVQA01/fulfill", headers=headers("reader1")).status_code == 403
+    assert client.put("/api/reservations/RVQA01/fulfill", headers=headers("admin")).status_code == 403
 
 
 def test_list_reader_sees_own_only(client, headers):
@@ -92,6 +127,12 @@ def test_list_reader_sees_own_only(client, headers):
     assert rows
     assert all(r["ma_doc_gia"] == "QADG01" for r in rows)
     assert not any(r["ma_dat"] == "RVQA01" for r in rows)
+
+
+def test_delete_all_processed_history(client, headers):
+    resp = client.delete("/api/reservations/me", headers=headers("reader1"))
+    assert resp.status_code == 200
+    assert resp.json()["so_phieu_da_xoa"] >= 1
 
 
 def test_list_admin_forbidden(client, headers):

@@ -167,6 +167,28 @@ Chỉ nối thêm khi phát hiện lệch pha mới, không xoá/sửa dòng cũ
 - Ghi nhận: admin-accounts.js chỉ tạo thủ thư (khớp Backend 05:22:45);
   reservations mock vẫn còn (YC-007).
 
+## 2026-08-10 06:45:01
+- YC-016 phần stats: ĐÃ XONG — stats.html đã bỏ nút Xuất CSV (06:42).
+- YC-016 phần books: CHƯA XONG — books.html VẪN còn nút Xuất CSV (06:10:05).
+- YC-017: ĐÃ XONG theo code — requests.js có updateSubmitState (disable nút
+  khi chưa chọn sách); chưa có log chính thức.
+- YC-015: ĐÃ XONG theo code — so_ngay_muon có trong schemas/requests/api_docs
+  0.25.0 (migration 0013); chưa có log chính thức.
+- Cảnh báo 16 (quy trình): Backend có loạt thay đổi lớn 05:57-06:31
+  (0013/0014, validation, export đặt trước chỉ thủ thư, lỗi đăng nhập tiếng
+  Việt, api_docs 0.25.0) NHƯNG CHƯA GỬI LOG — cần log bổ sung (YC-018).
+- Ghi nhận: UI admin đã bỏ "(UCxx)"; reservations.html thêm nút Xuất CSV
+  librarian (mới — cần xác nhận có giữ không).
+
+## 2026-08-10 06:54:40
+- Cảnh báo 16: ĐÃ HẾT — Backend ĐÃ gửi 4 log (05:59:29, 06:19:53, 06:26:07,
+  06:32:15; 0.22.0→0.25.0, 101/101) — trước đó Thư Ký đọc thiếu do thứ tự file.
+- YC-016: HOÀN THÀNH — Frontend đã bỏ toàn bộ nút/hàm Xuất CSV (books, stats,
+  borrow, reservations); Backend /api/export/* giữ nguyên.
+- YC-015 (so_ngay_muon): HOÀN THÀNH — log 05:59:29 (0.22.0, 100/100).
+- YC-017: HOÀN THÀNH — requests.js updateSubmitState (06:04) + khớp log.
+- YC-007/YC-012 phần 3: VẪN CÒN — reservations.html vẫn tải reservation-mock.js.
+
 ## 2026-08-09 09:55
 - Đính chính theo quyết định người dùng: tính năng "quản lý tài khoản thủ thư" đã bị XOÁ (không có trong đề bài) — /api/admin/librarians trả 404, Frontend admin-librarians.html/js đã gỡ → phạm vi UI admin chỉ còn 3 nhóm (cấu hình thư viện, cấu hình AI, audit + backup).
 - Lưu ý vận hành: code Backend đã có /api/readers (09:49:03) nhưng server đang chạy chưa reload → cần restart để API thực tế khớp code.

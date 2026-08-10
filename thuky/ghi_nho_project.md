@@ -133,6 +133,15 @@
   0.21.0, 95/95). Frontend nối xoá lịch sử + accounts thủ thư (theo quét).
   CHƯA LÀM: bỏ Xuất CSV books/stats (YC-016), disable nút gửi (YC-017),
   so_ngay_muon (YC-015), reservations mock (YC-007).
+- Cập nhật 06:45:01 (10/08): Backend 0.25.0 — so_ngay_muon XONG (0013), bỏ loại
+  khac (0014), validation, export đặt trước chỉ thủ thư, lỗi đăng nhập tiếng
+  Việt — NHƯNG CHƯA CÓ LOG (YC-018). Frontend: stats bỏ Xuất CSV ✅; YC-017
+  xong ✅; UI admin sạch UC ✅; books.html CÒN nút Xuất CSV ❌; reservations
+  thêm nút CSV librarian (chờ xác nhận).
+- Cập nhật 06:54:40 (10/08): Backend ĐÃ có đủ 4 log (05:59→06:32, 0.22→0.25,
+  101/101). Frontend ĐÃ bỏ TOÀN BỘ nút/hàm Xuất CSV (books/stats/borrow/
+  reservations) — chức năng 8 chỉ còn qua API; books.html căn chỉnh giao diện.
+  YC-015/016/017/018 đóng; còn reservations mock (YC-007) + AI Engine.
 
 ## Đối chiếu chức năng (cập nhật 09:50:40)
 - 1 (đăng nhập/phân quyền): Backend + Frontend có code; phần admin-only Backend

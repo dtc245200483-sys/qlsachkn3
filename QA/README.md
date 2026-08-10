@@ -73,8 +73,8 @@ python QA/frontend/check_frontend.py http://localhost:8000
 
 ## Kết quả chốt
 
-- QA backend: **96/96 PASS** (DB sạch).
-- Backend gốc: **66/67 PASS** (1 fail test-isolation, BUG-007).
+- QA backend: **116/116 PASS** (DB sạch, Backend 0.25.0).
+- Backend gốc: **101/101 PASS** trên DB sạch; **100/101** trên DB có dữ liệu (BUG-007).
 - Frontend static: **PASS**.
 - UI manual: xem `frontend/test_cases_ui.md`.
-- Bug: `bug_reports.md` — 8 bug + 1 trạng thái AI chưa triển khai.
+- Bug: `bug_reports.md` — 16 mã bug (2 đã sửa, 3 sửa một phần, còn lại mở) + AI chưa triển khai.

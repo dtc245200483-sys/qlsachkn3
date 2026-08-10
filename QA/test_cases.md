@@ -1,53 +1,53 @@
 # Tổng hợp Test Case — QA
 
-Ngày: 2026-08-09 · Môi trường: Backend QA `LibraryDB_QA` (port 8001) + Backend demo (port 8000) · Không đụng dữ liệu thật.
+Cập nhật: 2026-08-10 · Backend 0.25.0 (điểm SVNET, DAT_TRUOC, so_ngay_muon, profile, lock reader, validation DTC).
+Môi trường: Backend QA `LibraryDB_QA` (port 8001) + Backend demo (port 8000). Không đụng dữ liệu thật.
 
 ## 1. Backend — bộ test QA tự viết (`QA/backend`)
 
-Chạy bằng `python -m pytest` (hoặc `run_qa_tests.ps1` để tự reset DB sạch).
-Kết quả vòng sạch: **96/96 PASS**.
+Kết quả vòng sạch: **116/116 PASS** (`run_qa_tests.ps1` tự reset DB → migrate → seed → start server → pytest).
 
-| Nhóm | Số test | Đúng | Sai | Biên | Ghi chú |
-|---|---|---|---|---|---|
-| Auth/Đăng ký/Phân quyền | 12 | 3 | 7 | 2 | Login 3 vai trò, sai mật khẩu, trùng username/email, password ngắn, loại độc giả sai, admin không mượn được |
-| Quản lý sách + Tra cứu | 18 | 8 | 7 | 3 | CRUD, soLuong=0, namXb biên 1000/2100, tìm theo tên/tác giả/loại/trạng thái, trạng thái sai |
-| Quản lý độc giả | 9 | 4 | 4 | 1 | CRUD, trùng mã/email, loại/trạng thái sai, khoá thẻ, xoá chỉ admin |
-| Mượn/Trả/Gia hạn/Phạt | 19 | 7 | 9 | 3 | stock=0, thiếu tồn, vượt max 3, trả đúng/trễ, gia hạn 1 lần, gia hạn trễ có phạt, chặn gia hạn khi có đặt trước, thu phạt 2 lần |
-| Đặt trước | 10 | 4 | 5 | 1 | Sách hết đặt được, sách còn bị chặn, trùng 409, huỷ, sẵn sàng, phân quyền |
-| Yêu cầu reader→thủ thư | 7 | 3 | 4 | 0 | MUON/TRA/GIA_HAN duyệt, từ chối, thiếu items, phiếu người khác, trùng mã |
-| Thông báo | 5 | 3 | 2 | 0 | SAP_HET_HAN, QUA_HAN, SACH_SAN_SANG, phiếu đã trả không hiện, phân quyền |
-| Thống kê + Xuất CSV | 8 | 4 | 3 | 1 | top-books limit 1–100, top-readers, quá hạn, CSV BOM/header, phân quyền |
-| Admin: cấu hình/audit/tài khoản/danh mục/restore | 8 | 4 | 3 | 1 | API key che, khoá tài khoản, CRUD danh mục, restore file sai → 404 |
+| Nhóm | Số test | Ghi chú |
+|---|---:|---|
+| Auth/Đăng ký/Phân quyền | 15 | Login 3 vai trò, sai mật khẩu, thiếu field → 400, username/email/SĐT/họ tên sai validation, loại độc giả sai, role_display |
+| Quản lý sách + Tra cứu + sort | 20 | CRUD, biên số lượng/năm, lọc q/theLoai/trạng thái, sort/order, `trangThai=het` → 422 (BUG-009) |
+| Quản lý độc giả | 10 | CRUD admin-only, lock librarian, khoá thẻ chặn login, email trùng, validation |
+| Mượn/Trả/Gia hạn/Phạt điểm | 18 | stock=0, vượt max, trả đúng/trễ (so_diem), gia hạn 1 lần/trễ/chặn khi có đặt trước, thu phạt trừ điểm SVNET, `so_ngay_muon` trực tiếp bị bỏ qua (BUG-002) |
+| Đặt trước | 11 | Sách hết/còn/trùng, huỷ reader/librarian, xoá lịch sử, fulfill kiểm tồn kho, xác nhận đã lấy → phiếu mượn |
+| Yêu cầu (MUON/TRA/GIA_HAN/DAT_TRUOC) | 10 | so_ngay_muon đề xuất + ghi đè khi duyệt, vượt max 400, DAT_TRUOC tạo đặt trước thật, reject, phân quyền |
+| Hồ sơ cá nhân | 5 | GET/PUT profile, đổi mật khẩu, upload avatar (PNG hợp lệ + sai loại), cleanup file |
+| Thông báo | 5 | SAP_HET_HAN, QUA_HAN, SACH_SAN_SANG, phiếu đã trả không hiện, phân quyền |
+| Thống kê + Xuất CSV | 10 | top-books limit, top-readers, quá hạn, CSV BOM/header, reservations.csv chỉ librarian |
+| Admin: cấu hình/audit/tài khoản/danh mục/restore | 12 | API key che, cấu hình điểm, tạo tài khoản chỉ librarian, khoá tài khoản, CRUD danh mục, restore file sai |
 
 ## 2. Backend — bộ test gốc của dự án (`Backend/tests`)
 
-Chạy trên DB QA (trỏ `DATABASE_URL` về `LibraryDB_QA`): **66/67 PASS, 1 FAIL**.
-
-- FAIL: `test_stats.py::test_top_books_order_and_limit` — test không cô lập dữ liệu: giả định top-10 chỉ có 2 sách TEST; khi DB có nhiều sách khác có lượt mượn, `TESTSTT2` (1 lượt) rơi ngoài top-10 → `KeyError`. Logic API vẫn đúng (xem BUG-007).
-- Các test còn lại bao gồm: mượn/trả/phạt, đặt trước, yêu cầu, thông báo, thống kê, xuất CSV, admin — đều pass trên DB QA.
+- Trên DB QA **sạch** (migrate xong, chưa seed): **101/101 PASS**.
+- Trên DB QA **đã có dữ liệu** (sau khi QA suite tạo dữ liệu): **100/101 PASS** — fail duy nhất `test_stats.py::test_top_books_order_and_limit` (`KeyError: 'TESTSTT2'`) = BUG-007 (test không cô lập dữ liệu, logic API không sai).
+- BUG-015: `conftest.py` dọn `Readers` theo `DTC100%` trước `Users` → vỡ FK khi DB có reader seed dùng dải này (đã né bằng cách QA dùng `DTC90x`; bản thân conftest vẫn chưa an toàn).
 
 ## 3. Frontend
 
-- Kiểm tra tĩnh (`QA/frontend/check_frontend.py`): **PASS** — mọi file HTML tham chiếu CSS/JS đều tồn tại; mọi endpoint trong `js/api.js` đều có trong OpenAPI Backend.
-- Kịch bản UI thủ công: `QA/frontend/test_cases_ui.md` — 122 case đúng/sai/biên; nhiều case đã xác nhận bằng code review, một số cần chạy tay trên trình duyệt.
-- Bug frontend phát hiện: **BUG-001 → BUG-006, BUG-008** (xem `bug_reports.md`).
+- Kiểm tra tĩnh (`QA/frontend/check_frontend.py`): **PASS** — file tham chiếu đủ; mọi endpoint `api.js` đều có trong OpenAPI Backend (bao gồm profile/lock/DAT_TRUOC/export reservations).
+- Kịch bản UI: `QA/frontend/test_cases_ui.md`.
+- Bug mở (2026-08-10): BUG-002 (mượn trực tiếp), BUG-003, BUG-005, BUG-006, BUG-007, BUG-008 (menu sách), BUG-009 → BUG-016 — xem `bug_reports.md`.
 
-## 4. AI Engine — bắt buộc theo mục 4 đề bài
+## 4. AI Engine
 
-AI-1/2/3 **chưa được triển khai** (AI_Engine chỉ có file prompt `AI.txt`; Backend chưa có `/ai/search`, `/ai/summarize`, `/ai/recommend`; Frontend chưa có màn hình AI). Vì vậy **chưa thể thực thi** 3 tình huống bắt buộc. Test case đã chuẩn bị sẵn để chạy khi có code:
+AI-1/2/3 vẫn **chưa triển khai** (chỉ có `AI_Engine/AI.txt`). Test case chuẩn bị sẵn:
 
-| Mã | Tình huống | Input | Kết quả mong đợi |
-|---|---|---|---|
-| AI-001 | Câu hỏi mơ hồ | "Tôi muốn tìm sách hay để đọc" | Gợi ý ≤ 5 sách có trong dữ liệu, kèm lý do; không bịa mã sách |
-| AI-002 | Sách không tồn tại | "Tìm sách 'Khoa học huyền bí 2099'" | Trả lời không tìm thấy, không bịa ra sách |
-| AI-003 | Sách hết | "Tìm sách X đang hết" | Trả về trạng thái hết + gợi ý đặt trước/sách tương tự, không báo sai còn sách |
-| AI-004 | Biên | Prompt/dữ liệu đầu vào quá dài | Trả lỗi rõ ràng (422/timeout), không treo |
-| AI-005 | Biên | API AI trả response rỗng/sai định dạng | Frontend hiện lỗi thân thiện, không crash |
-| AI-006 | Sai | Gọi AI khi chưa cấu hình API key | Hiện lỗi cấu hình rõ ràng |
+| Mã | Tình huống | Kết quả mong đợi |
+|---|---|---|
+| AI-001 | Câu hỏi mơ hồ | Gợi ý ≤5 sách có thật, kèm lý do, không bịa |
+| AI-002 | Sách không tồn tại | Trả lời không tìm thấy |
+| AI-003 | Sách hết | Trả đúng trạng thái hết + gợi ý đặt trước/tương tự |
+| AI-004 | Input quá dài / timeout / rate limit | Lỗi rõ ràng, không treo |
+| AI-005 | Response rỗng/sai định dạng | Frontend hiện lỗi thân thiện |
+| AI-006 | Chưa cấu hình API key | Hiện lỗi cấu hình |
 
 ## 5. Tổng kết
 
-- Tổng test đã chạy tự động: **96 (QA) + 67 (gốc) = 163**, pass **162**, fail **1** (test gốc thiếu cô lập dữ liệu).
-- Test case đúng/sai/biên cho mượn/trả/quá hạn/phạt: đầy đủ (19 case backend + UI).
-- Test chatbot AI: chưa chạy được vì chưa có code AI (đã chuẩn bị case).
-- Bug đã ghi nhận: 8 bug + 1 trạng thái AI chưa triển khai.
+- QA suite: **116/116 PASS**.
+- Backend gốc: sạch **101/101**; có dữ liệu **100/101** (BUG-007).
+- Frontend static: **PASS**; UI manual: xem kịch bản (nhiều case cần chạy tay).
+- Bug mở: 16 mã (trong đó 3 mã sửa một phần, 2 mã đã sửa hoàn toàn) + AI chưa triển khai.

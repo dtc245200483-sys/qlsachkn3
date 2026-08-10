@@ -7,7 +7,14 @@ from ..deps import require_roles
 from ..models import Reader, User
 from ..schemas import AccountCreate, AccountOut, AccountUpdate
 from ..security import hash_password
-from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
+from ..validation import (
+    ensure_email_unique,
+    validate_email,
+    validate_ho_ten,
+    validate_password,
+    validate_phone,
+    validate_username,
+)
 
 router = APIRouter(prefix="/api/admin/accounts", tags=["admin-accounts"])
 
@@ -20,6 +27,8 @@ def create_account(
 ) -> AccountOut:
     if db.query(User).filter(User.username == body.username).first() is not None:
         raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại.")
+    username = validate_username(body.username)
+    password = validate_password(body.password)
     if body.role != "librarian":
         raise HTTPException(
             status_code=400,
@@ -31,8 +40,8 @@ def create_account(
     ensure_email_unique(db, email)
 
     new_user = User(
-        username=body.username,
-        password_hash=hash_password(body.password),
+        username=username,
+        password_hash=hash_password(password),
         ho_ten=ho_ten,
         email=email,
         so_dien_thoai=so_dien_thoai,
@@ -125,7 +134,7 @@ def update_account(
     if "role" in data:
         target.role = data["role"]
     if "password" in data:
-        target.password_hash = hash_password(data["password"])
+        target.password_hash = hash_password(validate_password(data["password"]))
     if "is_active" in data:
         target.is_active = data["is_active"]
         if target.reader_id:

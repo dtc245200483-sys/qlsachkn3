@@ -1,5 +1,6 @@
 from app.database import SessionLocal
 from app.models import Book, DatTruoc
+from tests.helpers import next_test_email
 
 
 def _headers(token: str) -> dict:
@@ -16,7 +17,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Đặt trước",
-            "email": f"{username}@ictu.edu.vn",
+            "email": next_test_email(),
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },

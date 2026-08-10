@@ -1,6 +1,6 @@
 # Tài liệu API Backend — Hệ thống quản lý thư viện có tích hợp AI
 
-Phiên bản: 0.21.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C + Hồ sơ cá nhân + Validation + Phạt bằng ĐIỂM + Phân quyền độc giả + Đặt trước + DAT_TRUOC + Xoá lịch sử đặt trước + **Export CSV đặt trước + Admin accounts chỉ tạo thủ thư**.
+Phiên bản: 0.25.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C + Hồ sơ cá nhân + Validation + Phạt bằng ĐIỂM + Phân quyền độc giả + Đặt trước + DAT_TRUOC + Xoá lịch sử đặt trước + Export CSV + Admin accounts thủ thư + so_ngay_muon + Validation tài khoản + bỏ loại "khac" + export đặt trước chỉ thủ thư + Email DTC + **Thông báo lỗi đăng nhập tiếng Việt**.
 
 ## Thông tin chung
 
@@ -86,7 +86,7 @@ Phiên bản: 0.21.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08
 { "username": "admin", "password": "mat-khau" }
 ```
 
-Response 200: `{ "token", "role", "role_display", "name" }` — `role_display` là nhãn tiếng Việt: `admin → Quản trị viên`, `librarian → Thủ thư`, `reader → Độc giả`. Lỗi: `401` sai tài khoản/mật khẩu hoặc tài khoản bị khoá.
+Response 200: `{ "token", "role", "role_display", "name" }` — `role_display` là nhãn tiếng Việt: `admin → Quản trị viên`, `librarian → Thủ thư`, `reader → Độc giả`. Lỗi: `400` thiếu tên đăng nhập/mật khẩu (`"Vui lòng nhập tên đăng nhập."` / `"Vui lòng nhập mật khẩu."`); `401` sai tài khoản/mật khẩu hoặc tài khoản bị khoá.
 
 ## 2. Đăng ký độc giả — POST `/api/auth/register`
 
@@ -105,10 +105,12 @@ Response 200: `{ "token", "role": "reader", "role_display": "Độc giả", "nam
 
 Validation chung (áp dụng register, profile, admin accounts):
 
-- `hoTen` — bắt buộc, ≥ 2 từ, mỗi từ ≥ 2 ký tự, không chứa số/ký tự đặc biệt.
-- `email` — bắt buộc, đúng định dạng ICTU: `^[A-Za-z0-9._%+-]+@ictu\.edu\.vn$`; trùng email (Users hoặc Readers) → `409`.
-- `soDienThoai` — bắt buộc, SĐT Việt Nam: `^(0|\+84)(3|5|7|8|9)\d{8}$`.
-- Vi phạm → `422` kèm thông báo rõ.
+- `username` — ≥ 6 ký tự → ngắn hơn `400 "Tên đăng nhập phải từ 6 ký tự trở lên."`.
+- `password` — ≥ 6 ký tự → `400 "Mật khẩu phải từ 6 ký tự trở lên."`.
+- `hoTen` — bắt buộc, ≥ 2 từ → `422 "Họ tên phải đầy đủ (tên + họ)."` (mỗi từ ≥ 2 ký tự, không số/ký tự đặc biệt).
+- `email` — bắt buộc khớp `^DTC\d+@ictu\.edu\.vn$` (bắt đầu `DTC` + số, VD `DTC245200483@ictu.edu.vn`) → `422 "Email sai định dạng — phải bắt đầu bằng DTC + số (VD: DTC245200483@ictu.edu.vn)."`; trùng (Users/Readers) → `409`.
+- `soDienThoai` — bắt buộc khớp `^0\d{9}$` → `422 "Số điện thoại phải là 10 chữ số và bắt đầu bằng 0."`.
+- Áp dụng chung: register, admin accounts, profile, readers.
 
 ## 3. Tra cứu sách — GET `/api/books`
 
@@ -132,7 +134,7 @@ Lọc (`q`, `theLoai`, `trangThai`) chạy trước, sắp xếp sau; kèm tie-b
 
 ## 7. Quản lý độc giả — `/api/readers`
 
-Fields: `ma, hoTen, email, soDienThoai, loaiDocGia (sinh_vien/giang_vien/khac), trangThaiThe (hoat_dong/khoa), diem_svnet (mặc định 100), ngayTao`.
+Fields: `ma, hoTen, email, soDienThoai, loaiDocGia (chỉ sinh_vien/giang_vien), trangThaiThe (hoat_dong/khoa), diem_svnet (mặc định 100), ngayTao`.
 
 - `GET /api/readers?q=` — danh sách + tìm theo mã/họ tên (`librarian`, `admin`).
 - `POST /api/readers` — tạo (chỉ `admin`); trùng mã hoặc email → `409`.
@@ -210,9 +212,9 @@ Audit log: `DELETE_BORROW_HISTORY`, `DELETE_BORROW_HISTORY_ALL`.
 
 ## 10. Yêu cầu mượn/trả/gia hạn/đặt trước — `/api/requests`
 
-- `POST /api/requests` (reader): loai `MUON` cần `items`; `DAT_TRUOC` cần `ma_sach` (hoặc `items` có đúng 1 sách) + thẻ `hoat_dong`; `TRA`/`GIA_HAN` cần `ma_phieu` thuộc về mình và đang `dang_muon` (GIA_HAN chỉ khi chưa gia hạn).
+- `POST /api/requests` (reader): loai `MUON` cần `items` + có thể gửi `so_ngay_muon` (1–365, **không vượt quá `max_borrow_days`** — vượt → `400 "Số ngày mượn vượt quá tối đa X ngày."`); `DAT_TRUOC` cần `ma_sach` (hoặc `items` có đúng 1 sách) + thẻ `hoat_dong`; `TRA`/`GIA_HAN` cần `ma_phieu` thuộc về mình và đang `dang_muon` (GIA_HAN chỉ khi chưa gia hạn).
 - `GET /api/requests?maDocGia=&trangThai=` — reader chỉ thấy của mình.
-- `PUT /api/requests/{ma}/approve` (librarian): MUON → tạo phiếu (`ma_phieu = "PM" + ma_yeu_cau`); TRA → trả + tính phạt; GIA_HAN → gia hạn; **DAT_TRUOC → tạo đặt trước thật** (tái dùng logic `/api/reservations`): chỉ khi sách đang hết (soLuong = 0 hoặc đang mượn hết) → nếu còn → `400 "Sách còn, không cần đặt trước"`; đặt trùng active → `409`; tạo `DatTruoc` mã `RV...` trạng thái `CHO_XU_LY`, yêu cầu chuyển `DA_DUYET` (ma_phieu = null), audit `CREATE_RESERVATION` + `APPROVE_REQUEST`.
+- `PUT /api/requests/{ma}/approve` (librarian): MUON → tạo phiếu (`ma_phieu = "PM" + ma_yeu_cau`) với body tùy chọn `{ "so_ngay_muon": n }` (ưu tiên body, nếu không có lấy từ yêu cầu, còn không dùng `max_borrow_days`; vượt max → `400`); TRA → trả + tính phạt; GIA_HAN → gia hạn; **DAT_TRUOC → tạo đặt trước thật** (tái dùng logic `/api/reservations`): chỉ khi sách đang hết (soLuong = 0 hoặc đang mượn hết) → nếu còn → `400 "Sách còn, không cần đặt trước"`; đặt trùng active → `409`; tạo `DatTruoc` mã `RV...` trạng thái `CHO_XU_LY`, yêu cầu chuyển `DA_DUYET` (ma_phieu = null), audit `CREATE_RESERVATION` + `APPROVE_REQUEST`.
 - `PUT /api/requests/{ma}/reject` — chuyển `TU_CHOI`.
 
 Trạng thái: `CHO_XU_LY` → `DA_DUYET` hoặc `TU_CHOI`.
@@ -395,7 +397,7 @@ Gộp 3 phần, mỗi phần có tiêu đề và header rõ ràng:
 
 ### 21.4 Danh sách đặt trước — GET `/api/export/reservations.csv`
 
-Header: `Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái` — dữ liệu từ `DatTruoc` kèm tên sách/tên độc giả, UTF-8 BOM, filename `danh_sach_dat_truoc_<thời gian>.csv`; `librarian`/`admin`, reader → 403.
+Header: `Mã đặt,Mã sách,Tên sách,Độc giả,Ngày đặt,Trạng thái` — dữ liệu từ `DatTruoc` kèm tên sách/tên độc giả, UTF-8 BOM, filename `danh_sach_dat_truoc_<thời gian>.csv`; **chỉ `librarian`** (admin → 403).
 
 ## 22. Hồ sơ cá nhân — `/api/profile/me`
 
@@ -421,7 +423,7 @@ Response 200 (khớp `profileOut` Frontend):
 
 ### 22.2 Cập nhật — PUT `/api/profile/me`
 
-Body tùy chọn: `ho_ten`, `email`, `so_dien_thoai`, `loai_doc_gia` (`sinh_vien`/`giang_vien`/`khac`).
+Body tùy chọn: `ho_ten`, `email`, `so_dien_thoai`, `loai_doc_gia` (chỉ `sinh_vien`/`giang_vien`).
 
 - Cả 3 role: cập nhật `ho_ten`, `email`, `so_dien_thoai` theo validation chung; reader thêm `loai_doc_gia`.
 - Email trùng (Users hoặc Readers) → `409`.

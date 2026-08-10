@@ -153,6 +153,37 @@ def test_filter_invalid_status(client, headers):
         headers=headers("reader1"),
     )
     assert resp.status_code == 422
+    # BUG-009: UI search.html gửi trangThai=het nhưng Backend chỉ nhận con/dang_muon
+    resp = client.get(
+        "/api/books",
+        params={"trangThai": "het"},
+        headers=headers("reader1"),
+    )
+    assert resp.status_code == 422
+
+
+def test_sort_and_order(client, headers):
+    resp = client.get(
+        "/api/books",
+        params={"sort": "namXb", "order": "desc"},
+        headers=headers("reader1"),
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    years = [b["namXb"] for b in data]
+    assert years == sorted(years, reverse=True)
+    resp = client.get(
+        "/api/books",
+        params={"sort": "sai", "order": "asc"},
+        headers=headers("reader1"),
+    )
+    assert resp.status_code == 422
+    resp = client.get(
+        "/api/books",
+        params={"sort": "ten", "order": "sai"},
+        headers=headers("reader1"),
+    )
+    assert resp.status_code == 422
 
 
 def test_create_book_as_reader_forbidden(client, headers):

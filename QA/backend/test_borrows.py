@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from conftest import unique
 
 
@@ -5,7 +7,7 @@ def _create_book(client, headers, ma: str, so_luong: int = 2) -> dict:
     body = {
         "ma": ma,
         "ten": f"Sách mượn {ma}",
-        "tacGia": f"Tác giả {ma}",
+        "tacGia": "Tác giả QA",
         "theLoai": "Công nghệ QA",
         "nxb": "NXB QA Test",
         "namXb": 2024,
@@ -18,10 +20,13 @@ def _create_book(client, headers, ma: str, so_luong: int = 2) -> dict:
     return body
 
 
-def _borrow(client, headers, ma_phieu: str, ma_doc_gia: str, items: list[dict]) -> object:
+def _borrow(client, headers, ma_phieu: str, ma_doc_gia: str, items: list[dict], extra=None) -> object:
+    payload = {"ma_phieu": ma_phieu, "ma_doc_gia": ma_doc_gia, "items": items}
+    if extra:
+        payload.update(extra)
     return client.post(
         "/api/borrows",
-        json={"ma_phieu": ma_phieu, "ma_doc_gia": ma_doc_gia, "items": items},
+        json=payload,
         headers=headers("librarian"),
     )
 
@@ -146,6 +151,23 @@ def test_borrow_role_permissions(client, headers):
     assert client.post("/api/borrows", json=body, headers=headers("admin")).status_code == 403
 
 
+def test_borrow_extra_so_ngay_muon_ignored(client, headers):
+    # BUG-002: trang Mượn/Trả vẫn gửi so_ngay_muon nhưng Backend bỏ qua
+    ma_book = _create_book(client, headers, unique("QBSO"), so_luong=2)["ma"]
+    ma_phieu = unique("QAPMSO")
+    resp = _borrow(
+        client,
+        headers,
+        ma_phieu,
+        "QADG01",
+        [{"ma_sach": ma_book, "so_luong": 1}],
+        extra={"so_ngay_muon": 3},
+    )
+    assert resp.status_code == 200
+    days = (datetime.fromisoformat(resp.json()["han_tra"].replace("Z", "+00:00")) - datetime.fromisoformat(resp.json()["ngay_muon"].replace("Z", "+00:00"))).days
+    assert days == 14, f"so_ngay_muon=3 bị bỏ qua, thực tế {days} ngày (BUG-002)"
+
+
 def test_return_on_time_no_fine(client, headers):
     ma_book = _create_book(client, headers, unique("QBRT"), so_luong=1)["ma"]
     ma_phieu = unique("QAPMRT")
@@ -157,14 +179,14 @@ def test_return_on_time_no_fine(client, headers):
     assert next(b["soLuong"] for b in books if b["ma"] == ma_book) == 1
 
 
-def test_return_late_creates_fine(client, headers):
-    # QAPM07: phiếu đang mượn quá hạn 2 ngày (seed)
+def test_return_late_creates_fine_points(client, headers):
+    # QAPM07: đang mượn quá hạn (seed)
     resp = client.put("/api/borrows/QAPM07/return", headers=headers("librarian"))
     assert resp.status_code == 200, resp.text
     fine = resp.json()["fine"]
     assert fine is not None
     assert fine["so_ngay_qua_han"] >= 2
-    assert fine["so_tien"] == fine["so_ngay_qua_han"] * 5000
+    assert fine["so_diem"] == fine["so_ngay_qua_han"] * 2
 
 
 def test_return_already_returned(client, headers):
@@ -189,13 +211,14 @@ def test_renew_success_once_twice_fails(client, headers):
     assert resp2.status_code == 400
 
 
-def test_renew_late_adds_fine(client, headers):
-    # QAPM06: đang mượn quá hạn 2 ngày (seed)
+def test_renew_late_adds_fine_points(client, headers):
+    # QAPM06: đang mượn quá hạn (seed)
     resp = client.put("/api/borrows/QAPM06/renew", headers=headers("librarian"))
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["fine"] is not None
     assert data["fine"]["so_ngay_qua_han"] >= 2
+    assert data["fine"]["so_diem"] == data["fine"]["so_ngay_qua_han"] * 2
     assert data["so_lan_gia_han"] == 1
 
 
@@ -205,11 +228,13 @@ def test_renew_with_reservation_fails(client, headers):
     assert resp.status_code == 400
 
 
-def test_collect_fine_success_twice_fails(client, headers):
-    # QAPM04 đã trả trễ 2 ngày, có FineHistory 10000 chưa thu
+def test_collect_fine_points_success_twice_fails(client, headers):
+    # QAPM04 đã trả trễ 2 ngày = 4 điểm, chưa thu
     resp = client.post("/api/borrows/QAPM04/collect-fine", headers=headers("librarian"))
     assert resp.status_code == 200, resp.text
-    assert resp.json()["so_tien_da_thu"] == 10000
+    data = resp.json()
+    assert data["so_diem_da_thu"] == 4
+    assert data["diem_con_lai"] == 96
     resp2 = client.post("/api/borrows/QAPM04/collect-fine", headers=headers("librarian"))
     assert resp2.status_code == 400
 

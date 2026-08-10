@@ -66,9 +66,43 @@
       });
   }
 
+  function validateLibraryConfig(form) {
+    var maxDays = form.elements.maxBorrowDays.value;
+    var points = form.elements.overdueFinePointsPerDay.value;
+    var maxBooks = form.elements.maxBooksAtOnce.value;
+
+    if (maxDays === "") {
+      return "Chưa nhập số ngày mượn tối đa.";
+    }
+    var nDays = Number(maxDays);
+    if (isNaN(nDays) || nDays < 1 || nDays > 365) {
+      return "Số ngày mượn tối đa phải từ 1 đến 365.";
+    }
+    if (points === "") {
+      return "Chưa nhập điểm phạt quá hạn.";
+    }
+    var nPoints = Number(points);
+    if (isNaN(nPoints) || nPoints < 0) {
+      return "Điểm phạt quá hạn không được âm.";
+    }
+    if (maxBooks === "") {
+      return "Chưa nhập giới hạn số sách mượn.";
+    }
+    var nBooks = Number(maxBooks);
+    if (isNaN(nBooks) || nBooks < 1 || nBooks > 100) {
+      return "Giới hạn số sách mượn phải từ 1 đến 100.";
+    }
+    return "";
+  }
+
   function saveLibraryConfig(e) {
     e.preventDefault();
     var form = document.getElementById("library-config-form");
+    var error = validateLibraryConfig(form);
+    if (error) {
+      showMessage(error);
+      return;
+    }
     var built = API.serializeForm(form, "libraryConfig");
     if (!built.ok) {
       showMessage(built.message);

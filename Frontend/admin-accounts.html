@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260809-4">
+  <link rel="stylesheet" href="css/style.css?v=20260810-1">
 </head>
 <body data-page="admin-accounts">
   <header class="app-header">
@@ -24,7 +24,7 @@
     </div>
     <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
       <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
-      <a href="reservations.html" data-roles="admin,librarian,reader">Đặt trước</a>
+      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
       <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
       <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
       <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
@@ -97,6 +97,14 @@
             <label for="account-password">Mật khẩu (≥ 6 ký tự)</label>
             <input type="password" id="account-password" name="password" minlength="6" maxlength="128" autocomplete="new-password">
           </div>
+          <div class="form-group">
+            <label for="account-email">Email</label>
+            <input type="email" id="account-email" name="email" maxlength="255" autocomplete="off" required>
+          </div>
+          <div class="form-group">
+            <label for="account-sdt">Số điện thoại</label>
+            <input type="text" id="account-sdt" name="soDienThoai" maxlength="20" autocomplete="off" required>
+          </div>
           <div class="form-group" id="account-reader-group" hidden>
             <label for="account-reader-id">Mã độc giả (nếu role = độc giả)</label>
             <input type="text" id="account-reader-id" name="readerId" maxlength="20" autocomplete="off">
@@ -125,8 +133,8 @@
     <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
   </footer>
 
-  <script src="js/api.js?v=20260810-4"></script>
+  <script src="js/api.js?v=20260810-5"></script>
   <script src="js/auth.js?v=20260809-14"></script>
-  <script src="js/admin-accounts.js?v=20260810-3"></script>
+  <script src="js/admin-accounts.js?v=20260810-4"></script>
 </body>
 </html>

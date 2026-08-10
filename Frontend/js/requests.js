@@ -199,7 +199,7 @@
     var valid = needsBooks
       ? hasValidBookLine()
       : !!document.getElementById("req-borrow").value;
-    btn.disabled = !valid;
+    btn.disabled = false;
   }
 
   function createRequest() {

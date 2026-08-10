@@ -173,6 +173,8 @@
       username.value = account.username;
       username.disabled = true;
       form.elements.hoTen.value = account.hoTen || "";
+      form.elements.email.value = account.email || "";
+      form.elements.soDienThoai.value = account.soDienThoai || "";
       form.elements.role.value = account.role;
       form.elements.readerId.value = account.readerId || "";
       form.elements.isActive.checked = !!account.isActive;
@@ -194,13 +196,58 @@
     state.editId = null;
   }
 
+  function validateForm(form, isEdit) {
+    var username = form.elements.username.value.trim();
+    var hoTen = form.elements.hoTen.value.trim();
+    var email = form.elements.email.value.trim();
+    var sdt = form.elements.soDienThoai.value.trim();
+    var password = form.elements.password.value;
+
+    if (!isEdit && !username) {
+      return "Chưa nhập tên đăng nhập.";
+    }
+    if (username.length < 6) {
+      return "Tên đăng nhập phải từ 6 ký tự trở lên.";
+    }
+    if (!hoTen) {
+      return "Chưa nhập họ tên.";
+    }
+    if (!isEdit && !email) {
+      return "Chưa nhập email.";
+    }
+    if (email && !/^[^@\s]+@ictu\.edu\.vn$/i.test(email)) {
+      return "Email sai định dạng — phải là email @ictu.edu.vn.";
+    }
+    if (!isEdit && !sdt) {
+      return "Chưa nhập số điện thoại.";
+    }
+    if (sdt && !/^0\d{9}$/.test(sdt)) {
+      return "Số điện thoại phải là 10 chữ số và bắt đầu bằng 0.";
+    }
+    if (!isEdit && !password) {
+      return "Chưa nhập mật khẩu.";
+    }
+    if (password && password.length < 6) {
+      return "Mật khẩu phải từ 6 ký tự trở lên.";
+    }
+    return "";
+  }
+
   function saveForm(e) {
     e.preventDefault();
     var form = document.getElementById("account-form");
     var request;
-    if (state.editId !== null) {
+    var isEdit = state.editId !== null;
+    var error = validateForm(form, isEdit);
+    if (error) {
+      showMessage(error);
+      return;
+    }
+    if (isEdit) {
       var payload = {
         ho_ten: form.elements.hoTen.value,
+        email: form.elements.email.value.trim(),
+        so_dien_thoai: form.elements.soDienThoai.value.trim(),
         role: form.elements.role.value,
         reader_id: form.elements.readerId.value || null,
         is_active: form.elements.isActive.checked

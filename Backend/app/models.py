@@ -149,7 +149,7 @@ class Reader(Base):
         CheckConstraint("LEN(LTRIM(email)) > 0", name="ck_readers_email_not_empty"),
         CheckConstraint("LEN(LTRIM(soDienThoai)) > 0", name="ck_readers_phone_not_empty"),
         CheckConstraint(
-            "loaiDocGia IN ('sinh_vien', 'giang_vien', 'khac')",
+            "loaiDocGia IN ('sinh_vien', 'giang_vien')",
             name="ck_readers_loai",
         ),
         CheckConstraint(

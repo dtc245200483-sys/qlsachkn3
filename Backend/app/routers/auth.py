@@ -9,14 +9,28 @@ from ..database import get_db
 from ..models import Reader, User
 from ..schemas import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 from ..security import create_access_token, hash_password, verify_password
-from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
+from ..validation import (
+    ensure_email_unique,
+    validate_email,
+    validate_ho_ten,
+    validate_password,
+    validate_phone,
+    validate_username,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=LoginResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
-    user = db.query(User).filter(User.username == body.username).first()
+    username = (body.username or "").strip()
+    password = body.password or ""
+    if not username:
+        raise HTTPException(status_code=400, detail="Vui lòng nhập tên đăng nhập.")
+    if not password:
+        raise HTTPException(status_code=400, detail="Vui lòng nhập mật khẩu.")
+
+    user = db.query(User).filter(User.username == username).first()
     if user is None or not verify_password(body.password, user.password_hash):
         write_audit_log(
             db,
@@ -59,6 +73,8 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
 
 @router.post("/register", response_model=RegisterResponse)
 def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterResponse:
+    username = validate_username(body.username)
+    password = validate_password(body.password)
     if db.query(User).filter(User.username == body.username).first() is not None:
         raise HTTPException(status_code=409, detail="Tên đăng nhập đã tồn tại.")
     ho_ten = validate_ho_ten(body.hoTen)
@@ -91,7 +107,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
     db.add(reader)
     user = User(
         username=body.username,
-        password_hash=hash_password(body.password),
+        password_hash=hash_password(password),
         ho_ten=ho_ten,
         email=email,
         so_dien_thoai=so_dien_thoai,

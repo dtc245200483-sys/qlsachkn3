@@ -309,3 +309,21 @@
   admin-accounts chỉ thủ thư.
 - CHƯA: bỏ Xuất CSV books/stats (YC-016), disable Gửi yêu cầu (YC-017),
   so_ngay_muon (YC-015), reservations mock (YC-007).
+
+## 23. CẬP NHẬT 2026-08-10 06:45 — so_ngay_muon + UI (0.25.0)
+
+- Backend 0.25.0 (quét, CHƯA có log): so_ngay_muon (migration 0013, approve
+  ưu tiên body > yêu cầu > max_borrow_days); bỏ loại "khac" (0014); validation
+  tài khoản; export đặt trước chỉ thủ thư; lỗi đăng nhập tiếng Việt.
+- Frontend (log 06:45:01 + quét): stats bỏ Xuất CSV ✅; requests.js disable
+  nút Gửi ✅ (YC-017); UI admin sạch UC ✅; books.html CÒN Xuất CSV ❌.
+- YC-015, YC-017 đóng theo code; chờ log chính thức (YC-018).
+
+## 24. CẬP NHẬT 2026-08-10 06:54 — Đủ log Backend + bỏ toàn bộ Xuất CSV UI
+
+- Backend logs: 05:59:29 (so_ngay_muon, 0.22.0, 100/100), 06:19:53 (validation
+  + bỏ khac + export đặt trước chỉ thủ thư, 0.23.0), 06:26:07 (Email DTC,
+  0.24.0), 06:32:15 (login tiếng Việt, 0.25.0, 101/101).
+- Frontend log 06:54:40: bỏ toàn bộ nút/hàm Xuất CSV (books/stats/borrow/
+  reservations); /api/export/* giữ nguyên; books.html căn chỉnh giao diện.
+- Chức năng 8: chỉ còn demo qua API, không nút UI. YC-015/016/017/018 đóng.

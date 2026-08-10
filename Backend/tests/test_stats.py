@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from app.database import SessionLocal
 from app.models import BorrowSlip
+from tests.helpers import next_test_email
 
 _seq = 0
 
@@ -17,7 +18,7 @@ def _register(client, username: str):
             "username": username,
             "password": "Pass@123",
             "hoTen": "Độc giả Thống kê",
-            "email": f"{username}@ictu.edu.vn",
+            "email": next_test_email(),
             "soDienThoai": "0911111111",
             "loaiDocGia": "sinh_vien",
         },

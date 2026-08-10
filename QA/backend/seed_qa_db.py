@@ -49,7 +49,7 @@ def seed_config(db):
             LibraryConfig(
                 id=1,
                 max_borrow_days=14,
-                overdue_fine_per_day=5000,
+                overdue_fine_points_per_day=2,
                 max_books_at_once=3,
             )
         )
@@ -117,9 +117,9 @@ def seed_books(db):
 
 def seed_readers(db):
     readers = [
-        ("QADG01", "Nguyễn Văn QA1", "qa1@example.com", "0900000001", "sinh_vien", "hoat_dong"),
-        ("QADG02", "Trần Thị QA2", "qa2@example.com", "0900000002", "sinh_vien", "hoat_dong"),
-        ("QADG03", "Lê Văn QA3", "qa3@example.com", "0900000003", "giang_vien", "khoa"),
+        ("QADG01", "Nguyễn Văn QA1", "DTC901000001@ictu.edu.vn", "0900000001", "sinh_vien", "hoat_dong"),
+        ("QADG02", "Trần Thị QA2", "DTC901000002@ictu.edu.vn", "0900000002", "sinh_vien", "hoat_dong"),
+        ("QADG03", "Lê Văn QA3", "DTC901000003@ictu.edu.vn", "0900000003", "giang_vien", "khoa"),
     ]
     for ma, ho_ten, email, sdt, loai, trang_thai in readers:
         if db.get(Reader, ma) is None:
@@ -131,6 +131,7 @@ def seed_readers(db):
                     soDienThoai=sdt,
                     loaiDocGia=loai,
                     trangThaiThe=trang_thai,
+                    diem_svnet=100,
                     ngayTao=_now(),
                 )
             )
@@ -139,18 +140,20 @@ def seed_readers(db):
 
 def seed_users(db):
     users = [
-        ("qa_admin", "admin", None),
-        ("qa_librarian", "librarian", None),
-        ("qa_reader1", "reader", "QADG01"),
-        ("qa_reader2", "reader", "QADG02"),
+        ("qa_admin", "admin", None, "DTC901000101@ictu.edu.vn", "0910000101"),
+        ("qa_librarian", "librarian", None, "DTC901000102@ictu.edu.vn", "0910000102"),
+        ("qa_reader1", "reader", "QADG01", "DTC901000001@ictu.edu.vn", "0900000001"),
+        ("qa_reader2", "reader", "QADG02", "DTC901000002@ictu.edu.vn", "0900000002"),
     ]
-    for username, role, reader_id in users:
+    for username, role, reader_id, email, sdt in users:
         if db.query(User).filter(User.username == username).first() is None:
             db.add(
                 User(
                     username=username,
                     password_hash=hash_password(PASSWORD),
                     ho_ten=username,
+                    email=email,
+                    so_dien_thoai=sdt,
                     role=role,
                     reader_id=reader_id,
                     is_active=True,
@@ -161,7 +164,7 @@ def seed_users(db):
 
 def seed_slips(db):
     now = _now()
-    fine_per_day = 5000.0
+    points_per_day = 2
     slips = [
         # (ma_phieu, ma_doc_gia, ma_sach, so_luong, muon_off, han_off, tra_off)
         # QAPM01: đang mượn, sắp hết hạn (còn 2 ngày) -> thông báo SAP_HET_HAN
@@ -211,7 +214,7 @@ def seed_slips(db):
                     ma_phieu=ma_phieu,
                     ma_doc_gia=ma_doc_gia,
                     so_ngay_qua_han=2,
-                    so_tien=2 * fine_per_day,
+                    so_diem=2 * points_per_day,
                     ngay_tinh=ngay_tra,
                 )
             )

@@ -121,6 +121,16 @@ Yêu cầu (request) hỗ trợ loai `DAT_TRUOC`: reader gửi `ma_sach` (hoặc
 - `GET /api/export/reservations.csv` — xuất đặt trước (Mã đặt, Mã sách, Tên sách, Độc giả, Ngày đặt, Trạng thái), UTF-8 BOM; librarian/admin.
 - `POST /api/admin/accounts` chỉ nhận role `librarian`; gửi `reader` → `400 "Độc giả tự đăng ký qua /api/auth/register"`.
 
+## Số ngày mượn theo yêu cầu (YC-015)
+
+Migration `0013`: `YeuCau.so_ngay_muon` (nullable, check ≥ 1). Yêu cầu `MUON` có thể gửi `so_ngay_muon` (≤ `max_borrow_days`); khi duyệt, thủ thư có thể ghi đè qua body; không có → dùng `max_borrow_days`.
+
+## Validation tài khoản + bỏ loại "khac"
+
+- Username ≥ 6 ký tự; password ≥ 6; email bắt buộc **`DTC` + số + `@ictu.edu.vn`** (VD `DTC245200483@ictu.edu.vn`); SĐT `^0\d{9}$`; họ tên ≥ 2 từ — áp dụng register, admin accounts, profile, readers (migration `0014` bỏ `khac`, chỉ còn `sinh_vien`/`giang_vien`).
+- `GET /api/export/reservations.csv` chỉ `librarian` (admin → 403).
+- Login thiếu tên/mật khẩu → `400` tiếng Việt: `"Vui lòng nhập tên đăng nhập."` / `"Vui lòng nhập mật khẩu."` (không còn lỗi tiếng Anh "String should have at least 1 character").
+
 ## Dữ liệu demo (seed)
 
 Chạy 1 lần, idempotent (chạy lại không đè/không trùng). Backend phải đang chạy để tạo tài khoản qua API register:

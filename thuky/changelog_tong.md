@@ -233,6 +233,36 @@ Tài liệu API đã cấp: api_docs.md (mục 6-10: API admin)
 
 [PHÁT HIỆN TỪ QUÉT] 2026-08-10 05:48:15 - Agent: Frontend - File: books.html + stats.html (05:15:27) - Suy đoán thay đổi: vẫn CÒN nút "Xuất CSV" → YC-016 phần bỏ CSV CHƯA thực hiện; requests.js KHÔNG đổi (20:14) → YC-017 (disable nút gửi) CHƯA thực hiện; requests.py + api_docs đổi lúc 05:29 CHƯA có log, không thấy so_ngay_muon → YC-015 vẫn chờ - Chức năng đề bài liên quan: 6, 8, 4 (UI)
 
+## 2026-08-10 — Log agent tự báo cáo (Frontend, lần 11 — UI: bỏ Xuất CSV thống kê + bỏ mã UC)
+
+[FRONTEND] 2026-08-10 06:45:01 - Thay đổi: Bỏ nút "Xuất CSV" ở stats.html (Thống kê) + hàm exportReport/exportStats trong stats.js; bỏ toàn bộ hậu tố "(UCxx)" trên các trang admin (Cấu hình thư viện, Quản lý tài khoản, Danh mục) - Chức năng đề bài: 7, 8 (UI) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 — Phát hiện từ quét (Backend 0.25.0 CHƯA có log + Frontend 06:04-06:42)
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:45:01 - Agent: Backend - File: alembic 0013_add_yeu_cau_so_ngay_muon.py + 0014_remove_reader_type_khac.py + app\validation.py + routers (accounts/export/profile/readers/auth/requests/borrows) + tests + api_docs 0.25.0 (05:57-06:31) - Suy đoán thay đổi: so_ngay_muon ĐÃ CÓ (migration 0013; RequestCreate/RequestOut; approve ưu tiên body > yêu cầu > max_borrow_days; vượt max → 400) → YC-015 HOÀN THÀNH theo code; bỏ loại độc giả "khac" (0014); validation tài khoản; export đặt trước chỉ thủ thư; Email DTC; thông báo lỗi đăng nhập tiếng Việt — NHƯNG Backend CHƯA gửi log (LOG_THU_KY.md chỉ đến 05:22) → CẦN LOG BỔ SUNG - Chức năng đề bài liên quan: 1, 3, 4, 8
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:45:01 - Agent: Frontend - File: js\requests.js (06:04:31) - Suy đoán thay đổi: thêm updateSubmitState() — disable nút "Gửi yêu cầu" khi chưa chọn sách hợp lệ → YC-017 HOÀN THÀNH theo code - Chức năng đề bài liên quan: 4, 6 (UI)
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:45:01 - Agent: Frontend - File: stats.html + js\stats.js (06:42) - Suy đoán thay đổi: ĐÃ BỎ nút Xuất CSV + hàm export (khớp log Frontend 06:45:01); books.html (06:10:05) VẪN CÒN nút "Xuất CSV"; reservations.html (06:10:05) THÊM nút "Xuất CSV" (librarian) - Chức năng đề bài liên quan: 8 (UI)
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:45:01 - Agent: Frontend - File: các trang admin (06:09-06:42) - Suy đoán thay đổi: UI admin đã sạch hậu tố "(UCxx)" (rg *.html không còn) - Chức năng đề bài liên quan: toàn bộ (UI)
+
+## 2026-08-10 — Log agent tự báo cáo (Backend, lần 27-30: so_ngay_muon, validation, Email DTC, login tiếng Việt)
+
+[BACKEND] 2026-08-10 05:59:29 - Thay đổi: Bổ sung so_ngay_muon cho luồng yêu cầu mượn — migration 0013 thêm YeuCau.so_ngay_muon (Integer nullable, check >= 1, dữ liệu cũ NULL); RequestCreate/RequestOut thêm so_ngay_muon, thêm schema RequestApprove cho PUT approve; create_request MUON kiểm tra so_ngay_muon không vượt max_borrow_days (vượt → 400 "Số ngày mượn vượt quá tối đa X ngày.") và lưu vào YeuCau; approve MUON truyền so_ngay_muon ưu tiên body thủ thư → so_ngay_muon trong yêu cầu → max_borrow_days; _perform_create_borrow thêm tham số so_ngay_muon (han_tra = ngay_muon + so_ngay_muon, giới hạn max_borrow_days, POST /api/borrows giữ nguyên); cập nhật api_docs.md bản 0.22.0 + README; test 5 case + 95 case cũ = 100/100 PASS; restart server 8000 bản mới. - Chức năng đề bài liên quan: 4 (mở rộng UC07/09) - Ảnh hưởng Frontend: có - Ảnh hưởng AI Engine: không
+
+[BACKEND] 2026-08-10 06:19:53 - Thay đổi: Validation dùng chung (register, admin accounts, profile, readers) với thông báo tiếng Việt — username >= 6 ký tự, password >= 6, email bắt buộc @ictu.edu.vn, SĐT ^0\d{9}$, họ tên >= 2 từ; bỏ loại độc giả 'khac' — migration 0014 drop ck_readers_loai, chuyển dữ liệu 'khac' → 'sinh_vien', add constraint mới; GET /api/export/reservations.csv đổi quyền thành CHỈ librarian (admin → 403); cập nhật api_docs.md bản 0.23.0 + README; test 100/100 PASS; restart server. - Chức năng đề bài liên quan: 1, 3, 6 (mở rộng) - Ảnh hưởng Frontend: có - Ảnh hưởng AI Engine: không
+
+[BACKEND] 2026-08-10 06:26:07 - Thay đổi: Email định dạng DTC + số — validation email regex ^DTC\d+@ictu\.edu\.vn$; seed_demo dùng DTC245200501–506; test chuyển sang DTC100...@ictu.edu.vn; api_docs 0.24.0; test 100/100 PASS; backfill + restart. - Chức năng đề bài liên quan: 1, 3, 6 (mở rộng) - Ảnh hưởng Frontend: có - Ảnh hưởng AI Engine: không
+
+[BACKEND] 2026-08-10 06:32:15 - Thay đổi: Sửa lỗi "String should have at least 1 character" khi đăng nhập để trống — LoginRequest bỏ min_length, router login kiểm tra: thiếu tên đăng nhập → 400 "Vui lòng nhập tên đăng nhập.", thiếu mật khẩu → 400 "Vui lòng nhập mật khẩu."; api_docs 0.25.0; test 101/101 PASS; xác minh live; restart server. - Chức năng đề bài liên quan: 1 - Ảnh hưởng Frontend: có - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 — Log agent tự báo cáo (Frontend, lần 12 — Bỏ toàn bộ nút Xuất CSV + căn chỉnh books.html)
+
+[FRONTEND] 2026-08-10 06:54:40 - Thay đổi: Bỏ toàn bộ nút/hàm "Xuất CSV" trên giao diện (books, stats, borrow, reservations) — Backend /api/export/* GIỮ NGUYÊN; căn chỉnh nút "+ Thêm sách" khớp khung "Sắp xếp theo" ở books.html - Chức năng đề bài: 8 (UI) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:54:40 - Agent: Frontend - File: books.js/borrow.js/reservations.js/stats.js (06:51:17-19) + các html (06:51:36) + css (06:51:30) - Suy đoán thay đổi: đã bỏ toàn bộ nút/hàm export (rg không còn "Xuất CSV" và không còn lời gọi export*); api.js vẫn giữ config + downloadFile (chỉ cấu hình) - Chức năng đề bài liên quan: 8 (UI)
+
 [PHÁT HIỆN TỪ QUÉT] 2026-08-09 19:22:31 - Agent: Frontend - File: D:\ung dung tri tue nhan ao\app\Frontend\AGENTS.md - Suy đoán thay đổi: AGENTS.md cập nhật 19:21:05 — thêm mục "LƯU PROMPT (bắt buộc)" + checklist; bản promtAI/FRONTEND_AGENT_PROMPT.md CHƯA được agent cập nhật dù log nói "đã lưu" → Thư Ký đã đồng bộ PHIÊN BẢN 3 (19:21:05) - Chức năng đề bài liên quan: toàn bộ
 
 ## 2026-08-09 09:55 — Đồng bộ dữ liệu toàn bộ file (Trợ Lý ghi theo yêu cầu người dùng, không phải log agent tự báo cáo)
@@ -315,3 +345,17 @@ Tài liệu API đã cấp: api_docs.md (mục 6-10: API admin)
 ## 2026-08-10 - Log agent tự báo cáo (Frontend, YC-016 + YC-017 + bỏ reservation mock)
 
 [FRONTEND] 2026-08-10 05:55:57 - Thay đổi: YC-016 — xoá nút Xuất CSV + hàm exportBooks/exportReport + listener ở books.html/stats.html (giữ borrow.html); YC-017 — nút Gửi yêu cầu disabled tới khi có ≥1 dòng sách hợp lệ (theo dõi change book + input số lượng, enable khi hợp lệ, vẫn kiểm tra khi bấm); YC-007 — bỏ script reservation-mock ở 6 trang (search/requests/notifications/profile/reservations/my-borrows), chuyển window.Reservation.* sang API trực tiếp (reservations.js list/create/cancel/fulfill/deleteOne/deleteAll, search.js createReservation, notifications-core.js reservations), xoá file js/reservation-mock.js, gỡ mock-banner reservations/notifications; test Chrome headless PASS (books/stats hết nút Xuất, borrow còn; submit requests đúng 4 trạng thái; không còn script mock; không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 6, 8 - Ảnh hưởng Backend: có (so_ngay_muon chờ Backend) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, validation tiếng Việt + bỏ đặt trước ở admin)
+
+[FRONTEND] 2026-08-10 06:14:17 - Thay đổi: Validation tiếng Việt theo từng ô — register.js (username ≥6, email @ictu.edu.vn, SĐT 10 số đầu 0, mật khẩu ≥6, xác nhận khớp, thêm ô xác nhận mật khẩu, bỏ loại Khác); admin-accounts thêm trường email/SĐT (Backend 0.16 hỗ trợ) + validation y hệt; readers.js validation mã/họ tên/email/SĐT/loại/trạng thái + bỏ loại Khác; admin-config.js validation số ngày/điểm phạt/giới hạn sách (chưa nhập + âm/ngoài khoảng); BỎ ĐẶT TRƯỚC Ở ADMIN — menu Đặt trước data-roles reader,librarian ở tất cả trang, reservations.html admin mở bị chuyển về search.html kèm thông báo "Bạn không có quyền truy cập trang này.", nút Xuất CSV chỉ librarian; test Chrome headless PASS (đăng ký 5 lỗi đúng message, dropdown hết Khác, tài khoản chỉ Thủ thư, độc giả/cấu hình đúng lỗi, admin bị chặn đặt trước); đã lưu prompt promtAI - Chức năng đề bài: 1, 3, 6 (mở rộng) - Ảnh hưởng Backend: có (email/SĐT tài khoản) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bỏ Xuất CSV ở Thống kê + bỏ hậu tố UC)
+
+[FRONTEND] 2026-08-10 06:43:12 - Thay đổi: stats.html + stats.js xoá nút "Xuất CSV" (export-report-button) + hàm exportReport/exportStamp + listener (Backend /api/export/report.csv giữ nguyên); admin-config.html bỏ "(UC24)"/"(UC26)"/"(UC27)" khỏi tiêu đề; rà toàn bộ HTML admin không còn hậu tố (UCxx); bump stats.js ?v=20260810-3; test Chrome headless PASS (stats hết nút/chữ Xuất CSV, admin-config tiêu đề sạch, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 7, 8 (mở rộng UC24/25/26/27) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bỏ Xuất CSV toàn bộ + căn chỉnh nút Thêm sách)
+
+[FRONTEND] 2026-08-10 06:52:01 - Thay đổi: Xoá nút "Xuất CSV" + hàm/listener ở reservations.html/js (exportReservations/exportStamp), borrow.html/js (exportBorrows/exportStamp), books.html/js (exportBooks/exportStamp); sau bước này KHÔNG còn nút Xuất CSV trên web (Backend /api/export/* giữ nguyên); books.html căn chỉnh nút "+ Thêm sách" khớp select "Sắp xếp theo" — style.css .toolbar thêm align-items:flex-end + select/.btn height 43px + padding 10px 12px + border-radius 8px; test Chrome headless PASS (3 trang hết nút/chữ Xuất CSV, button và select cùng height 43px cùng padding/radius cùng bottom, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 6, 4, 2, 8 (mở rộng UI) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log QA tự báo cáo (rà soát lại Backend 0.25.0 + Frontend)
+
+[QA] 2026-08-10 08:30 - Đã test: toàn bộ Backend 0.25.0 (đăng nhập/validation DTC, sách/sort, độc giả/lock, mượn-trả-gia hạn-phạt điểm SVNET, đặt trước + xoá lịch sử + xác nhận đã lấy, yêu cầu MUON/TRA/GIA_HAN/DAT_TRUOC + so_ngay_muon, hồ sơ cá nhân/đổi mật khẩu/avatar, thông báo, thống kê, xuất CSV, admin accounts/cấu hình/danh mục/restore) trên DB QA riêng LibraryDB_QA + review Frontend 15 màn hình + đối chiếu API - Kết quả: QA suite 116/116 PASS; bộ test gốc Backend 101/101 PASS trên DB sạch, 100/101 trên DB có dữ liệu (BUG-007 test không cô lập); kiểm tra tĩnh Frontend PASS - Lỗi phát hiện: có, 16 mã bug (BUG-001, BUG-004 đã sửa; BUG-002/008 sửa một phần; BUG-003/005/006/007 mở; BUG-009..016 mới) + AI-1/2/3 chưa triển khai - Agent cần sửa: Frontend (BUG-002/003/005/006/008/009/010/011/012/013/014), Backend (BUG-002/007/015/016 + xác nhận quyền export reservations), AI Engine (triển khai AI-1/2/3)

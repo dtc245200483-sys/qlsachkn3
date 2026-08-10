@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from app.database import SessionLocal
 from app.models import BorrowSlip, FineHistory
+from tests.helpers import next_test_email
 
 
 def _headers(token: str) -> dict:
@@ -14,7 +15,7 @@ def _make_reader(client, token: str, ma: str = "TESTDG1", trang_thai: str = "hoa
         json={
             "ma": ma,
             "hoTen": "Độc giả Test",
-            "email": f"{ma}@example.com",
+            "email": next_test_email(),
             "soDienThoai": "0900000000",
             "loaiDocGia": "sinh_vien",
             "trangThaiThe": trang_thai,

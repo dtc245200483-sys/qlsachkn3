@@ -262,6 +262,12 @@
     }
 
     loadBooks();
+
+    var accessMsg = sessionStorage.getItem("thuvien_access_msg");
+    if (accessMsg) {
+      sessionStorage.removeItem("thuvien_access_msg");
+      showMessage(accessMsg);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);

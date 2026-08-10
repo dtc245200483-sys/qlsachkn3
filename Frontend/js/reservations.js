@@ -305,49 +305,18 @@
     });
   }
 
-  function exportReservations() {
-    var stamp = exportStamp();
-    var filename = "danh_sach_dat_truoc_" + stamp + ".csv";
-    API.downloadFile("exportReservations", filename).then(function (res) {
-      if (!res.ok) {
-        showMessage(
-          res.status === 404 || res.status === 405
-            ? "Chức năng xuất chưa sẵn sàng (Backend chưa có API export reservations)."
-            : res.message || "Không thể tải file xuất dữ liệu."
-        );
-        return;
-      }
-      showMessage("Đã tải file " + filename + ".", "alert-success");
-    });
-  }
-
-  function exportStamp() {
-    var d = new Date();
-    function p(n) {
-      return n < 10 ? "0" + n : String(n);
-    }
-    return (
-      d.getFullYear() +
-      p(d.getMonth() + 1) +
-      p(d.getDate()) +
-      "_" +
-      p(d.getHours()) +
-      p(d.getMinutes()) +
-      p(d.getSeconds())
-    );
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
     var user = Auth.currentUser();
     if (!user) {
       window.location.replace("index.html");
       return;
     }
-    Auth.applyRoleUI();
-    var exportBtn = document.getElementById("export-reservations-button");
-    if (exportBtn) {
-      exportBtn.addEventListener("click", exportReservations);
+    if (user.role === "admin") {
+      sessionStorage.setItem("thuvien_access_msg", "Bạn không có quyền truy cập trang này.");
+      window.location.replace("search.html");
+      return;
     }
+    Auth.applyRoleUI();
     var deleteAllBtn = document.getElementById("delete-processed-reservations-button");
     if (deleteAllBtn) {
       deleteAllBtn.addEventListener("click", deleteAllHistory);

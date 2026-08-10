@@ -6,8 +6,8 @@ from pydantic import ConfigDict
 
 
 class LoginRequest(BaseModel):
-    username: str = Field(..., min_length=1, max_length=50)
-    password: str = Field(..., min_length=1, max_length=128)
+    username: str = Field("", max_length=50)
+    password: str = Field("", max_length=128)
 
 
 class LoginResponse(BaseModel):
@@ -81,7 +81,7 @@ class ReaderCreate(BaseModel):
     hoTen: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=1, max_length=255)
     soDienThoai: str = Field(..., min_length=1, max_length=20)
-    loaiDocGia: Literal["sinh_vien", "giang_vien", "khac"]
+    loaiDocGia: Literal["sinh_vien", "giang_vien"]
     trangThaiThe: Literal["hoat_dong", "khoa"] = "hoat_dong"
 
 
@@ -89,7 +89,7 @@ class ReaderUpdate(BaseModel):
     hoTen: str | None = Field(None, min_length=1, max_length=255)
     email: str | None = Field(None, min_length=1, max_length=255)
     soDienThoai: str | None = Field(None, min_length=1, max_length=20)
-    loaiDocGia: Literal["sinh_vien", "giang_vien", "khac"] | None = None
+    loaiDocGia: Literal["sinh_vien", "giang_vien"] | None = None
     trangThaiThe: Literal["hoat_dong", "khoa"] | None = None
 
 
@@ -161,12 +161,12 @@ class BorrowRenewOut(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=6, max_length=128)
+    username: str = Field(..., min_length=1, max_length=50)
+    password: str = Field(..., min_length=1, max_length=128)
     hoTen: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=1, max_length=255)
     soDienThoai: str = Field(..., min_length=1, max_length=20)
-    loaiDocGia: Literal["sinh_vien", "giang_vien", "khac"] = "sinh_vien"
+    loaiDocGia: Literal["sinh_vien", "giang_vien"] = "sinh_vien"
 
 
 class RegisterResponse(BaseModel):
@@ -214,8 +214,8 @@ class RequestOut(BaseModel):
 
 
 class AccountCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=6, max_length=128)
+    username: str = Field(..., min_length=1, max_length=50)
+    password: str = Field(..., min_length=1, max_length=128)
     ho_ten: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., max_length=255)
     so_dien_thoai: str = Field(..., max_length=20)
@@ -227,7 +227,7 @@ class AccountUpdate(BaseModel):
     ho_ten: str | None = Field(None, min_length=1, max_length=255)
     email: str | None = Field(None, max_length=255)
     so_dien_thoai: str | None = Field(None, max_length=20)
-    password: str | None = Field(None, min_length=6, max_length=128)
+    password: str | None = Field(None, min_length=1, max_length=128)
     is_active: bool | None = None
     role: Literal["librarian", "reader"] | None = None
     reader_id: str | None = None
@@ -327,12 +327,12 @@ class ProfileUpdate(BaseModel):
     ho_ten: str | None = Field(None, min_length=1, max_length=255)
     email: str | None = Field(None, max_length=255)
     so_dien_thoai: str | None = Field(None, max_length=20)
-    loai_doc_gia: Literal["sinh_vien", "giang_vien", "khac"] | None = None
+    loai_doc_gia: Literal["sinh_vien", "giang_vien"] | None = None
 
 
 class ChangePasswordRequest(BaseModel):
     mat_khau_cu: str = Field(..., min_length=1, max_length=128)
-    mat_khau_moi: str = Field(..., min_length=6, max_length=128)
+    mat_khau_moi: str = Field(..., min_length=1, max_length=128)
     xac_nhan: str | None = Field(None, max_length=128)
 
 

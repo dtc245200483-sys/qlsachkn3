@@ -242,6 +242,8 @@ window.API = (function () {
         username: "username",
         password: "password",
         hoTen: "ho_ten",
+        email: "email",
+        soDienThoai: "so_dien_thoai",
         role: "role",
         readerId: "reader_id"
       },
@@ -249,6 +251,8 @@ window.API = (function () {
         id: "id",
         username: "username",
         hoTen: "ho_ten",
+        email: "email",
+        soDienThoai: "so_dien_thoai",
         role: "role",
         isActive: "is_active",
         readerId: "reader_id",

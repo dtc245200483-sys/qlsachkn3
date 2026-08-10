@@ -199,7 +199,7 @@ def export_report(
 @router.get("/reservations.csv")
 def export_reservations(
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin", "librarian")),
+    user=Depends(require_roles("librarian")),
 ) -> Response:
     rows = [["Mã đặt", "Mã sách", "Tên sách", "Độc giả", "Ngày đặt", "Trạng thái"]]
     reservations = db.query(DatTruoc).order_by(DatTruoc.ngay_dat.desc()).all()

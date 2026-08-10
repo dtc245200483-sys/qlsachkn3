@@ -11,7 +11,13 @@ from ..deps import get_current_user
 from ..models import Reader, User
 from ..schemas import AvatarOut, ChangePasswordRequest, ProfileOut, ProfileUpdate
 from ..security import hash_password, verify_password
-from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
+from ..validation import (
+    ensure_email_unique,
+    validate_email,
+    validate_ho_ten,
+    validate_password,
+    validate_phone,
+)
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
@@ -109,12 +115,13 @@ def change_password(
 ):
     if not verify_password(body.mat_khau_cu, user.password_hash):
         raise HTTPException(status_code=400, detail="Mật khẩu cũ không đúng.")
+    password_moi = validate_password(body.mat_khau_moi)
     if body.xac_nhan is not None and body.xac_nhan != body.mat_khau_moi:
         raise HTTPException(
             status_code=400,
             detail="Xác nhận mật khẩu mới không khớp.",
         )
-    user.password_hash = hash_password(body.mat_khau_moi)
+    user.password_hash = hash_password(password_moi)
     write_audit_log(
         db,
         user,

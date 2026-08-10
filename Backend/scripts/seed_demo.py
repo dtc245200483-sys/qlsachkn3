@@ -101,7 +101,7 @@ DEMO_READERS = [
     {
         "ma": "DG001",
         "hoTen": "Nguyễn Văn An",
-        "email": "nguyenvanan@ictu.edu.vn",
+        "email": "DTC245200504@ictu.edu.vn",
         "soDienThoai": "0912345001",
         "loaiDocGia": "sinh_vien",
         "trangThaiThe": "hoat_dong",
@@ -109,7 +109,7 @@ DEMO_READERS = [
     {
         "ma": "DG002",
         "hoTen": "Trần Thị Bích",
-        "email": "tranthibich@ictu.edu.vn",
+        "email": "DTC245200505@ictu.edu.vn",
         "soDienThoai": "0912345002",
         "loaiDocGia": "sinh_vien",
         "trangThaiThe": "hoat_dong",
@@ -117,7 +117,7 @@ DEMO_READERS = [
     {
         "ma": "DG003",
         "hoTen": "Lê Minh Cường",
-        "email": "leminhcuong@ictu.edu.vn",
+        "email": "DTC245200506@ictu.edu.vn",
         "soDienThoai": "0912345003",
         "loaiDocGia": "giang_vien",
         "trangThaiThe": "hoat_dong",
@@ -148,19 +148,26 @@ DEMO_ACCOUNTS = [
         "username": "docgia1",
         "password": "docgia1",
         "ho_ten": "Nguyễn Văn An",
-        "email": "nguyenvanan@ictu.edu.vn",
+        "email": "DTC245200504@ictu.edu.vn",
         "reader_ma": "DG001",
     },
     {
         "username": "docgia2",
         "password": "docgia2",
         "ho_ten": "Trần Thị Bích",
-        "email": "tranthibich@ictu.edu.vn",
+        "email": "DTC245200505@ictu.edu.vn",
         "reader_ma": "DG002",
     },
 ]
 
-# SĐT mặc định cho các tài khoản cũ chưa có (email tự sinh theo tên người).
+# Email mặc định (định dạng DTC + số) + SĐT cho các tài khoản cũ.
+DEMO_USER_CONTACTS_EMAILS = {
+    "admin": "DTC245200501@ictu.edu.vn",
+    "librarian": "DTC245200502@ictu.edu.vn",
+    "reader": "DTC245200503@ictu.edu.vn",
+    "docgia1": "DTC245200504@ictu.edu.vn",
+    "docgia2": "DTC245200505@ictu.edu.vn",
+}
 DEMO_USER_CONTACTS_PHONES = {
     "admin": "0912345001",
     "librarian": "0912345002",
@@ -376,13 +383,15 @@ def seed_accounts(db) -> list[str]:
 
 
 def seed_user_contacts(db) -> list[str]:
-    """Điền email theo tên người + SĐT cho tài khoản cũ (idempotent, không ghi đè SĐT đã có)."""
+    """Điền email DTC + SĐT cho tài khoản cũ (idempotent, không ghi đè SĐT đã có)."""
     updated = []
     for username, phone in DEMO_USER_CONTACTS_PHONES.items():
         user = db.query(User).filter(User.username == username).first()
         if user is None:
             continue
-        email = _email_from_name(user.ho_ten)
+        email = DEMO_USER_CONTACTS_EMAILS.get(username, "")
+        if not email:
+            continue
         changed = False
         if user.email != email:
             user.email = email

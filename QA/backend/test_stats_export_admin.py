@@ -11,10 +11,8 @@ def test_top_books_sorted_and_limit(client, headers):
     counts = [row["so_lan_muon"] for row in data]
     assert counts == sorted(counts, reverse=True)
     assert all({"ma_sach", "ten_sach", "so_lan_muon"} <= set(row) for row in data)
-    resp = client.get("/api/stats/top-books", params={"limit": 0}, headers=headers("librarian"))
-    assert resp.status_code == 422
-    resp = client.get("/api/stats/top-books", params={"limit": 101}, headers=headers("librarian"))
-    assert resp.status_code == 422
+    assert client.get("/api/stats/top-books", params={"limit": 0}, headers=headers("librarian")).status_code == 422
+    assert client.get("/api/stats/top-books", params={"limit": 101}, headers=headers("librarian")).status_code == 422
 
 
 def test_top_readers(client, headers):
@@ -54,6 +52,7 @@ def test_export_borrows_csv(client, headers):
     resp = client.get("/api/export/borrows.csv", headers=headers("librarian"))
     assert resp.status_code == 200
     assert resp.content.startswith(b"\xef\xbb\xbf")
+    assert "Điểm phạt".encode("utf-8") in resp.content
     assert b"QAPM01" in resp.content
 
 
@@ -65,6 +64,16 @@ def test_export_report_csv(client, headers):
     assert "SÁCH QUÁ HẠN".encode("utf-8") in resp.content
 
 
+def test_export_reservations_csv_permissions(client, headers):
+    resp = client.get("/api/export/reservations.csv", headers=headers("librarian"))
+    assert resp.status_code == 200
+    assert resp.content.startswith(b"\xef\xbb\xbf")
+    assert "Mã đặt".encode("utf-8") in resp.content
+    # Admin bị chặn (chỉ librarian)
+    assert client.get("/api/export/reservations.csv", headers=headers("admin")).status_code == 403
+    assert client.get("/api/export/reservations.csv", headers=headers("reader1")).status_code == 403
+
+
 def test_export_permissions(client, headers):
     for path in ("/api/export/books.csv", "/api/export/borrows.csv", "/api/export/report.csv"):
         assert client.get(path, headers=headers("reader1")).status_code == 403
@@ -74,11 +83,12 @@ def test_library_config_get_put_permissions(client, headers):
     assert client.get("/api/admin/config/library", headers=headers("librarian")).status_code == 200
     assert client.get("/api/admin/config/library", headers=headers("admin")).status_code == 200
     assert client.get("/api/admin/config/library", headers=headers("reader1")).status_code == 403
-    body = {"max_borrow_days": 14, "overdue_fine_per_day": 5000, "max_books_at_once": 3}
+    body = {"max_borrow_days": 14, "overdue_fine_points_per_day": 2, "max_books_at_once": 3}
     assert client.put("/api/admin/config/library", json=body, headers=headers("librarian")).status_code == 403
     resp = client.put("/api/admin/config/library", json=body, headers=headers("admin"))
     assert resp.status_code == 200
-    bad = {"max_borrow_days": 0, "overdue_fine_per_day": 5000, "max_books_at_once": 3}
+    assert resp.json()["overdue_fine_points_per_day"] == 2
+    bad = {"max_borrow_days": 0, "overdue_fine_points_per_day": 2, "max_books_at_once": 3}
     assert client.put("/api/admin/config/library", json=bad, headers=headers("admin")).status_code == 422
 
 
@@ -109,24 +119,53 @@ def test_audit_logs_admin_only(client, headers):
     assert all(row["action"] == "LOGIN_SUCCESS" for row in resp.json())
 
 
-def test_admin_accounts_crud(client, headers):
+def test_admin_accounts_librarian_only(client, headers):
     username = f"qaacc{int(time.time() * 1000) % 100000000}"
     resp = client.post(
         "/api/admin/accounts",
-        json={"username": username, "password": "MatKhau123", "ho_ten": "QA Account", "role": "librarian"},
+        json={
+            "username": username,
+            "password": "MatKhau123",
+            "ho_ten": "Nguyễn Văn QA",
+            "email": f"DTC96{int(time.time() * 1000)}@ictu.edu.vn",
+            "so_dien_thoai": "0910000001",
+            "role": "librarian",
+        },
         headers=headers("admin"),
     )
     assert resp.status_code == 200, resp.text
     acc_id = resp.json()["id"]
+    # Tạo tài khoản reader qua admin -> 400
+    resp = client.post(
+        "/api/admin/accounts",
+        json={
+            "username": f"qareaderacc{int(time.time() * 1000)}",
+            "password": "MatKhau123",
+            "ho_ten": "Trần Văn QA",
+            "email": f"DTC96{int(time.time() * 1000) + 1}@ictu.edu.vn",
+            "so_dien_thoai": "0910000002",
+            "role": "reader",
+        },
+        headers=headers("admin"),
+    )
+    assert resp.status_code == 400
+    # Trùng username -> 409
     assert client.post(
         "/api/admin/accounts",
-        json={"username": username, "password": "MatKhau123", "ho_ten": "Trùng", "role": "reader"},
+        json={
+            "username": username,
+            "password": "MatKhau123",
+            "ho_ten": "Lê Văn QA",
+            "email": f"DTC96{int(time.time() * 1000) + 2}@ictu.edu.vn",
+            "so_dien_thoai": "0910000003",
+            "role": "librarian",
+        },
         headers=headers("admin"),
     ).status_code == 409
+    # Khoá tài khoản -> không đăng nhập được
     resp = client.put(f"/api/admin/accounts/{acc_id}", json={"is_active": False}, headers=headers("admin"))
     assert resp.status_code == 200
     assert resp.json()["is_active"] is False
-    # Tài khoản bị khoá không đăng nhập được
     assert client.post(
         "/api/auth/login",
         json={"username": username, "password": "MatKhau123"},
@@ -146,7 +185,6 @@ def test_categories_crud(client, headers):
     assert resp.status_code == 200
     assert resp.json()["ten"] == "Thể loại QA sửa"
     assert client.delete(f"/api/admin/categories/{ma}", headers=headers("admin")).status_code == 200
-    # Thể loại đang dùng không xoá được
     assert client.delete("/api/admin/categories/QATL1", headers=headers("admin")).status_code == 400
     assert client.get("/api/admin/categories", headers=headers("librarian")).status_code == 403
 

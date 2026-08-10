@@ -1,3 +1,6 @@
+from tests.helpers import next_test_email
+
+
 def _headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
@@ -98,8 +101,8 @@ def test_filter_status_dang_muon_with_active_borrow(client_and_tokens):
         "/api/readers",
         json={
             "ma": "TESTDGX",
-            "hoTen": "Độc giả X",
-            "email": "x@example.com",
+            "hoTen": "Độc Giả Xuân",
+            "email": next_test_email(),
             "soDienThoai": "0900000001",
             "loaiDocGia": "sinh_vien",
             "trangThaiThe": "hoat_dong",

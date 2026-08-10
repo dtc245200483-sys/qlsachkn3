@@ -212,3 +212,19 @@
   nối delete; admin-accounts chỉ thủ thư.
 - CHƯA: bỏ Xuất CSV books/stats, disable nút Gửi yêu cầu, so_ngay_muon,
   bỏ mock reservations.
+
+## CẬP NHẬT 2026-08-10 06:45 — so_ngay_muon + UI
+
+- Backend 0.25.0 (CHƯA có log): so_ngay_muon (0013), bỏ loại "khac" (0014),
+  validation tài khoản, export đặt trước chỉ thủ thư, lỗi đăng nhập tiếng Việt.
+- Frontend: stats bỏ Xuất CSV ✅; requests.js disable nút Gửi ✅ (YC-017);
+  UI admin bỏ "(UCxx)" ✅; books.html CÒN Xuất CSV ❌; reservations.html thêm
+  nút Xuất CSV librarian (chờ xác nhận).
+
+## CẬP NHẬT 2026-08-10 06:54 — Bỏ toàn bộ nút Xuất CSV trên UI
+
+- Frontend log 06:54:40 + quét: ĐÃ bỏ toàn bộ nút/hàm "Xuất CSV" (books, stats,
+  borrow, reservations); Backend /api/export/* GIỮ NGUYÊN.
+- GHI CHÚ CHỨC NĂNG 8: xuất dữ liệu hiện chỉ demo qua API, KHÔNG còn nút UI.
+- Backend 0.22.0→0.25.0 có đủ log (so_ngay_muon, validation, Email DTC, login
+  tiếng Việt; 101/101).

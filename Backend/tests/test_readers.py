@@ -1,3 +1,6 @@
+from tests.helpers import next_test_email
+
+
 def _headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
@@ -6,7 +9,7 @@ def _reader_payload(ma: str = "TEST001", **overrides) -> dict:
     payload = {
         "ma": ma,
         "hoTen": "Nguyễn Văn Test",
-        "email": f"test{ma.lower()}@example.com",
+        "email": next_test_email(),
         "soDienThoai": "0901234567",
         "loaiDocGia": "sinh_vien",
         "trangThaiThe": "hoat_dong",
@@ -55,12 +58,12 @@ def test_update_reader(client_and_tokens):
     )
     response = client.put(
         "/api/readers/TEST003",
-        json={"hoTen": "Nguyễn Văn B", "soDienThoai": "0912345678"},
+        json={"hoTen": "Nguyễn Văn Bích", "soDienThoai": "0912345678"},
         headers=_headers(tokens["admin"]),
     )
     assert response.status_code == 200, response.text
     data = response.json()
-    assert data["hoTen"] == "Nguyễn Văn B"
+    assert data["hoTen"] == "Nguyễn Văn Bích"
     assert data["soDienThoai"] == "0912345678"
 
 

@@ -482,6 +482,7 @@ a {
   margin-bottom: var(--space-2);
   display: flex;
   justify-content: flex-end;
+  align-items: flex-end;
   gap: var(--space-1);
   flex-wrap: wrap;
 }
@@ -492,6 +493,16 @@ a {
 
 .toolbar select {
   width: 220px;
+}
+
+.toolbar select,
+.toolbar .btn {
+  height: 43px;
+}
+
+.toolbar .btn {
+  padding: 10px 12px;
+  border-radius: var(--radius);
 }
 
 .search-bar .toolbar {

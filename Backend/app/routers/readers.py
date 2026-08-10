@@ -7,6 +7,7 @@ from ..database import get_db
 from ..deps import require_roles
 from ..models import Reader, User
 from ..schemas import LockReaderRequest, ReaderCreate, ReaderOut, ReaderUpdate
+from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
 
 router = APIRouter(prefix="/api/readers", tags=["readers"])
 
@@ -37,9 +38,18 @@ def create_reader(
 ) -> ReaderOut:
     if db.get(Reader, body.ma) is not None:
         raise HTTPException(status_code=409, detail="Mã độc giả đã tồn tại.")
-    if db.query(Reader).filter(Reader.email == body.email).first() is not None:
-        raise HTTPException(status_code=409, detail="Email đã được sử dụng.")
-    reader = Reader(**body.model_dump())
+    ho_ten = validate_ho_ten(body.hoTen)
+    email = validate_email(body.email)
+    so_dien_thoai = validate_phone(body.soDienThoai)
+    ensure_email_unique(db, email)
+    reader = Reader(
+        ma=body.ma,
+        hoTen=ho_ten,
+        email=email,
+        soDienThoai=so_dien_thoai,
+        loaiDocGia=body.loaiDocGia,
+        trangThaiThe=body.trangThaiThe,
+    )
     db.add(reader)
     write_audit_log(
         db,
@@ -66,16 +76,16 @@ def update_reader(
         raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
     data = body.model_dump(exclude_unset=True)
     if "email" in data:
-        duplicate_email = (
-            db.query(Reader)
-            .filter(Reader.email == data["email"], Reader.ma != ma)
-            .first()
-        )
-        if duplicate_email is not None:
-            raise HTTPException(status_code=409, detail="Email đã được sử dụng.")
-    for field, value in data.items():
-        setattr(reader, field, value)
+        reader.email = validate_email(data["email"])
+        ensure_email_unique(db, reader.email, exclude_reader_ma=ma)
+    if "hoTen" in data:
+        reader.hoTen = validate_ho_ten(data["hoTen"])
+    if "soDienThoai" in data:
+        reader.soDienThoai = validate_phone(data["soDienThoai"])
+    if "loaiDocGia" in data:
+        reader.loaiDocGia = data["loaiDocGia"]
     if "trangThaiThe" in data:
+        reader.trangThaiThe = data["trangThaiThe"]
         linked = db.query(User).filter(User.reader_id == ma).first()
         if linked is not None:
             linked.is_active = data["trangThaiThe"] == "hoat_dong"

@@ -2,17 +2,17 @@
 File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh lần quét sau.
 
 ## Lần quét gần nhất
-- Thời gian: 2026-08-10 05:48:15
+- Thời gian: 2026-08-10 06:54:40
 - Git: CÓ repository git tại D:\ung dung tri tue nhan ao\app (từ 20:35) → có thể dùng git log/diff.
-- Kết quả: Backend xong Xoá lịch sử đặt trước (05:13:10, 0.20.0, 94/94) + Export reservations.csv + accounts chỉ thủ thư (05:22:45, 0.21.0, 95/95). Frontend nối xoá lịch sử + accounts thủ thư; NHƯNG bỏ Xuất CSV books/stats CHƯA làm, YC-017 chưa làm, so_ngay_muon chưa có, reservations mock còn.
+- Kết quả: Backend ĐÃ GỬI đủ 4 log (05:59→06:32, 0.22.0→0.25.0, 101/101). Frontend ĐÃ BỎ toàn bộ nút/hàm Xuất CSV (books, stats, borrow, reservations — 06:51); books.html căn chỉnh "+ Thêm sách"/"Sắp xếp theo". Còn: reservations mock (YC-007), AI Engine.
 
 ## Backend (D:\ung dung tri tue nhan ao\app\Backend)
 - AGENTS.md — 07:54 — ĐÃ SỬA (prompt cập nhật theo YC-002)
 - .env — 06:58:43 — KHÔNG ĐỌC nội dung (tránh lộ bí mật)
 - alembic.ini — 06:58:43 — không đổi
-- api_docs.md — 05:29 — ĐÃ SỬA: bản 0.21.0 (xoá lịch sử đặt trước, export reservations, accounts thủ thư)
-- LOG_THU_KY.md — 05:22 — ĐÃ SỬA: chứa log 05:13:10 + 05:22:45 (đã ghi changelog)
-- README.md — 05:22 — ĐÃ SỬA
+- api_docs.md — 06:31 — ĐÃ SỬA: bản 0.25.0 (so_ngay_muon, validation, bỏ khac, export đặt trước chỉ thủ thư, lỗi đăng nhập tiếng Việt)
+- LOG_THU_KY.md — 06:32 — ĐÃ SỬA: chứa đủ 4 log 05:59:29, 06:19:53, 06:26:07, 06:32:15 (đã ghi changelog)
+- README.md — 06:31 — ĐÃ SỬA
 - requirements.txt — 02:13 — ĐÃ SỬA (python-multipart)
 - .env.example — 20:34 — MỚI (KT2)
 - requirements-dev.txt — 09:47 — MỚI
@@ -41,6 +41,10 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - app\routers\export.py — 05:21 — ĐÃ SỬA (GET /api/export/reservations.csv)
 - app\routers\accounts.py — 05:41 — ĐÃ SỬA (chỉ tạo thủ thư)
 - app\routers\requests.py + api_docs — 05:29 — ĐÃ SỬA (CHƯA có log; không thấy so_ngay_muon)
+- alembic\versions\0013_add_yeu_cau_so_ngay_muon.py — 05:57 — MỚI (YeuCau.so_ngay_muon)
+- alembic\versions\0014_remove_reader_type_khac.py — 06:17 — MỚI (bỏ loại độc giả khac)
+- app\validation.py — 06:21; routers accounts/export/profile/readers/auth — 06:16-06:30 — ĐÃ SỬA
+- tests\helpers.py + nhiều test — 06:21-06:31 — ĐÃ SỬA
 - app\models.py, app\schemas.py — 04:46 — ĐÃ SỬA
 - tests\test_uc_compat.py, test_notifications.py, test_reservations.py — 04:46-04:49 — ĐÃ SỬA (90/90 PASS tổng)
 - tests\test_reservations.py — 05:11 — ĐÃ SỬA (94/94 PASS tổng)
@@ -187,6 +191,15 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - books.html, stats.html — 05:15:27 — ĐÃ SỬA (VẪN CÒN nút Xuất CSV)
 - requests.html — 05:15:27 — ĐÃ SỬA (vẫn chưa disable nút Gửi yêu cầu)
 - readers.html — 05:39:15 — ĐÃ SỬA
+- js\requests.js — 06:04:31 — ĐÃ SỬA (19267 bytes; updateSubmitState disable nút) → YC-017 xong
+- stats.html + js\stats.js — 06:42 — ĐÃ SỬA (ĐÃ BỎ nút Xuất CSV + hàm export) — có log Frontend 06:45:01
+- books.html — 06:10:05 — ĐÃ SỬA (VẪN CÒN nút Xuất CSV)
+- reservations.html — 06:10:05 — ĐÃ SỬA (THÊM nút Xuất CSV librarian)
+- admin-config.html — 06:42:47; admin-accounts.html — 06:10:05 — ĐÃ SỬA (UI bỏ UC)
+- js\admin-config.js, admin-accounts.js, readers.js, reservations.js, register.js, search.js, api.js — 06:04-06:13 — ĐÃ SỬA
+- books.js — 06:51:19; borrow.js — 06:51:18; reservations.js — 06:51:17; stats.js — 06:42:47 — ĐÃ SỬA (BỎ hàm export)
+- Các html — 06:51:36 — ĐÃ SỬA (BỎ nút Xuất CSV; books.html căn chỉnh nút + sắp xếp)
+- css\style.css — 06:51:30 — ĐÃ SỬA
 - js\auth.js — 17:41:22 — ĐÃ SỬA
 - Ghi chú: requests có log 18:01:49 + 18:07:45; các trang còn lại CHƯA có log riêng.
 

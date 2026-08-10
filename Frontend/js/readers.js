@@ -217,10 +217,50 @@
     state.editId = null;
   }
 
+  function validateForm(form, isEdit) {
+    var ma = form.elements.ma.value.trim();
+    var hoTen = form.elements.hoTen.value.trim();
+    var email = form.elements.email.value.trim();
+    var sdt = form.elements.soDienThoai.value.trim();
+    var loai = form.elements.loaiDocGia.value;
+    var trangThai = form.elements.trangThaiThe.value;
+
+    if (!isEdit && !ma) {
+      return "Chưa nhập mã độc giả.";
+    }
+    if (!hoTen) {
+      return "Chưa nhập họ tên.";
+    }
+    if (!email) {
+      return "Chưa nhập email.";
+    }
+    if (!/^[^@\s]+@ictu\.edu\.vn$/i.test(email)) {
+      return "Email sai định dạng — phải là email @ictu.edu.vn.";
+    }
+    if (!sdt) {
+      return "Chưa nhập số điện thoại.";
+    }
+    if (!/^0\d{9}$/.test(sdt)) {
+      return "Số điện thoại phải là 10 chữ số và bắt đầu bằng 0.";
+    }
+    if (!loai) {
+      return "Chưa nhập loại độc giả.";
+    }
+    if (!trangThai) {
+      return "Chưa nhập trạng thái thẻ.";
+    }
+    return "";
+  }
+
   function saveForm(e) {
     e.preventDefault();
     var form = document.getElementById("reader-form");
     var isEdit = state.editId !== null;
+    var error = validateForm(form, isEdit);
+    if (error) {
+      showMessage(error);
+      return;
+    }
     var request;
 
     if (isEdit) {
