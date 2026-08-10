@@ -444,6 +444,7 @@ def create_borrow(
         ma_phieu=body.ma_phieu,
         ma_doc_gia=body.ma_doc_gia,
         items=body.items,
+        so_ngay_muon=body.so_ngay_muon,
     )
     return _slip_out(db, slip)
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, Unicode, UnicodeText, text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, Unicode, UnicodeText, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -251,6 +251,7 @@ class YeuCau(Base):
     items: Mapped[str] = mapped_column(UnicodeText, nullable=False)
     so_ngay_muon: Mapped[int | None] = mapped_column(Integer, nullable=True)
     trang_thai: Mapped[str] = mapped_column(Unicode(20), nullable=False)
+    ngay_xu_ly: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     ngay_tao: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -306,4 +307,35 @@ class DatTruoc(Base):
         ),
         Index("ix_dat_truoc_ma_sach", "ma_sach"),
         Index("ix_dat_truoc_ma_doc_gia", "ma_doc_gia"),
+    )
+
+
+class DocThongBao(Base):
+    __tablename__ = "DocThongBao"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ma_doc_gia: Mapped[str] = mapped_column(Unicode(20), nullable=False)
+    nguon_id: Mapped[str] = mapped_column(Unicode(100), nullable=False)
+    da_doc: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    ngay_doc: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("ma_doc_gia", "nguon_id", name="uq_doc_thong_bao_nguon"),
+    )
+
+
+class AnThongBao(Base):
+    __tablename__ = "AnThongBao"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ma_doc_gia: Mapped[str] = mapped_column(Unicode(20), nullable=False)
+    nguon_id: Mapped[str] = mapped_column(Unicode(100), nullable=False)
+    ngay_an: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("ma_doc_gia", "nguon_id", name="uq_an_thong_bao_nguon"),
     )

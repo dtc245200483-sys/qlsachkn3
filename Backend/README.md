@@ -39,7 +39,7 @@ Bảng `Users` có thêm cột `is_active` để khoá/mở khoá tài khoản. 
 
 ## Quản lý độc giả (chức năng 3)
 
-- Bảng `Readers` tạo ở migration `0004`: mã độc giả, họ tên, email, số điện thoại, loại độc giả (`sinh_vien`/`giang_vien`/`khac`), trạng thái thẻ (`hoat_dong`/`khoa`), ngày tạo.
+- Bảng `Readers` tạo ở migration `0004`: mã độc giả, họ tên, email, số điện thoại, loại độc giả (`sinh_vien`/`giang_vien` — từ migration `0014` đã bỏ `khac`), trạng thái thẻ (`hoat_dong`/`khoa`), điểm SVNET, ngày tạo.
 - API: `GET/POST /api/readers`, `PUT /api/readers/{ma}`, `DELETE /api/readers/{ma}` — chi tiết trong [api_docs.md](api_docs.md) mục 11.
 - `Readers` (dữ liệu độc giả) tách biệt với `Users` (tài khoản đăng nhập).
 
@@ -47,7 +47,8 @@ Bảng `Users` có thêm cột `is_active` để khoá/mở khoá tài khoản. 
 
 - Migration `0005` tạo 3 bảng: `BorrowSlips`, `BorrowDetails`, `FineHistory`.
 - API: `POST /api/borrows` (lập phiếu, giảm số lượng sách, tự tính `han_tra`), `PUT /api/borrows/{ma}/return` (trả, tăng số lượng, tự tính phạt nếu quá hạn), `PUT /api/borrows/{ma}/renew` (gia hạn tối đa 1 lần), `GET /api/borrows` (lọc theo độc giả/trạng thái) — chi tiết trong [api_docs.md](api_docs.md) mục 12.
-- Phạt: `so_tien = so_ngay_qua_han * overdue_fine_per_day` (tham số trong `LibraryConfig`).
+- Phạt: `so_diem = so_ngay_qua_han * overdue_fine_points_per_day` (đơn vị điểm, mặc định 2 điểm/ngày — `LibraryConfig`).
+- `POST /api/borrows` có thể gửi `so_ngay_muon` (1–`max_borrow_days`) để đặt hạn trả theo ý thủ thư; không gửi thì dùng `max_borrow_days`.
 
 ## Đợt A — Tương thích Use Case
 
@@ -64,7 +65,9 @@ Bảng `Users` có thêm cột `is_active` để khoá/mở khoá tài khoản. 
 
 ## Thông báo cho độc giả (UC11)
 
-- `GET /api/notifications` (chỉ reader): tổng hợp động nhắc hạn trả (≤ 3 ngày / quá hạn) và đặt trước `SAN_SANG`; trả `{ id, loai, noi_dung, ngay, da_doc }` với `da_doc=false` (chưa lưu trạng thái đọc — Frontend đang dùng localStorage).
+- `GET /api/notifications` (chỉ reader): nhắc hạn trả (≤ 3 ngày / quá hạn), đặt trước `SAN_SANG`, yêu cầu `DA_DUYET` (7 ngày), đặt trước `DA_MUON` (7 ngày); trả `{ id, loai, noi_dung, ngay, da_doc }` với `da_doc` lấy từ `DocThongBao`. Migration `0015`: `YeuCau.ngay_xu_ly` để truy vết + lọc thông báo.
+- Migration `0016` bảng `DocThongBao` lưu trạng thái đã đọc theo `(ma_doc_gia, nguon_id)`; `PUT /api/notifications/{id}/read` và `PUT /api/notifications/read-all` để đánh dấu đã đọc.
+- Migration `0017` bảng `AnThongBao` lưu nguồn đã ẩn theo `(ma_doc_gia, nguon_id)`; `DELETE /api/notifications/{source_id}` ẩn 1 thông báo và `DELETE /api/notifications` ẩn tất cả thông báo hiện tại (chỉ reader); thông báo đã ẩn không xuất hiện lại trong `GET /api/notifications`.
 
 ## Thống kê (chức năng 7)
 
@@ -118,7 +121,7 @@ Yêu cầu (request) hỗ trợ loai `DAT_TRUOC`: reader gửi `ma_sach` (hoặc
 
 ## Export CSV đặt trước + Admin accounts
 
-- `GET /api/export/reservations.csv` — xuất đặt trước (Mã đặt, Mã sách, Tên sách, Độc giả, Ngày đặt, Trạng thái), UTF-8 BOM; librarian/admin.
+- `GET /api/export/reservations.csv` — xuất đặt trước (Mã đặt, Mã sách, Tên sách, Độc giả, Ngày đặt, Trạng thái), UTF-8 BOM; **chỉ librarian** (admin → 403).
 - `POST /api/admin/accounts` chỉ nhận role `librarian`; gửi `reader` → `400 "Độc giả tự đăng ký qua /api/auth/register"`.
 
 ## Số ngày mượn theo yêu cầu (YC-015)
@@ -154,7 +157,7 @@ Script còn **backfill email + SĐT cho tài khoản cũ** — email tự sinh t
 
 ## Tạo tài khoản đăng nhập
 
-Ở phạm vi hiện tại chỉ có API đăng nhập, chưa có API đăng ký tài khoản. Tài khoản `admin`, `librarian`, `reader` ban đầu tạo trực tiếp trong bảng `Users` qua SSMS/sqlcmd: chạy Python để sinh mật khẩu hash rồi thêm dòng vào bảng `Users`:
+Độc giả tự đăng ký qua `POST /api/auth/register`; admin tạo tài khoản thủ thư qua `POST /api/admin/accounts`. Tài khoản `admin` ban đầu tạo trực tiếp trong bảng `Users` qua SSMS/sqlcmd: chạy Python để sinh mật khẩu hash rồi thêm dòng vào bảng `Users`:
 
 ```powershell
 python -c "from app.security import hash_password; print(hash_password('MatKhauCuaBan'))"

@@ -552,6 +552,7 @@ def test_reader_cannot_delete_other_reservation_history(client_and_tokens):
 
 def test_reservation_history_roles(client_and_tokens):
     client, tokens = client_and_tokens
-    assert client.delete("/api/reservations/me", headers=_headers(tokens["librarian"])).status_code == 403
+    # Librarian được phép dọn lịch sử đã xử lý (2026-08-10)
+    assert client.delete("/api/reservations/me", headers=_headers(tokens["librarian"])).status_code == 200
     assert client.delete("/api/reservations/me", headers=_headers(tokens["admin"])).status_code == 403
     assert client.delete("/api/reservations/me", headers=_headers(tokens["reader"])).status_code == 403

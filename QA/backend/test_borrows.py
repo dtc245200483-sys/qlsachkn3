@@ -151,8 +151,8 @@ def test_borrow_role_permissions(client, headers):
     assert client.post("/api/borrows", json=body, headers=headers("admin")).status_code == 403
 
 
-def test_borrow_extra_so_ngay_muon_ignored(client, headers):
-    # BUG-002: trang Mượn/Trả vẫn gửi so_ngay_muon nhưng Backend bỏ qua
+def test_borrow_so_ngay_muon_applied(client, headers):
+    # BUG-002 đã sửa: trang Mượn/Trả gửi so_ngay_muon, Backend áp dụng
     ma_book = _create_book(client, headers, unique("QBSO"), so_luong=2)["ma"]
     ma_phieu = unique("QAPMSO")
     resp = _borrow(
@@ -165,7 +165,20 @@ def test_borrow_extra_so_ngay_muon_ignored(client, headers):
     )
     assert resp.status_code == 200
     days = (datetime.fromisoformat(resp.json()["han_tra"].replace("Z", "+00:00")) - datetime.fromisoformat(resp.json()["ngay_muon"].replace("Z", "+00:00"))).days
-    assert days == 14, f"so_ngay_muon=3 bị bỏ qua, thực tế {days} ngày (BUG-002)"
+    assert days == 3, f"so_ngay_muon=3 phải được áp dụng, thực tế {days} ngày"
+
+
+def test_borrow_so_ngay_muon_exceeds_max(client, headers):
+    ma_book = _create_book(client, headers, unique("QBSX"), so_luong=2)["ma"]
+    resp = _borrow(
+        client,
+        headers,
+        unique("QAPMSX"),
+        "QADG01",
+        [{"ma_sach": ma_book, "so_luong": 1}],
+        extra={"so_ngay_muon": 30},
+    )
+    assert resp.status_code == 400
 
 
 def test_return_on_time_no_fine(client, headers):

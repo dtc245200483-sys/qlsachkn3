@@ -81,18 +81,24 @@ def test_top_books_order_and_limit(client_and_tokens):
     _borrow(client, staff, "PMSTT2", reader["reader_ma"], "TESTSTT1")
     _borrow(client, staff, "PMSTT3", reader["reader_ma"], "TESTSTT2")
 
-    top = client.get("/api/stats/top-books", headers=_headers(admin)).json()
-    by_ma = {row["ma_sach"]: row for row in top}
+    top = client.get(
+        "/api/stats/top-books?limit=100",
+        headers=_headers(admin),
+    ).json()
+    by_ma = {row["ma_sach"]: row for row in top if row["ma_sach"].startswith("TESTSTT")}
     assert by_ma["TESTSTT1"]["so_lan_muon"] == 2
     assert by_ma["TESTSTT2"]["so_lan_muon"] == 1
     assert top.index(by_ma["TESTSTT1"]) < top.index(by_ma["TESTSTT2"])
 
+    # Không giả định DB trống: chỉ kiểm tra thứ tự tương đối của dữ liệu TEST
     limited = client.get(
-        "/api/stats/top-books?limit=1",
+        "/api/stats/top-books?limit=100",
         headers=_headers(staff),
     ).json()
-    assert len(limited) == 1
-    assert limited[0]["ma_sach"] == "TESTSTT1"
+    test_rows = [row for row in limited if row["ma_sach"].startswith("TESTSTT")]
+    assert len(test_rows) == 2
+    assert test_rows[0]["ma_sach"] == "TESTSTT1"
+    assert test_rows[1]["ma_sach"] == "TESTSTT2"
 
 
 def test_top_readers_order(client_and_tokens):

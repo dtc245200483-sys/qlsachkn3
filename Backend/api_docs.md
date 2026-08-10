@@ -1,6 +1,6 @@
 # Tài liệu API Backend — Hệ thống quản lý thư viện có tích hợp AI
 
-Phiên bản: 0.25.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C + Hồ sơ cá nhân + Validation + Phạt bằng ĐIỂM + Phân quyền độc giả + Đặt trước + DAT_TRUOC + Xoá lịch sử đặt trước + Export CSV + Admin accounts thủ thư + so_ngay_muon + Validation tài khoản + bỏ loại "khac" + export đặt trước chỉ thủ thư + Email DTC + **Thông báo lỗi đăng nhập tiếng Việt**.
+Phiên bản: 0.28.0 (2026-08-10) — phạm vi: chức năng 1–8 + YC-2026-08-09-002 + Đợt A + Đợt C + Hồ sơ cá nhân + Validation + Phạt bằng ĐIỂM + Phân quyền độc giả + Đặt trước + DAT_TRUOC + Xoá lịch sử đặt trước + Export CSV + Admin accounts thủ thư + so_ngay_muon + Validation tài khoản + bỏ loại "khac" + export đặt trước chỉ thủ thư + Email DTC + Thông báo lỗi đăng nhập tiếng Việt + Thông báo yêu cầu đã duyệt / đã lập phiếu + Đánh dấu đã đọc thông báo + **Ẩn/xoá thông báo**.
 
 ## Thông tin chung
 
@@ -152,11 +152,12 @@ Fields: `ma, hoTen, email, soDienThoai, loaiDocGia (chỉ sinh_vien/giang_vien),
 {
   "ma_phieu": "PM001",
   "ma_doc_gia": "DG001",
-  "items": [ { "ma_sach": "S001", "so_luong": 1 } ]
+  "items": [ { "ma_sach": "S001", "so_luong": 1 } ],
+  "so_ngay_muon": 10
 }
 ```
 
-Quy tắc: thẻ `hoat_dong`; sách còn > 0 và đủ; tổng ≤ `max_books_at_once`; `han_tra = ngay_muon + max_borrow_days`; tự giảm `soLuong`. Lỗi: `400/404/409`.
+Quy tắc: thẻ `hoat_dong`; sách còn > 0 và đủ; tổng ≤ `max_books_at_once`; `han_tra = ngay_muon + so_ngay_muon` nếu có (1–`max_borrow_days`, vượt → 400) nếu không thì `+ max_borrow_days`; tự giảm `soLuong`. Lỗi: `400/404/409`.
 
 ### 8.2 Trả — PUT `/api/borrows/{ma}/return`
 
@@ -296,10 +297,10 @@ Role: chỉ `librarian`. Chỉ khi `CHO_XU_LY` → `SAN_SANG`; trạng thái kh�
 
 Audit log: `CREATE_RESERVATION`, `CANCEL_RESERVATION`, `FULFILL_RESERVATION`, `RESERVATION_READY`.
 
-### 18.5 Xoá lịch sử đặt trước (reader tự xoá)
+### 18.5 Xoá lịch sử đặt trước
 
-- `DELETE /api/reservations/me/{ma_dat}` — xoá 1 đặt trước **đã xử lý** (`HUY`/`DA_MUON`) của mình; không tồn tại/không thuộc mình → `404`; đang `CHO_XU_LY`/`SAN_SANG` → `400`.
-- `DELETE /api/reservations/me` — xoá toàn bộ đặt trước `HUY`/`DA_MUON` của mình, trả `{ "so_phieu_da_xoa": n }`; giữ nguyên `CHO_XU_LY`/`SAN_SANG`.
+- `DELETE /api/reservations/me/{ma_dat}` — role `reader` (đặt trước đã xử lý của mình) hoặc `librarian` (mọi phiếu); không tồn tại → `404`; đang `CHO_XU_LY`/`SAN_SANG` → `400`.
+- `DELETE /api/reservations/me` — `reader`: xoá toàn bộ `HUY`/`DA_MUON` của mình; `librarian`: xoá toàn bộ `HUY`/`DA_MUON` của tất cả độc giả. Trả `{ "so_phieu_da_xoa": n }`; giữ nguyên `CHO_XU_LY`/`SAN_SANG`.
 
 Audit log: `DELETE_RESERVATION_HISTORY`, `DELETE_RESERVATION_HISTORY_ALL`.
 
@@ -310,6 +311,8 @@ Role: chỉ `reader` (theo `reader_id`); librarian/admin → `403`. API **tự t
 - `SAP_HET_HAN` — phiếu mượn đang `dang_muon` của reader còn ≤ 3 ngày đến hạn.
 - `QUA_HAN` — phiếu mượn đang `dang_muon` đã quá hạn.
 - `SACH_SAN_SANG` — đặt trước của reader có `trang_thai = SAN_SANG`.
+- `YEU_CAU_DA_DUYET` — yêu cầu (`MUON`/`TRA`/`GIA_HAN`/`DAT_TRUOC`) của reader đã `DA_DUYET` trong 7 ngày gần nhất; với `MUON` có kèm mã phiếu.
+- `DAT_TRUOC_DA_MUON` — đặt trước của reader đã `DA_MUON` trong 7 ngày gần nhất (kèm mã phiếu `PM` + mã đặt trước).
 
 Response 200 — mảng sắp xếp theo `ngay` giảm dần:
 
@@ -332,7 +335,28 @@ Response 200 — mảng sắp xếp theo `ngay` giảm dần:
 ]
 ```
 
-`id` dùng tiền tố `BORROW:`/`RES:` khớp với `notifications-core.js`. Phiếu đã trả (`da_tra`) không xuất hiện. `da_doc` luôn `false` vì Backend chưa lưu trạng thái đọc; nếu sau này Frontend cần lưu, sẽ thêm migration 0008 bảng `ThongBao` + `PUT /api/notifications/{id}/read`.
+`id` dùng tiền tố `BORROW:`/`RES:`/`YEU_CAU:`/`DAT_TRUOC:`. Phiếu đã trả (`da_tra`) không xuất hiện. `da_doc` lấy từ bảng `DocThongBao` (migration 0016): chưa có dòng = chưa đọc (`false`).
+
+### 19.1 Đánh dấu đã đọc
+
+- `PUT /api/notifications/{id}/read` — reader đánh dấu 1 thông báo đã đọc (upsert `DocThongBao`); `id` không phải thông báo của mình/không tồn tại → `404`.
+- `PUT /api/notifications/read-all` — reader đánh dấu tất cả thông báo **hiện tại** của mình đã đọc, trả `{ "so_da_doc": n }`.
+
+### 19.2 Xoá (ẩn) thông báo
+
+Role: chỉ `reader` (theo `reader_id`); librarian/admin → `403`. Migration `0017` tạo bảng `AnThongBao` lưu `(ma_doc_gia, nguon_id, ngay_an)` — nguồn đã ẩn sẽ **không xuất hiện lại** trong `GET /api/notifications` dù dữ liệu gốc vẫn còn.
+
+- `DELETE /api/notifications/{source_id}` — reader ẩn 1 thông báo của mình (upsert `AnThongBao`, đồng thời xoá trạng thái đọc tương ứng trong `DocThongBao`); `source_id` không thuộc mình/không tồn tại → `404`. Trả:
+
+```json
+{ "message": "Đã xoá thông báo.", "da_xoa": 1 }
+```
+
+- `DELETE /api/notifications` — reader ẩn **tất cả** thông báo hiện tại của mình, trả:
+
+```json
+{ "message": "Đã xóa tất cả thông báo.", "da_xoa": n }
+```
 
 ## 20. Thống kê — `/api/stats` (UC20/UC28)
 

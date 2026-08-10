@@ -337,3 +337,199 @@ File đã sửa:
 - Frontend/books.html, js/books.js
 - Frontend/css/style.css
 - 15 file HTML (bump style.css ?v=20260810-1)
+---
+
+# PHIÊN BẢN 2026-08-10 08:11:51 - Prompt lượt chỉnh banner header theo mẫu ICTU
+
+Nhiệm vụ lượt này:
+1. LOGO: copy logo tròn chính thức → Frontend/assets/logo-ictu-round.png (nguồn img/cropped-logoww.png — sách mở, nền trắng, viền tròn xanh); dùng trong .app-banner kích thước 48px.
+2. CHỮ: "TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG" in hoa đậm navy #0A2E5C; dòng mô tả in hoa đậm nhỏ hơn #1E4B8C; bỏ chữ trắng/đổ bóng.
+3. NỀN: sáng/trắng + ảnh nền bg_header.png + gradient trắng mờ + viền dưới xanh.
+4. KHÔNG ĐỔI .app-header__inner + .admin-nav (navy, menu, user info, badge; logo thanh nav vẫn cropped-logoww.png).
+5. Bump css/style.css ?v=20260810-3 mọi trang; test 127.0.0.1:8787.
+6. Gửi log [FRONTEND] — Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/assets/logo-ictu-round.png (mới)
+- Frontend/css/style.css
+- 13 trang HTML (banner: logo + chữ in hoa)
+- 15 file HTML (bump css ?v=20260810-3)
+---
+
+# PHIÊN BẢN 2026-08-10 08:19:27 - Prompt lượt gộp user-info vào hàng admin-nav + nền banner
+
+Nhiệm vụ lượt này:
+1. Trong header, di chuyển user-info (tên, vai trò, Đăng xuất) xuống hàng admin-nav; xoá toàn bộ phần còn lại của .app-header__inner (block .brand).
+2. Cấu trúc mới: .app-banner → .app-header__nav-row (nav trái + user-info phải, flex align-center).
+3. Nền .app-banner dùng ảnh bg_header.png (đồng bộ từ img/bg_header.png), bỏ gradient.
+4. GIỮ NGUYÊN .admin-nav (menu, badge, chức năng) và user-info (id bind JS giữ nguyên).
+5. Bump css/style.css ?v=20260810-4 mọi trang; test headless.
+6. Gửi log [FRONTEND] — Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/css/style.css
+- 13 trang HTML (header structure)
+- Frontend/assets/bg_header.png (đồng bộ từ img)
+- 15 file HTML (bump css ?v=20260810-4)
+---
+
+# PHIÊN BẢN 2026-08-10 08:22:45 - Prompt lượt tương thích web + responsive mobile
+
+Nhiệm vụ lượt này: Chạy web trước nhưng các khung phải tương thích web và khi chuyển qua điện thoại các khung di chuyển tương ứng.
+
+Kết quả:
+- Desktop: banner + hàng nav (nav trái, user-info phải, căn giữa hàng), bảng cuộn trong .table-wrap, không tràn ngang.
+- Mobile (≤768px): banner thu gọn (logo 40px, chữ 14/11px), nav full-width + user-info xuống dưới, search-bar full-width, form-grid 1 cột, toolbar wrap, profile-layout 1 cột.
+- Test 12 trang × 2 viewport PASS, không issue.
+- Bump css/style.css ?v=20260810-5.
+- Gửi log [FRONTEND] — Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/css/style.css
+- 15 file HTML (bump css ?v=20260810-5)
+---
+
+# PHIÊN BẢN 2026-08-10 08:28:18 - Prompt lượt nút thông báo dùng API thật
+
+Nhiệm vụ lượt này:
+1. GET /api/notifications lấy danh sách + da_doc (bỏ localStorage hoặc chỉ fallback).
+2. Bấm đọc 1: PUT /api/notifications/{id}/read.
+3. Bấm đọc tất cả: PUT /api/notifications/read-all (trả { so_da_doc }).
+4. api.js: markNotificationRead /api/notifications/{id}/read, markAllNotificationsRead /api/notifications/read-all.
+5. notifications-core.js: map đủ loại, markRead/markAllRead gọi API + localStorage fallback; notifications.js await rồi load lại.
+6. Gửi log [FRONTEND] — Chức năng đề bài: 4, 6 (mở rộng UC11) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/js/api.js
+- Frontend/js/notifications-core.js
+- Frontend/js/notifications.js
+- 15 file HTML (bump api.js ?v=20260810-6, notifications-core.js ?v=20260810-3, notifications.js ?v=20260810-3)
+---
+
+# PHIÊN BẢN 2026-08-10 08:30:50 - Prompt lượt khôi phục bản thông báo cũ
+
+Nhiệm vụ lượt này: Khôi phục lại bản thông báo cũ (trước khi chuyển sang PUT read).
+
+Kết quả:
+- notifications-core.js: GET /api/notifications lấy danh sách + da_doc; markRead/markAllRead ghi localStorage.
+- notifications.js: bấm nút → markRead/markAllRead (localStorage) rồi load lại, không await API.
+- api.js: gỡ markNotificationRead + markAllNotificationsRead.
+- Test headless: chỉ có GET /api/notifications, không có PUT, không lỗi JS.
+- Gửi log [FRONTEND] — Chức năng đề bài: 4, 6 (mở rộng UC11) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/js/notifications-core.js
+- Frontend/js/notifications.js
+- Frontend/js/api.js
+- 15 file HTML (bump api.js ?v=20260810-7, notifications-core.js ?v=20260810-4, notifications.js ?v=20260810-4)
+---
+
+# PHIÊN BẢN 2026-08-10 08:35:59 - Prompt lượt đồng bộ layout bằng MainLayout dùng chung
+
+Nhiệm vụ lượt này:
+1. Kiểm tra: header/banner trước đây nằm lặp thủ công trong từng trang HTML (13 trang sau login); index/register không có banner (trang đăng nhập/đăng ký giữ nguyên).
+2. Tạo Frontend/js/layout.js: AppHeader (banner cố định: logo tròn ICTU + chữ in hoa đậm #0B5ED7 + nền sáng hoạ tiết công nghệ); AppNavbar(role) đúng menu reader/librarian/admin + user info + Đăng xuất; MainLayout.init(pageKey) chèn vào #app-header-root và đánh active.
+3. Thay header 13 trang bằng <header class="app-header" id="app-header-root"></header>, thêm js/layout.js + window.Layout.init("<pageKey>") sau auth.js; index/register không dùng.
+4. Giữ nguyên nội dung nghiệp vụ.
+5. Bump css ?v=20260810-6 (chữ banner #0B5ED7), layout.js ?v=20260810-1; test 3 tài khoản.
+6. Gửi log [FRONTEND] — Chức năng đề bài: giao diện (layout dùng chung) - Ảnh hưởng Backend: không.
+
+File đã tạo/sửa:
+- Frontend/js/layout.js (mới)
+- Frontend/css/style.css
+- 13 trang HTML (header → #app-header-root + layout.js + init)
+- 15 file HTML (bump css ?v=20260810-6)
+---
+
+# PHIÊN BẢN 2026-08-10 08:42:18 - Prompt lượt nút Xoá thông báo của độc giả
+
+Nhiệm vụ lượt này (Frontend làm trước):
+1. notifications.js: mỗi thẻ thông báo thêm nút "Xoá" (btn nhỏ đỏ, cạnh "Đánh dấu đã đọc"/nhãn "Đã đọc"), confirm "Xoá thông báo này khỏi danh sách?", gọi window.Notif.remove(item) → reload.
+2. notifications-core.js: thêm remove(item) → API.call("deleteNotification", undefined, "DELETE", { id: item.id }).
+3. api.js: deleteNotification -> DELETE /api/notifications/{id}.
+4. Bump ?v= api.js -8, notifications-core.js -5, notifications.js -5, css -7.
+5. Gửi log [FRONTEND] — Chức năng đề bài: 6 (mở rộng UC11) - Ảnh hưởng Backend: có.
+
+File đã sửa:
+- Frontend/js/api.js
+- Frontend/js/notifications-core.js
+- Frontend/js/notifications.js
+- Frontend/css/style.css
+- 15 file HTML (bump versions)
+---
+
+# PHIÊN BẢN 2026-08-10 08:44:33 - Prompt lượt sửa CSS navbar dàn đều + nội dung full-width
+
+Nhiệm vụ lượt này: Sau refactor MainLayout, sửa 2 lỗi CSS.
+
+Kết quả:
+1. Navbar: .admin-nav gap 8px 28px (menu cách đều 28px), layout.js gán class nav-item cho từng link; .app-header__nav-row display:flex + align-items:center + justify-content:space-between.
+2. Full-width: bỏ max-width 1200px ở .app-header__nav-row, .app-header__nav-row .admin-nav, .page; html/body width:100%; giữ padding 24px (mobile 16px).
+3. Test 1920/1366/900/390 PASS: nav-row + page full-width, link gap 28px, không overflow.
+4. Bump css ?v=20260810-8, layout.js ?v=20260810-2.
+5. Gửi log [FRONTEND] — Chức năng đề bài: giao diện (layout dùng chung) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/css/style.css (.admin-nav gap, .app-header__nav-row max-width:none, .page max-width:none, html/body width)
+- Frontend/js/layout.js (class nav-item)
+- 15 file HTML (bump css/layout version)
+---
+
+# PHIÊN BẢN 2026-08-10 08:50:08 - Prompt lượt sửa footer trôi/cắt
+
+Nhiệm vụ lượt này:
+1. Nguyên nhân: .page min-height calc(100vh - 220px) hack cũ → footer trôi/cắt.
+2. Sửa: html/body height 100%; body flex column min-height 100vh; .page flex 1 0 auto (bỏ min-height); .site-footer flex-shrink 0; footer nằm sau main trong luồng tự nhiên.
+3. Test 13 trang: nội dung ngắn → footer sát đáy viewport; nội dung dài → footer ngay sau nội dung; không cắt/tràn.
+4. Bump css ?v=20260810-9.
+5. Gửi log [FRONTEND] — Chức năng đề bài: giao diện (sticky footer) - Ảnh hưởng Backend: không.
+
+File đã sửa:
+- Frontend/css/style.css (html/body, .page, .site-footer)
+- 15 file HTML (bump css ?v=20260810-9)
+---
+
+# PHIÊN BẢN 2026-08-10 08:53:00 - Prompt lượt bỏ hộp xác nhận khi xoá thông báo
+
+Nhiệm vụ lượt này:
+1. Đọc AGENTS.md + api_docs 19.2 (0.28.0) — DELETE /api/notifications/{source_id} trả {message, da_xoa:1}; DELETE /api/notifications ẩn tất cả.
+2. notifications.js: bỏ window.confirm; bấm Xoá → window.Notif.remove(item) ngay; thành công → load(); lỗi → "Không thể xoá thông báo."
+3. Giữ nguyên nút Đánh dấu đã đọc / Đánh dấu tất cả đã đọc.
+4. Test reader: xoá ngay không confirm, F5 không hiện lại, reader khác vẫn thấy của mình.
+5. Gửi log theo mẫu.
+
+File đã sửa:
+- Frontend/js/notifications.js
+- Frontend/notifications.html (bump ?v=20260810-6)
+---
+
+# PHIÊN BẢN 2026-08-10 08:57:43 - Prompt lượt đồng bộ max-width khung + bỏ margin auto co cụm
+
+Nhiệm vụ lượt này:
+1. Sửa .app-header__inner max-width 1200px → none.
+2. Sửa .admin-nav (bản gốc) max-width 1200px → none.
+3. Rà toàn bộ max-width còn sót: hết 1200px; giữ 480px login-shell + 640px modal-box (không thuộc khung trang).
+4. Phát hiện thêm: body flex-column + margin:0 auto ở .page/.app-header__nav-row → co cụm; bỏ margin auto, .page width:100%.
+5. layout.js render đúng .app-header__nav-row (không lệch class).
+6. Test 13 trang × 1920/1366 PASS, không khoảng trắng hai bên.
+7. Bump css ?v=20260810-11.
+
+File đã sửa:
+- Frontend/css/style.css (.app-header__inner, .admin-nav, .app-header__nav-row, .page)
+- 15 file HTML (bump css)
+---
+
+# PHIÊN BẢN 2026-08-10 09:02:27 - Prompt lượt hoàn thiện responsive + hamburger menu
+
+Nhiệm vụ lượt này:
+1. layout.js: thêm nút hamburger #nav-toggle trong .app-header__nav-row; bấm mở/đóng dropdown menu dọc đúng role; mỗi mục ≥44px; đóng khi chọn hoặc bấm ngoài; aria-expanded.
+2. CSS ≤768px: .nav-toggle hiện, .admin-nav thành dropdown dọc (absolute, navy, z-index 120), user-info dồn phải; desktop >768 giữ menu ngang.
+3. CSS ≤480px: banner logo 36px/chữ 12-10px, page/card padding nhỏ, user-info gọn.
+4. .table-wrap max-width:100% cuộn ngang riêng; không tràn trang.
+5. Test 3 role × 375/390/768 + desktop 1280 PASS.
+6. Bump css ?v=20260810-12, layout.js ?v=20260810-3.
+
+File đã sửa:
+- Frontend/js/layout.js
+- Frontend/css/style.css
+- 15 file HTML (bump versions)

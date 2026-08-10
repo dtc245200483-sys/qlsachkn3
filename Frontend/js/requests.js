@@ -199,7 +199,7 @@
     var valid = needsBooks
       ? hasValidBookLine()
       : !!document.getElementById("req-borrow").value;
-    btn.disabled = false;
+    btn.disabled = !valid;
   }
 
   function createRequest() {
@@ -230,17 +230,8 @@
           showMessage("Vui lòng nhập số ngày mượn hợp lệ (>= 1).");
           return;
         }
-        /*
-         * Reader đề xuất số ngày mượn; thủ thư sẽ xem và xác nhận khi duyệt.
-         * Backend chưa lưu field này — cần Backend bổ sung so_ngay_muon.
-         */
         payload.so_ngay_muon = soNgay;
       } else {
-        /*
-         * DAT_TRUOC: đặt trước sách hết. Backend /api/requests hiện chỉ nhận
-         * loai MUON/TRA/GIA_HAN — cần Backend bổ sung loai DAT_TRUOC
-         * (hoặc Frontend chuyển sang /api/reservations).
-         */
         payload.loai = "DAT_TRUOC";
       }
     } else {
@@ -255,13 +246,7 @@
     API.call("createRequest", payload, "POST")
       .then(function (res) {
         if (!res.ok) {
-          if (loai === "DAT_TRUOC") {
-            showMessage(
-              "Backend chưa hỗ trợ loại 'Đặt trước sách' trong yêu cầu — cần Backend bổ sung loai DAT_TRUOC (hoặc dùng nút Đặt trước ở trang Tra cứu)."
-            );
-          } else {
-            showMessage(res.message);
-          }
+          showMessage(res.message);
           return;
         }
         showMessage("Đã gửi yêu cầu " + ma + ".", "alert-success");
@@ -497,10 +482,6 @@
     var name = action === "approve" ? "approveRequest" : "rejectRequest";
     var body = {};
     if (days !== undefined && days !== null) {
-      /*
-       * so_ngay_muon: thủ thư nhập khi duyệt yêu cầu MUON của reader.
-       * Backend chưa nhận body này — cần Backend bổ sung.
-       */
       body.so_ngay_muon = days;
     }
     API.call(name, body, "PUT", { id: req.maYeuCau })

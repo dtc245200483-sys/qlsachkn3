@@ -193,11 +193,6 @@
     var payload = {
       ma_phieu: maPhieu,
       ma_doc_gia: maDocGia,
-      /*
-       * so_ngay_muon: thủ thư nhập số ngày mượn (hạn trả).
-       * Backend 0.6.0 chưa hỗ trợ field này (đang dùng max_borrow_days)
-       * nên hiện Backend bỏ qua — cần Backend bổ sung để hạn trả đúng ý.
-       */
       so_ngay_muon: parseInt(document.getElementById("borrow-so-ngay").value, 10),
       items: items
     };

@@ -233,6 +233,7 @@ def approve_request(
         _perform_renew_borrow(db, user, req.ma_phieu)
 
     req.trang_thai = "DA_DUYET"
+    req.ngay_xu_ly = datetime.now()
     write_audit_log(
         db,
         user,
@@ -258,6 +259,7 @@ def reject_request(
     if req.trang_thai != "CHO_XU_LY":
         raise HTTPException(status_code=400, detail="Yêu cầu không ở trạng thái chờ xử lý.")
     req.trang_thai = "TU_CHOI"
+    req.ngay_xu_ly = datetime.now()
     write_audit_log(
         db,
         user,

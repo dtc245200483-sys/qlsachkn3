@@ -65,7 +65,7 @@
     card.className = "card notif-item" + (item.read ? " notif-item--read" : " notif-item--unread");
 
     var title = document.createElement("h3");
-    title.textContent = item.title + (item.read ? " (đã đọc)" : "");
+    title.textContent = item.title;
     card.appendChild(title);
 
     var text = document.createElement("p");
@@ -77,17 +77,55 @@
     meta.textContent = item.date ? item.date.toLocaleString("vi-VN") : "";
     card.appendChild(meta);
 
-    if (!item.read) {
+    var actions = document.createElement("div");
+    actions.className = "row-actions";
+    if (item.read) {
+      var done = document.createElement("span");
+      done.className = "status-badge status-badge--active";
+      done.textContent = "Đã đọc";
+      actions.appendChild(done);
+    } else {
       var mark = document.createElement("button");
       mark.type = "button";
       mark.className = "btn btn-secondary";
       mark.textContent = "Đánh dấu đã đọc";
       mark.addEventListener("click", function () {
-        window.Notif.markRead(item);
-        load();
+        mark.disabled = true;
+        window.Notif.markRead(item)
+          .then(function (res) {
+            if (!res.ok) {
+              mark.disabled = false;
+              showMessage(res.message || "Không thể đánh dấu đã đọc.");
+              return;
+            }
+            load();
+          })
+          .catch(function () {
+            mark.disabled = false;
+            showMessage("Đã xảy ra lỗi khi đánh dấu đã đọc.");
+          });
       });
-      card.appendChild(mark);
+      actions.appendChild(mark);
     }
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "btn btn-danger btn-sm";
+    del.textContent = "Xoá";
+    del.addEventListener("click", function () {
+      window.Notif.remove(item)
+        .then(function (res) {
+          if (!res.ok) {
+            showMessage("Không thể xoá thông báo.");
+            return;
+          }
+          load();
+        })
+        .catch(function () {
+          showMessage("Không thể xoá thông báo.");
+        });
+    });
+    actions.appendChild(del);
+    card.appendChild(actions);
     return card;
   }
 
@@ -97,8 +135,11 @@
     }
     Auth.applyRoleUI();
     document.getElementById("mark-all-button").addEventListener("click", function () {
-      window.Notif.build().then(function (res) {
-        window.Notif.markAllRead(res.items);
+      window.Notif.markAllRead().then(function (res) {
+        if (res && !res.ok) {
+          showMessage(res.message || "Không thể đánh dấu tất cả.");
+          return;
+        }
         load();
       });
     });

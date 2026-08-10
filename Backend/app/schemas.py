@@ -119,6 +119,7 @@ class BorrowCreate(BaseModel):
     ma_phieu: str = Field(..., min_length=1, max_length=20)
     ma_doc_gia: str = Field(..., min_length=1, max_length=20)
     items: list[BorrowItemCreate] = Field(..., min_length=1)
+    so_ngay_muon: int | None = Field(None, ge=1, le=365)
 
 
 class BorrowDetailOut(BaseModel):
@@ -300,7 +301,13 @@ class ReservationOut(BaseModel):
 
 class NotificationOut(BaseModel):
     id: str
-    loai: Literal["SAP_HET_HAN", "QUA_HAN", "SACH_SAN_SANG"]
+    loai: Literal[
+        "SAP_HET_HAN",
+        "QUA_HAN",
+        "SACH_SAN_SANG",
+        "YEU_CAU_DA_DUYET",
+        "DAT_TRUOC_DA_MUON",
+    ]
     noi_dung: str
     ngay: datetime
     da_doc: bool

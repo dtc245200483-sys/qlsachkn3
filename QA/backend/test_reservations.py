@@ -135,5 +135,18 @@ def test_delete_all_processed_history(client, headers):
     assert resp.json()["so_phieu_da_xoa"] >= 1
 
 
+def test_librarian_delete_processed_history(client, headers):
+    # Tạo tình huống HUY cho reader2, librarian xoá được
+    resp = client.put("/api/reservations/RVQA01/cancel", headers=headers("librarian"))
+    assert resp.status_code == 200
+    assert resp.json()["trang_thai"] == "HUY"
+    resp = client.delete("/api/reservations/me/RVQA01", headers=headers("librarian"))
+    assert resp.status_code == 200
+    # Xoá toàn bộ theo quyền librarian cũng chạy (không lỗi)
+    resp = client.delete("/api/reservations/me", headers=headers("librarian"))
+    assert resp.status_code == 200
+    assert resp.json()["so_phieu_da_xoa"] >= 0
+
+
 def test_list_admin_forbidden(client, headers):
     assert client.get("/api/reservations", headers=headers("admin")).status_code == 403

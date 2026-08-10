@@ -16,8 +16,7 @@
 
   var LOAI_LABELS = {
     sinh_vien: "Sinh viên",
-    giang_vien: "Giảng viên",
-    khac: "Khác"
+    giang_vien: "Giảng viên"
   };
 
   function showMessage(text, type) {

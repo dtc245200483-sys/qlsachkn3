@@ -91,10 +91,16 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 body {
   margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-family);
   font-size: var(--text-base);
   line-height: var(--line-body);
@@ -195,13 +201,23 @@ a {
 }
 
 .login-brand {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: var(--space-3);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  min-height: 130px;
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(10, 46, 92, 0.88) 0%, rgba(30, 75, 140, 0.72) 100%),
+    url("../assets/bg_header.png") center / cover no-repeat;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   color: var(--color-on-primary);
+}
+
+.login-brand .logo,
+.login-brand__text {
+  position: relative;
+  z-index: 1;
 }
 
 .login-brand__text {
@@ -213,12 +229,14 @@ a {
   font-weight: 800;
   line-height: var(--line-tight);
   color: var(--color-text-light);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .login-brand p {
   margin-top: 4px;
   font-size: var(--text-sm);
   color: var(--color-text-muted-navy);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .login-card {
@@ -410,8 +428,8 @@ a {
 }
 
 .app-header__inner {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 14px 24px;
   display: flex;
   align-items: center;
@@ -443,11 +461,11 @@ a {
 }
 
 .admin-nav {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 0 24px 12px;
   display: flex;
-  gap: 4px;
+  gap: 8px 28px;
   flex-wrap: wrap;
 }
 
@@ -469,13 +487,106 @@ a {
   color: var(--color-on-primary);
 }
 
+/* Banner header — logo + tên trường (khung chia đôi: block trên) */
+.app-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 96px;
+  padding: 10px 24px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  background-image: url("../assets/bg_header.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--color-primary-900);
+  border-bottom: 3px solid var(--color-primary-600);
+}
+
+.app-banner .logo {
+  height: 48px;
+  width: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.app-banner__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.app-banner__text strong {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0b5ed7;
+  text-shadow: none;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.app-banner__text span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e4b8c;
+  text-shadow: none;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.app-header__nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  max-width: none;
+  margin: 0;
+  padding: 0 24px 12px;
+}
+
+.app-header__nav-row .admin-nav {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--color-text-light);
+  border-radius: 2px;
+}
+
 /* ============ Khung trang ============ */
 
 .page {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
+  width: 100%;
   padding: var(--space-3);
-  min-height: calc(100vh - 220px);
+  flex: 1 0 auto;
 }
 
 .toolbar {
@@ -760,6 +871,7 @@ a {
 
 .table-wrap {
   overflow-x: auto;
+  max-width: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -814,6 +926,12 @@ a {
 
 .row-actions .btn {
   padding: 6px 12px;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+
+.btn-sm {
+  padding: 5px 10px;
   font-size: var(--text-sm);
   border-radius: var(--radius-sm);
 }
@@ -907,9 +1025,11 @@ a {
 /* ============ Footer ============ */
 
 .site-footer {
-  max-width: 1200px;
-  margin: var(--space-3) auto 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin: var(--space-3) 0 0;
   padding: var(--space-3) 24px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -918,7 +1038,8 @@ a {
   background: var(--color-primary-dark);
   color: var(--color-text-light);
   font-size: var(--text-sm);
-  border-radius: var(--radius-lg);
+  line-height: 1.5;
+  overflow: visible;
   text-align: center;
 }
 
@@ -933,12 +1054,80 @@ a {
     padding: var(--space-2);
   }
 
-  .app-header__inner {
-    padding: 12px var(--space-2);
+  .app-banner {
+    padding: 8px var(--space-2);
+    gap: 10px;
+    min-height: 0;
   }
 
-  .admin-nav {
+  .app-banner .logo {
+    height: 40px;
+    width: 40px;
+  }
+
+  .app-banner__text strong {
+    font-size: 14px;
+  }
+
+  .app-banner__text span {
+    font-size: 11px;
+  }
+
+  .app-header__nav-row {
+    position: relative;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
     padding: 0 var(--space-2) 10px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .app-header__nav-row .admin-nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: var(--space-2);
+    right: var(--space-2);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0;
+    padding: 8px;
+    background: var(--color-primary-900);
+    border: 1px solid var(--color-primary-600);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 120;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+  }
+
+  .app-header__nav-row.nav-open .admin-nav {
+    display: flex;
+  }
+
+  .admin-nav a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+  }
+
+  .app-header__nav-row .user-info {
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .search-bar .form-group {
+    flex: 1 1 100%;
+  }
+
+  .search-bar input {
+    width: 100%;
   }
 
   .form-grid {
@@ -959,11 +1148,6 @@ a {
     padding: 10px 10px;
   }
 
-  .user-info {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .toolbar {
     justify-content: stretch;
   }
@@ -978,6 +1162,56 @@ a {
 
   .site-footer {
     padding: var(--space-2);
+  }
+}
+
+/* ============ Điện thoại nhỏ (<=480px) ============ */
+
+@media (max-width: 480px) {
+  .app-banner {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .app-banner .logo {
+    height: 36px;
+    width: 36px;
+  }
+
+  .app-banner__text strong {
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .app-banner__text span {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .page {
+    padding: 12px;
+  }
+
+  .card {
+    padding: var(--space-2);
+  }
+
+  .app-header__nav-row {
+    padding: 0 12px 8px;
+  }
+
+  .user-info {
+    gap: 6px;
+  }
+
+  .role-badge {
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+
+  .user-info .btn {
+    padding: 8px 10px;
+    font-size: 13px;
   }
 }
 

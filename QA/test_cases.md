@@ -1,19 +1,19 @@
 # Tổng hợp Test Case — QA
 
-Cập nhật: 2026-08-10 · Backend 0.25.0 (điểm SVNET, DAT_TRUOC, so_ngay_muon, profile, lock reader, validation DTC).
+Cập nhật: 2026-08-10 · Backend 0.25.0 + đã sửa các bug QA (so_ngay_muon mượn trực tiếp, notifications API, search, admin-config, xoá đặt trước librarian, test-harness...).
 Môi trường: Backend QA `LibraryDB_QA` (port 8001) + Backend demo (port 8000). Không đụng dữ liệu thật.
 
 ## 1. Backend — bộ test QA tự viết (`QA/backend`)
 
-Kết quả vòng sạch: **116/116 PASS** (`run_qa_tests.ps1` tự reset DB → migrate → seed → start server → pytest).
+Kết quả vòng sạch: **118/118 PASS** (`run_qa_tests.ps1` tự reset DB → migrate → seed → start server → pytest).
 
 | Nhóm | Số test | Ghi chú |
 |---|---:|---|
 | Auth/Đăng ký/Phân quyền | 15 | Login 3 vai trò, sai mật khẩu, thiếu field → 400, username/email/SĐT/họ tên sai validation, loại độc giả sai, role_display |
 | Quản lý sách + Tra cứu + sort | 20 | CRUD, biên số lượng/năm, lọc q/theLoai/trạng thái, sort/order, `trangThai=het` → 422 (BUG-009) |
 | Quản lý độc giả | 10 | CRUD admin-only, lock librarian, khoá thẻ chặn login, email trùng, validation |
-| Mượn/Trả/Gia hạn/Phạt điểm | 18 | stock=0, vượt max, trả đúng/trễ (so_diem), gia hạn 1 lần/trễ/chặn khi có đặt trước, thu phạt trừ điểm SVNET, `so_ngay_muon` trực tiếp bị bỏ qua (BUG-002) |
-| Đặt trước | 11 | Sách hết/còn/trùng, huỷ reader/librarian, xoá lịch sử, fulfill kiểm tồn kho, xác nhận đã lấy → phiếu mượn |
+| Mượn/Trả/Gia hạn/Phạt điểm | 19 | stock=0, vượt max, trả đúng/trễ (so_diem), gia hạn 1 lần/trễ/chặn khi có đặt trước, thu phạt trừ điểm SVNET, `so_ngay_muon` mượn trực tiếp áp dụng + vượt max 400 |
+| Đặt trước | 12 | Sách hết/còn/trùng, huỷ reader/librarian, xoá lịch sử (reader + librarian), fulfill kiểm tồn kho, xác nhận đã lấy → phiếu mượn |
 | Yêu cầu (MUON/TRA/GIA_HAN/DAT_TRUOC) | 10 | so_ngay_muon đề xuất + ghi đè khi duyệt, vượt max 400, DAT_TRUOC tạo đặt trước thật, reject, phân quyền |
 | Hồ sơ cá nhân | 5 | GET/PUT profile, đổi mật khẩu, upload avatar (PNG hợp lệ + sai loại), cleanup file |
 | Thông báo | 5 | SAP_HET_HAN, QUA_HAN, SACH_SAN_SANG, phiếu đã trả không hiện, phân quyền |
@@ -22,15 +22,14 @@ Kết quả vòng sạch: **116/116 PASS** (`run_qa_tests.ps1` tự reset DB →
 
 ## 2. Backend — bộ test gốc của dự án (`Backend/tests`)
 
-- Trên DB QA **sạch** (migrate xong, chưa seed): **101/101 PASS**.
-- Trên DB QA **đã có dữ liệu** (sau khi QA suite tạo dữ liệu): **100/101 PASS** — fail duy nhất `test_stats.py::test_top_books_order_and_limit` (`KeyError: 'TESTSTT2'`) = BUG-007 (test không cô lập dữ liệu, logic API không sai).
-- BUG-015: `conftest.py` dọn `Readers` theo `DTC100%` trước `Users` → vỡ FK khi DB có reader seed dùng dải này (đã né bằng cách QA dùng `DTC90x`; bản thân conftest vẫn chưa an toàn).
+- Trên DB QA **sạch**: **101/101 PASS**.
+- Trên DB QA **đã có dữ liệu** (sau khi QA suite tạo dữ liệu): **101/101 PASS** (BUG-007/015 đã sửa).
 
 ## 3. Frontend
 
 - Kiểm tra tĩnh (`QA/frontend/check_frontend.py`): **PASS** — file tham chiếu đủ; mọi endpoint `api.js` đều có trong OpenAPI Backend (bao gồm profile/lock/DAT_TRUOC/export reservations).
 - Kịch bản UI: `QA/frontend/test_cases_ui.md`.
-- Bug mở (2026-08-10): BUG-002 (mượn trực tiếp), BUG-003, BUG-005, BUG-006, BUG-007, BUG-008 (menu sách), BUG-009 → BUG-016 — xem `bug_reports.md`.
+- Bug: toàn bộ BUG-001 → BUG-016 đã sửa (xem `bug_reports.md`); AI chưa triển khai theo yêu cầu.
 
 ## 4. AI Engine
 
@@ -47,7 +46,7 @@ AI-1/2/3 vẫn **chưa triển khai** (chỉ có `AI_Engine/AI.txt`). Test case 
 
 ## 5. Tổng kết
 
-- QA suite: **116/116 PASS**.
-- Backend gốc: sạch **101/101**; có dữ liệu **100/101** (BUG-007).
+- QA suite: **118/118 PASS**.
+- Backend gốc: **101/101** cả DB sạch lẫn DB có dữ liệu.
 - Frontend static: **PASS**; UI manual: xem kịch bản (nhiều case cần chạy tay).
-- Bug mở: 16 mã (trong đó 3 mã sửa một phần, 2 mã đã sửa hoàn toàn) + AI chưa triển khai.
+- Bug: 16 mã đã sửa; AI chưa triển khai (chưa cần sửa theo yêu cầu).

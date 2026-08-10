@@ -8,20 +8,20 @@
 
 Tài khoản demo: `qa_admin` / `qa_librarian` / `qa_reader1` (mật khẩu `Test@12345`) — dùng backend QA port 8001 hoặc backend demo port 8000 (thay `baseUrl` trong `js/api.js`).
 
-## Cập nhật 2026-08-10 (Backend 0.25.0)
+## Cập nhật 2026-08-10 (Backend 0.25.0 + đã sửa bug)
 
 | Mã | Thay đổi trạng thái |
 |---|---|
-| UI-012 | Vẫn FAIL (BUG-003) — lọc "Đang mượn" sai |
-| UI-032 | Vẫn FAIL (BUG-002) — "Số ngày mượn" ở borrow.html bị bỏ qua |
+| UI-012 | ✅ Đã sửa (BUG-003) — lọc "Đang mượn" tin Backend |
+| UI-032 | ✅ Đã sửa (BUG-002) — "Số ngày mượn" ở borrow.html có hiệu lực |
 | UI-037 | ✅ Đã sửa — phạt hiển thị dữ liệu thật, đơn vị điểm |
 | UI-050/051 | ✅ Đã sửa — duyệt yêu cầu áp dụng số ngày mượn |
 | UI-052 | ✅ Đã sửa — DAT_TRUOC hoạt động (Backend hỗ trợ) |
 | UI-060→066 | Cập nhật: admin bị chặn vào trang Đặt trước (đúng thiết kế); librarian có nút Xoá lịch sử nhưng Backend từ chối → FAIL (BUG-013) |
-| UI-080 | Vẫn FAIL nhẹ (BUG-005) — chưa dùng /api/notifications |
+| UI-080 | ✅ Đã sửa (BUG-005) — dùng GET /api/notifications |
 | UI-100 | Cập nhật: chỉ tạo tài khoản thủ thư; reader tự đăng ký |
-| UI-103 | FAIL (BUG-011) — nút AI/backup/restore ở admin-config.html không chạy |
-| Mới | Lọc "Hết sách" → FAIL (BUG-009); nút "Gửi yêu cầu" không disable → FAIL (BUG-010); profile còn option "Khác" → FAIL (BUG-012); reservation-mock chưa xoá → FAIL nhẹ (BUG-014) |
+| UI-103 | ✅ Đã sửa (BUG-011) — AI/backup/restore đã gắn listener |
+| Mới | ✅ Đã sửa: "Hết sách" (BUG-009), disable nút Gửi (BUG-010), bỏ "Khác" (BUG-012), xoá reservation-mock (BUG-014) |
 | Mới | Hồ sơ cá nhân (profile.html): GET/PUT/đổi mật khẩu/avatar — PASS (review + test API) |
 
 ## 1. Đăng nhập / Đăng ký (`index.html`, `register.html`)

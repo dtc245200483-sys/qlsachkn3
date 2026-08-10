@@ -1,87 +1,33 @@
 /*
- * UC11 — Thông báo cho độc giả (Frontend tổng hợp trước khi Backend có API):
- *  (a) Nhắc hạn trả: phiếu đang mượn còn <= 3 ngày hoặc đã quá hạn (borrows/me).
- *  (b) Sách đặt trước sẵn sàng: reservation trang_thai = SAN_SANG (reservations).
- * Đánh dấu đã đọc lưu tạm ở localStorage (chờ Backend /api/notifications).
+ * UC11 — Thông báo cho độc giả: lấy từ GET /api/notifications (Backend tổng hợp).
+ * Trạng thái đã đọc lưu ở Backend (DocThongBao) qua PUT .../{id}/read và read-all.
  */
 window.Notif = (function () {
   var API = window.API;
-  var READ_KEY = "thuvien_notif_read";
 
-  function readSet() {
-    try {
-      return JSON.parse(localStorage.getItem(READ_KEY) || "[]");
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveSet(set) {
-    localStorage.setItem(READ_KEY, JSON.stringify(set));
-  }
-
-  function idFor(item) {
-    return item.kind === "duedate" ? "BORROW:" + item.ref : "RES:" + item.ref;
-  }
+  var TITLES = {
+    QUA_HAN: "Nhắc hạn trả",
+    SAP_HET_HAN: "Nhắc hạn trả",
+    SACH_SAN_SANG: "Sách sẵn sàng",
+    YEU_CAU_DA_DUYET: "Yêu cầu đã duyệt",
+    DAT_TRUOC_DA_MUON: "Đặt trước đã xác nhận"
+  };
 
   function build() {
-    return Promise.all([API.call("myBorrows"), API.call("reservations")]).then(
-      function (results) {
-        var items = [];
-        var borrowRes = results[0];
-        var resvRes = results[1];
-
-        if (borrowRes.ok && Array.isArray(borrowRes.data)) {
-          borrowRes.data.forEach(function (raw) {
-            var slip = API.mapResponse("borrowHistoryOut", raw) || raw;
-            if (slip.trangThai !== "dang_muon" || !slip.hanTra) {
-              return;
-            }
-            var now = new Date();
-            var han = new Date(slip.hanTra);
-            var daysLeft = Math.ceil((han.getTime() - now.getTime()) / 86400000);
-            if (daysLeft <= 3) {
-              items.push({
-                kind: "duedate",
-                ref: slip.maPhieu,
-                title: "Nhắc hạn trả",
-                text:
-                  "Phiếu " +
-                  slip.maPhieu +
-                  " hạn trả " +
-                  han.toLocaleDateString("vi-VN") +
-                  (daysLeft < 0
-                    ? " — đã quá hạn " + -daysLeft + " ngày"
-                    : " — còn " + daysLeft + " ngày"),
-                date: han
-              });
-            }
-          });
+    return API.call("notifications")
+      .then(function (res) {
+        if (!res.ok || !Array.isArray(res.data)) {
+          return { ok: false, items: [], unreadCount: 0 };
         }
-
-        if (resvRes.ok && Array.isArray(resvRes.data)) {
-          resvRes.data.forEach(function (raw) {
-            var r = API.mapResponse("reservationOut", raw) || raw;
-            if (r.trangThai === "SAN_SANG") {
-              items.push({
-                kind: "ready",
-                ref: r.maDat,
-                title: "Sách sẵn sàng",
-                text:
-                  "Đặt trước " +
-                  r.maDat +
-                  " — " +
-                  (r.tenSach || r.maSach || "") +
-                  " đã sẵn sàng",
-                date: r.ngayDat ? new Date(r.ngayDat) : new Date()
-              });
-            }
-          });
-        }
-
-        var set = readSet();
-        items.forEach(function (it) {
-          it.read = set.indexOf(idFor(it)) !== -1;
+        var items = res.data.map(function (n) {
+          return {
+            id: String(n.id || ""),
+            loai: n.loai || "",
+            title: TITLES[n.loai] || "Thông báo",
+            text: n.noi_dung || "",
+            date: n.ngay ? new Date(n.ngay) : new Date(),
+            read: !!n.da_doc
+          };
         });
         items.sort(function (a, b) {
           return b.date.getTime() - a.date.getTime();
@@ -93,35 +39,28 @@ window.Notif = (function () {
             return !it.read;
           }).length
         };
-      }
-    ).catch(function () {
-      return { ok: false, items: [], unreadCount: 0 };
-    });
+      })
+      .catch(function () {
+        return { ok: false, items: [], unreadCount: 0 };
+      });
   }
 
   function markRead(item) {
-    var set = readSet();
-    var id = idFor(item);
-    if (set.indexOf(id) === -1) {
-      set.push(id);
-      saveSet(set);
-    }
+    return API.call("markNotificationRead", undefined, "PUT", { id: item.id });
   }
 
-  function markAllRead(items) {
-    var set = readSet();
-    items.forEach(function (it) {
-      var id = idFor(it);
-      if (set.indexOf(id) === -1) {
-        set.push(id);
-      }
-    });
-    saveSet(set);
+  function markAllRead() {
+    return API.call("markAllNotificationsRead", undefined, "PUT");
+  }
+
+  function remove(item) {
+    return API.call("deleteNotification", undefined, "DELETE", { id: item.id });
   }
 
   return {
     build: build,
     markRead: markRead,
-    markAllRead: markAllRead
+    markAllRead: markAllRead,
+    remove: remove
   };
 })();

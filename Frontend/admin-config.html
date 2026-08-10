@@ -7,36 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260810-1">
+  <link rel="stylesheet" href="css/style.css?v=20260810-12">
 </head>
 <body data-page="admin-config">
-  <header class="app-header">
-    <div class="app-header__inner">
-      <div class="brand">
-        <img class="logo logo--light" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
-        <strong class="app-title">Cấu hình</strong>
-      </div>
-      <div class="user-info">
-        <span id="user-name"></span>
-        <span id="user-role" class="role-badge"></span>
-        <button type="button" id="logout-button" class="btn btn-secondary">Đăng xuất</button>
-      </div>
-    </div>
-    <nav class="admin-nav" data-roles="admin,librarian,reader" hidden>
-      <a href="search.html" data-roles="admin,librarian,reader">Tra cứu sách</a>
-      <a href="reservations.html" data-roles="reader,librarian">Đặt trước</a>
-      <a href="my-borrows.html" data-roles="reader">Lịch sử mượn</a>
-      <a href="requests.html" data-roles="reader,librarian">Yêu cầu</a>
-      <a href="notifications.html" data-roles="reader">Thông báo <span class="notif-badge" id="notif-badge" hidden>0</span></a>
-      <a href="borrow.html" data-roles="librarian">Mượn / Trả sách</a>
-      <a href="books.html" data-roles="librarian">Quản lý sách</a>
-      <a href="readers.html" data-roles="admin,librarian">Quản lý độc giả</a>
-      <a href="stats.html" data-roles="admin,librarian">Thống kê</a>
-      <a href="admin-accounts.html" data-roles="admin">Tài khoản</a>
-      <a href="admin-catalog.html" data-roles="admin">Danh mục</a>
-      <a href="admin-config.html" class="active" data-roles="admin">Cấu hình</a>
-    </nav>
-  </header>
+  <header class="app-header" id="app-header-root"></header>
 
   <main class="page">
     <div id="page-message" class="alert" hidden></div>
@@ -120,8 +94,10 @@
     <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
   </footer>
 
-  <script src="js/api.js?v=20260810-5"></script>
+  <script src="js/api.js?v=20260810-8"></script>
   <script src="js/auth.js?v=20260809-14"></script>
+  <script src="js/layout.js?v=20260810-3"></script>
+  <script>window.Layout.init("admin-config");</script>
   <script src="js/admin-config.js?v=20260810-2"></script>
 </body>
 </html>

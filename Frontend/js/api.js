@@ -1,5 +1,5 @@
 /*
- * Cấu hình kết nối API — theo Backend/api_docs.md 0.6.0:
+ * Cấu hình kết nối API — theo Backend/api_docs.md 0.25.0:
  * chức năng 1–5 + đăng ký, yêu cầu mượn/trả/gia hạn, lịch sử độc giả,
  * quản lý tài khoản, danh mục thể loại/NXB. API key AI do Backend giữ.
  */
@@ -26,11 +26,6 @@ window.API = (function () {
       createReader: "/api/readers",
       updateReader: "/api/readers/{id}",
       deleteReader: "/api/readers/{id}",
-      /*
-       * Khoá/mở khoá thẻ độc giả (chỉ librarian/admin theo phân quyền mới).
-       * Backend chưa có endpoint — config chờ: PUT /api/readers/{id}/lock
-       * body { trangThaiThe: "hoat_dong" | "khoa" }.
-       */
       lockReader: "/api/readers/{id}/lock",
       createBorrow: "/api/borrows",
       borrows: "/api/borrows",
@@ -44,38 +39,16 @@ window.API = (function () {
       createReservation: "/api/reservations",
       cancelReservation: "/api/reservations/{id}/cancel",
       fulfillReservation: "/api/reservations/{id}/fulfill",
-      /*
-       * Xoá lịch sử đặt trước của độc giả (UC10 mở rộng) — config chờ:
-       *   deleteMyReservation  -> DELETE /api/reservations/me/{id}
-       *   deleteMyReservations -> DELETE /api/reservations/me
-       * Chỉ xoá phiếu HUY / DA_MUON.
-       */
       deleteMyReservation: "/api/reservations/me/{id}",
       deleteMyReservations: "/api/reservations/me",
       confirmReservation: "/api/reservations/{id}/borrow",
-      /*
-       * UC11 — Thông báo: Backend chưa có endpoint riêng nên Frontend hiện
-       * TỰ TỔNG HỢP từ /api/borrows/me + /api/reservations. Khi Backend cấp,
-       * chuyển notifications.html sang gọi endpoint này.
-       */
       notifications: "/api/notifications",
-      /*
-       * Chức năng 7 — Thống kê: Backend chưa có API, Frontend dùng mock
-       * tạm. Endpoint dự kiến khi Backend cấp:
-       *   statsTopBooks    -> GET /api/stats/top-books
-       *   statsTopReaders  -> GET /api/stats/top-readers
-       *   statsOverdueBooks-> GET /api/stats/overdue-books
-       */
+      markNotificationRead: "/api/notifications/{id}/read",
+      markAllNotificationsRead: "/api/notifications/read-all",
+      deleteNotification: "/api/notifications/{id}",
       statsTopBooks: "/api/stats/top-books",
       statsTopReaders: "/api/stats/top-readers",
       statsOverdueBooks: "/api/stats/overdue-books",
-      /*
-       * Chức năng 8 — Xuất dữ liệu (CSV). Backend chưa có endpoint,
-       * gọi sẽ báo "chưa sẵn sàng". Endpoint dự kiến:
-       *   exportBooks   -> GET /api/export/books.csv
-       *   exportBorrows -> GET /api/export/borrows.csv
-       *   exportReport  -> GET /api/export/report.csv
-       */
       exportBooks: "/api/export/books.csv",
       exportBorrows: "/api/export/borrows.csv",
       exportReport: "/api/export/report.csv",
@@ -84,17 +57,7 @@ window.API = (function () {
       updateAiConfig: "/api/admin/config/ai",
       backup: "/api/admin/backup",
       restore: "/api/admin/restore",
-      /*
-       * UC19 — Thu phạt: Backend chưa có API. Endpoint dự kiến:
-       *   collectFine -> POST /api/borrows/{id}/collect-fine
-       * (danh sách phạt chưa thu hiện đang dùng dữ liệu mẫu ở borrow.html)
-       */
       collectFine: "/api/borrows/{id}/collect-fine",
-      /*
-       * Reader xoá lịch sử yêu cầu — Backend chưa có API (config chờ):
-       *   deleteMyRequest  -> DELETE /api/requests/me/{ma_yeu_cau}
-       *   deleteMyRequests -> DELETE /api/requests/me
-       */
       deleteMyRequest: "/api/requests/me/{id}",
       deleteMyRequests: "/api/requests/me",
       requests: "/api/requests",
@@ -115,13 +78,6 @@ window.API = (function () {
       deletePublisher: "/api/admin/publishers/{id}",
       libraryConfig: "/api/admin/config/library",
       updateLibraryConfig: "/api/admin/config/library",
-      /*
-       * Hồ sơ cá nhân (mở rộng) — Backend chưa có API (config chờ):
-       *   profileMe             -> GET  /api/profile/me
-       *   updateProfileMe       -> PUT  /api/profile/me
-       *   changeProfilePassword -> PUT  /api/profile/me/password
-       *   uploadProfileAvatar   -> POST /api/profile/me/avatar (multipart/form-data)
-       */
       profileMe: "/api/profile/me",
       updateProfileMe: "/api/profile/me",
       changeProfilePassword: "/api/profile/me/password",

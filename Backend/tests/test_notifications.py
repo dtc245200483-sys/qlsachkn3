@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from app.database import SessionLocal
-from app.models import BorrowSlip
+from app.models import AnThongBao, Book, BorrowSlip, DatTruoc, DocThongBao, YeuCau
 from tests.helpers import next_test_email
 
 _seq = 0
@@ -64,6 +64,39 @@ def _set_han_tra(ma_phieu: str, days_offset: int) -> None:
         slip = db.get(BorrowSlip, ma_phieu)
         assert slip is not None
         slip.han_tra = datetime.now() + timedelta(days=days_offset)
+        db.commit()
+    finally:
+        db.close()
+
+
+def _set_reservation_status(ma_dat: str, trang_thai: str) -> None:
+    db = SessionLocal()
+    try:
+        res = db.get(DatTruoc, ma_dat)
+        assert res is not None
+        res.trang_thai = trang_thai
+        db.commit()
+    finally:
+        db.close()
+
+
+def _set_book_stock(book_ma: str, so_luong: int) -> None:
+    db = SessionLocal()
+    try:
+        book = db.get(Book, book_ma)
+        assert book is not None
+        book.soLuong = so_luong
+        db.commit()
+    finally:
+        db.close()
+
+
+def _set_request_xuly_date(ma_yeu_cau: str, days_offset: int) -> None:
+    db = SessionLocal()
+    try:
+        req = db.get(YeuCau, ma_yeu_cau)
+        assert req is not None
+        req.ngay_xu_ly = datetime.now() + timedelta(days=days_offset)
         db.commit()
     finally:
         db.close()
@@ -152,3 +185,337 @@ def test_notifications_permissions(client_and_tokens):
     assert client.get("/api/notifications", headers=_headers(tokens["librarian"])).status_code == 403
     assert client.get("/api/notifications", headers=_headers(tokens["admin"])).status_code == 403
     assert client.get("/api/notifications", headers=_headers(tokens["reader"])).status_code == 403
+
+
+def test_approved_muon_request_notification(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ntfreq1").json()
+    _make_book(client, staff, "TESTNTF8", 2)
+
+    created = client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCTESTNTF1",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTNTF8", "so_luong": 1}],
+        },
+        headers=_headers(reader["token"]),
+    )
+    assert created.status_code == 200, created.text
+    approved = client.put("/api/requests/YCTESTNTF1/approve", headers=_headers(staff))
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["ma_phieu"] == "PMYCTESTNTF1"
+
+    items = _notifications(client, reader["token"])
+    assert any(
+        n["loai"] == "YEU_CAU_DA_DUYET"
+        and n["id"] == "YEU_CAU:YCTESTNTF1"
+        and "phiếu mượn PMYCTESTNTF1" in n["noi_dung"]
+        and n["da_doc"] is False
+        for n in items
+    )
+
+
+def test_borrowed_reservation_notification(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    borrower = _register(client, "tmp_backend_test_ntfreq2bor").json()
+    reader = _register(client, "tmp_backend_test_ntfreq2").json()
+    _make_book(client, staff, "TESTNTF9", 1)
+    _borrow(client, staff, "PMNTF8", borrower["reader_ma"], "TESTNTF9")
+
+    reservation = client.post(
+        "/api/reservations",
+        json={"ma_sach": "TESTNTF9"},
+        headers=_headers(reader["token"]),
+    ).json()
+    _set_book_stock("TESTNTF9", 2)
+    _set_reservation_status(reservation["ma_dat"], "SAN_SANG")
+    borrowed = client.put(
+        f"/api/reservations/{reservation['ma_dat']}/borrow",
+        headers=_headers(staff),
+    )
+    assert borrowed.status_code == 200, borrowed.text
+    ma_phieu = "PM" + reservation["ma_dat"][2:]
+
+    items = _notifications(client, reader["token"])
+    assert any(
+        n["loai"] == "DAT_TRUOC_DA_MUON"
+        and n["id"] == f"DAT_TRUOC:{reservation['ma_dat']}"
+        and ma_phieu in n["noi_dung"]
+        and n["da_doc"] is False
+        for n in items
+    )
+
+
+def test_old_request_and_other_reader_not_shown(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader_a = _register(client, "tmp_backend_test_ntfreq3a").json()
+    reader_b = _register(client, "tmp_backend_test_ntfreq3b").json()
+    _make_book(client, staff, "TESTNTF10", 2)
+
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCTESTNTF2",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTNTF10", "so_luong": 1}],
+        },
+        headers=_headers(reader_a["token"]),
+    )
+    client.put("/api/requests/YCTESTNTF2/approve", headers=_headers(staff))
+    _set_request_xuly_date("YCTESTNTF2", days_offset=-8)
+
+    mine = _notifications(client, reader_a["token"])
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF2" for n in mine)
+
+    other = _notifications(client, reader_b["token"])
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF2" for n in other)
+
+
+def test_mark_one_notification_read(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ntfread1").json()
+    _make_book(client, staff, "TESTNTF11", 2)
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCTESTNTF3",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTNTF11", "so_luong": 1}],
+        },
+        headers=_headers(reader["token"]),
+    )
+    client.put("/api/requests/YCTESTNTF3/approve", headers=_headers(staff))
+
+    before = _notifications(client, reader["token"])
+    assert next(n for n in before if n["id"] == "YEU_CAU:YCTESTNTF3")["da_doc"] is False
+
+    marked = client.put(
+        "/api/notifications/YEU_CAU:YCTESTNTF3/read",
+        headers=_headers(reader["token"]),
+    )
+    assert marked.status_code == 200
+
+    after = _notifications(client, reader["token"])
+    assert next(n for n in after if n["id"] == "YEU_CAU:YCTESTNTF3")["da_doc"] is True
+
+
+def test_mark_all_notifications_read(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ntfread2").json()
+    _make_book(client, staff, "TESTNTF12", 2)
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCTESTNTF4",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTNTF12", "so_luong": 1}],
+        },
+        headers=_headers(reader["token"]),
+    )
+    client.put("/api/requests/YCTESTNTF4/approve", headers=_headers(staff))
+
+    borrower = _register(client, "tmp_backend_test_ntfread2bor").json()
+    _make_book(client, staff, "TESTNTF13", 1)
+    _borrow(client, staff, "PMNTF9", borrower["reader_ma"], "TESTNTF13")
+    reservation = client.post(
+        "/api/reservations",
+        json={"ma_sach": "TESTNTF13"},
+        headers=_headers(reader["token"]),
+    ).json()
+    _set_book_stock("TESTNTF13", 2)
+    assert client.put(
+        f"/api/reservations/{reservation['ma_dat']}/fulfill",
+        headers=_headers(staff),
+    ).status_code == 200
+
+    current = _notifications(client, reader["token"])
+    assert len(current) == 2
+    assert all(n["da_doc"] is False for n in current)
+
+    marked = client.put("/api/notifications/read-all", headers=_headers(reader["token"]))
+    assert marked.status_code == 200
+    assert marked.json()["so_da_doc"] == 2
+
+    after = _notifications(client, reader["token"])
+    assert all(n["da_doc"] is True for n in after)
+
+
+def test_read_other_reader_not_found(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader_a = _register(client, "tmp_backend_test_ntfread3a").json()
+    reader_b = _register(client, "tmp_backend_test_ntfread3b").json()
+    _make_book(client, staff, "TESTNTF14", 2)
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": "YCTESTNTF5",
+            "loai": "MUON",
+            "items": [{"ma_sach": "TESTNTF14", "so_luong": 1}],
+        },
+        headers=_headers(reader_a["token"]),
+    )
+    client.put("/api/requests/YCTESTNTF5/approve", headers=_headers(staff))
+
+    other = client.put(
+        "/api/notifications/YEU_CAU:YCTESTNTF5/read",
+        headers=_headers(reader_b["token"]),
+    )
+    assert other.status_code == 404
+
+    b_items = _notifications(client, reader_b["token"])
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF5" for n in b_items)
+
+    missing = client.put(
+        "/api/notifications/KHONGTONTAI/read",
+        headers=_headers(reader_a["token"]),
+    )
+    assert missing.status_code == 404
+
+    a_after = _notifications(client, reader_a["token"])
+    assert next(n for n in a_after if n["id"] == "YEU_CAU:YCTESTNTF5")["da_doc"] is False
+
+
+def _approve_muon_request(client, staff, reader_token, ma_yeu_cau, book_ma):
+    client.post(
+        "/api/requests",
+        json={
+            "ma_yeu_cau": ma_yeu_cau,
+            "loai": "MUON",
+            "items": [{"ma_sach": book_ma, "so_luong": 1}],
+        },
+        headers=_headers(reader_token),
+    )
+    assert client.put(
+        f"/api/requests/{ma_yeu_cau}/approve",
+        headers=_headers(staff),
+    ).status_code == 200
+
+
+def test_hide_one_notification(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader_a = _register(client, "tmp_backend_test_ntfhide1a").json()
+    reader_b = _register(client, "tmp_backend_test_ntfhide1b").json()
+    _make_book(client, staff, "TESTNTF15", 2)
+    _make_book(client, staff, "TESTNTF16", 2)
+    _approve_muon_request(client, staff, reader_a["token"], "YCTESTNTF6", "TESTNTF15")
+    _approve_muon_request(client, staff, reader_b["token"], "YCTESTNTF7", "TESTNTF16")
+
+    mine = _notifications(client, reader_a["token"])
+    assert any(n["id"] == "YEU_CAU:YCTESTNTF6" for n in mine)
+    other = _notifications(client, reader_b["token"])
+    assert any(n["id"] == "YEU_CAU:YCTESTNTF7" for n in other)
+
+    hidden = client.delete(
+        "/api/notifications/YEU_CAU:YCTESTNTF6",
+        headers=_headers(reader_a["token"]),
+    )
+    assert hidden.status_code == 200
+    assert hidden.json()["da_xoa"] == 1
+
+    mine_after = _notifications(client, reader_a["token"])
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF6" for n in mine_after)
+
+    other_after = _notifications(client, reader_b["token"])
+    assert any(n["id"] == "YEU_CAU:YCTESTNTF7" for n in other_after)
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF6" for n in other_after)
+
+    mine_again = _notifications(client, reader_a["token"])
+    assert not any(n["id"] == "YEU_CAU:YCTESTNTF6" for n in mine_again)
+
+
+def test_hide_all_notifications(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ntfhide2").json()
+    _make_book(client, staff, "TESTNTF17", 2)
+    _approve_muon_request(client, staff, reader["token"], "YCTESTNTF8", "TESTNTF17")
+
+    borrower = _register(client, "tmp_backend_test_ntfhide2bor").json()
+    _make_book(client, staff, "TESTNTF18", 1)
+    _borrow(client, staff, "PMNTF10", borrower["reader_ma"], "TESTNTF18")
+    reservation = client.post(
+        "/api/reservations",
+        json={"ma_sach": "TESTNTF18"},
+        headers=_headers(reader["token"]),
+    ).json()
+    _set_book_stock("TESTNTF18", 2)
+    assert client.put(
+        f"/api/reservations/{reservation['ma_dat']}/fulfill",
+        headers=_headers(staff),
+    ).status_code == 200
+
+    before = _notifications(client, reader["token"])
+    assert len(before) == 2
+    hidden = client.delete("/api/notifications", headers=_headers(reader["token"]))
+    assert hidden.status_code == 200
+    assert hidden.json()["da_xoa"] == 2
+
+    after = _notifications(client, reader["token"])
+    assert not any(n["loai"] in ("YEU_CAU_DA_DUYET", "SACH_SAN_SANG") for n in after)
+
+
+def test_hide_other_reader_not_found(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader_a = _register(client, "tmp_backend_test_ntfhide3a").json()
+    reader_b = _register(client, "tmp_backend_test_ntfhide3b").json()
+    _make_book(client, staff, "TESTNTF19", 2)
+    _approve_muon_request(client, staff, reader_a["token"], "YCTESTNTF9", "TESTNTF19")
+
+    response = client.delete(
+        "/api/notifications/YEU_CAU:YCTESTNTF9",
+        headers=_headers(reader_b["token"]),
+    )
+    assert response.status_code == 404
+
+    missing = client.delete(
+        "/api/notifications/KHONGTONTAI",
+        headers=_headers(reader_a["token"]),
+    )
+    assert missing.status_code == 404
+
+
+def test_hide_removes_read_state(client_and_tokens):
+    client, tokens = client_and_tokens
+    staff = tokens["librarian"]
+    reader = _register(client, "tmp_backend_test_ntfhide4").json()
+    _make_book(client, staff, "TESTNTF20", 2)
+    _approve_muon_request(client, staff, reader["token"], "YCTESTNTF10", "TESTNTF20")
+
+    client.put(
+        "/api/notifications/YEU_CAU:YCTESTNTF10/read",
+        headers=_headers(reader["token"]),
+    )
+    db = SessionLocal()
+    try:
+        assert db.query(DocThongBao).filter(
+            DocThongBao.ma_doc_gia == reader["reader_ma"],
+            DocThongBao.nguon_id == "YEU_CAU:YCTESTNTF10",
+        ).count() == 1
+    finally:
+        db.close()
+
+    client.delete(
+        "/api/notifications/YEU_CAU:YCTESTNTF10",
+        headers=_headers(reader["token"]),
+    )
+    db = SessionLocal()
+    try:
+        assert db.query(DocThongBao).filter(
+            DocThongBao.ma_doc_gia == reader["reader_ma"],
+            DocThongBao.nguon_id == "YEU_CAU:YCTESTNTF10",
+        ).count() == 0
+        assert db.query(AnThongBao).filter(
+            AnThongBao.ma_doc_gia == reader["reader_ma"],
+            AnThongBao.nguon_id == "YEU_CAU:YCTESTNTF10",
+        ).count() == 1
+    finally:
+        db.close()

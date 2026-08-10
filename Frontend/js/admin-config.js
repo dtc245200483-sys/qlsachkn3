@@ -247,6 +247,10 @@
     }
     Auth.applyRoleUI();
     document.getElementById("library-config-form").addEventListener("submit", saveLibraryConfig);
+    document.getElementById("ai-config-form").addEventListener("submit", saveAiConfig);
+    document.getElementById("backup-button").addEventListener("click", backupDatabase);
+    document.getElementById("restore-button").addEventListener("click", restoreDatabase);
     loadLibraryConfig();
+    loadAiConfig();
   });
 })();

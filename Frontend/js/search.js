@@ -41,37 +41,14 @@
   }
 
   /*
-   * Backend GET /api/books hiện chưa hỗ trợ q/theLoai/trangThai
-   * (api_docs 0.3.0) nên ngoài việc gửi query đúng tên, tạm thời lọc
-   * client-side để trang dùng được ngay. Khi Backend bổ sung param,
-   * bỏ phần lọc này (chỉ giữ API.call với buildQuery).
+   * Backend đã hỗ trợ q/theLoai/trangThai/sort/order (api_docs 0.13+).
+   * Chỉ lọc client-side cho "het" vì Backend không có giá trị này.
    */
   function clientFilter(list, filters) {
     return list.filter(function (book) {
-      if (filters.q) {
-        var needle = filters.q.toLowerCase();
-        var haystack = ((book.ten || "") + " " + (book.tacGia || "")).toLowerCase();
-        if (haystack.indexOf(needle) === -1) {
-          return false;
-        }
-      }
-      if (filters.theLoai && book.theLoai !== filters.theLoai) {
+      if (filters.trangThai === "het" && book.soLuong > 0) {
         return false;
       }
-      if (filters.trangThai === "con" && !(book.soLuong > 0)) {
-        return false;
-      }
-      if (
-        (filters.trangThai === "het" || filters.trangThai === "dang_muon") &&
-        book.soLuong > 0
-      ) {
-        return false;
-      }
-      /*
-       * Lưu ý: "dang_muon" hiện tạm tính như soLuong = 0 (cùng dữ liệu
-       * với "het") vì Backend chưa có API trả trạng thái mượn thật.
-       * Khi Backend bổ sung, tách 2 trạng thái này theo dữ liệu mượn.
-       */
       return true;
     });
   }
@@ -110,10 +87,12 @@
     var theLoai = document.getElementById("search-theloai").value;
     var trangThai = document.getElementById("search-trangthai").value;
     var sortParsed = parseSort(document.getElementById("search-sort").value);
+    // "het" không phải giá trị hợp lệ của Backend -> lấy tất cả rồi lọc client-side
+    var apiTrangThai = trangThai === "het" ? "" : trangThai;
     var built = API.buildQuery("books", {
       q: q,
       theLoai: theLoai,
-      trangThai: trangThai,
+      trangThai: apiTrangThai,
       sort: sortParsed.sort,
       order: sortParsed.order
     });

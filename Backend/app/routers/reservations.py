@@ -82,7 +82,7 @@ def create_reservation(
     db: Session = Depends(get_db),
     user=Depends(require_roles("reader")),
 ) -> ReservationOut:
-    if not user.reader_id:
+    if user.role == "reader" and not user.reader_id:
         raise HTTPException(
             status_code=403,
             detail="Tài khoản chưa liên kết với độc giả.",
@@ -173,15 +173,17 @@ def cancel_reservation(
 def delete_my_reservation_history(
     ma_dat: str,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("reader")),
+    user=Depends(require_roles("reader", "librarian")),
 ):
-    if not user.reader_id:
+    if user.role == "reader" and not user.reader_id:
         raise HTTPException(
             status_code=403,
             detail="Tài khoản chưa liên kết với độc giả.",
         )
     res = db.get(DatTruoc, ma_dat)
-    if res is None or res.ma_doc_gia != user.reader_id:
+    if res is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
+    if user.role == "reader" and res.ma_doc_gia != user.reader_id:
         raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
     if res.trang_thai in ("CHO_XU_LY", "SAN_SANG"):
         raise HTTPException(
@@ -204,21 +206,17 @@ def delete_my_reservation_history(
 @router.delete("/me")
 def delete_all_my_reservation_history(
     db: Session = Depends(get_db),
-    user=Depends(require_roles("reader")),
+    user=Depends(require_roles("reader", "librarian")),
 ):
-    if not user.reader_id:
+    if user.role == "reader" and not user.reader_id:
         raise HTTPException(
             status_code=403,
             detail="Tài khoản chưa liên kết với độc giả.",
         )
-    targets = (
-        db.query(DatTruoc)
-        .filter(
-            DatTruoc.ma_doc_gia == user.reader_id,
-            DatTruoc.trang_thai.in_(["HUY", "DA_MUON"]),
-        )
-        .all()
-    )
+    query = db.query(DatTruoc).filter(DatTruoc.trang_thai.in_(["HUY", "DA_MUON"]))
+    if user.role == "reader":
+        query = query.filter(DatTruoc.ma_doc_gia == user.reader_id)
+    targets = query.all()
     count = len(targets)
     for res in targets:
         db.delete(res)
