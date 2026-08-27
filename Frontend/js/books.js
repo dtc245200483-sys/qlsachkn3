@@ -80,9 +80,6 @@
           return;
         }
         var list = res.data;
-        if (!API.config.sortBooksBackend) {
-          list = API.sortBooks(list, sortParsed.sort, sortParsed.order);
-        }
         renderBooks(list);
       })
       .catch(function () {
@@ -215,7 +212,7 @@
 
     var isEdit = state.editId !== null;
     var name = isEdit ? "updateBook" : "createBook";
-    var pathParams = isEdit ? { id: state.editId } : undefined;
+    var pathParams = isEdit ? { ma: state.editId } : undefined;
 
     var button = document.getElementById("save-book-button");
     if (button) {
@@ -251,7 +248,7 @@
     if (!ok) {
       return;
     }
-    API.call("deleteBook", undefined, "DELETE", { id: book.ma })
+    API.call("deleteBook", undefined, "DELETE", { ma: book.ma })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);

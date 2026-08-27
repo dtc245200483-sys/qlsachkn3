@@ -46,7 +46,7 @@ window.Notif = (function () {
   }
 
   function markRead(item) {
-    return API.call("markNotificationRead", undefined, "PUT", { id: item.id });
+    return API.call("markNotificationRead", undefined, "PUT", { source_id: item.id });
   }
 
   function markAllRead() {
@@ -54,7 +54,7 @@ window.Notif = (function () {
   }
 
   function remove(item) {
-    return API.call("deleteNotification", undefined, "DELETE", { id: item.id });
+    return API.call("deleteNotification", undefined, "DELETE", { source_id: item.id });
   }
 
   return {

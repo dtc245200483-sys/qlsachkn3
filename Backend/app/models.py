@@ -144,10 +144,10 @@ class Reader(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("LEN(LTRIM(ma)) > 0", name="ck_readers_ma_not_empty"),
-        CheckConstraint("LEN(LTRIM(hoTen)) > 0", name="ck_readers_ho_ten_not_empty"),
-        CheckConstraint("LEN(LTRIM(email)) > 0", name="ck_readers_email_not_empty"),
-        CheckConstraint("LEN(LTRIM(soDienThoai)) > 0", name="ck_readers_phone_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(ma)) > 0", name="ck_readers_ma_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(hoTen)) > 0", name="ck_readers_ho_ten_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(email)) > 0", name="ck_readers_email_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(soDienThoai)) > 0", name="ck_readers_phone_not_empty"),
         CheckConstraint(
             "loaiDocGia IN ('sinh_vien', 'giang_vien')",
             name="ck_readers_loai",
@@ -224,8 +224,8 @@ class TheLoai(Base):
     ten: Mapped[str] = mapped_column(Unicode(100), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("LEN(LTRIM(ma)) > 0", name="ck_the_loai_ma_not_empty"),
-        CheckConstraint("LEN(LTRIM(ten)) > 0", name="ck_the_loai_ten_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(ma)) > 0", name="ck_the_loai_ma_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(ten)) > 0", name="ck_the_loai_ten_not_empty"),
     )
 
 
@@ -236,8 +236,8 @@ class Nxb(Base):
     ten: Mapped[str] = mapped_column(Unicode(255), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("LEN(LTRIM(ma)) > 0", name="ck_nxb_ma_not_empty"),
-        CheckConstraint("LEN(LTRIM(ten)) > 0", name="ck_nxb_ten_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(ma)) > 0", name="ck_nxb_ma_not_empty"),
+        CheckConstraint("LENGTH(LTRIM(ten)) > 0", name="ck_nxb_ten_not_empty"),
     )
 
 

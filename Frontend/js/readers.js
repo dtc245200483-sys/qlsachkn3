@@ -270,7 +270,7 @@
         loaiDocGia: form.elements.loaiDocGia.value,
         trangThaiThe: form.elements.trangThaiThe.value
       };
-      request = API.call("updateReader", payload, "PUT", { id: state.editId });
+      request = API.call("updateReader", payload, "PUT", { ma: state.editId });
     } else {
       var built = API.serializeForm(form, "readerCreate");
       if (!built.ok) {
@@ -297,7 +297,7 @@
 
   function toggleLock(reader) {
     var next = reader.trangThaiThe === "hoat_dong" ? "khoa" : "hoat_dong";
-    API.call("lockReader", { trangThaiThe: next }, "PUT", { id: reader.ma })
+    API.call("lockReader", { trangThaiThe: next }, "PUT", { ma: reader.ma })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);
@@ -319,7 +319,7 @@
     if (!ok) {
       return;
     }
-    API.call("deleteReader", undefined, "DELETE", { id: reader.ma })
+    API.call("deleteReader", undefined, "DELETE", { ma: reader.ma })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);

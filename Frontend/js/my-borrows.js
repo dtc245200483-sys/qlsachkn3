@@ -126,7 +126,7 @@
     if (!ok) {
       return;
     }
-    API.call("deleteMyBorrow", undefined, "DELETE", { id: slip.maPhieu })
+    API.call("deleteMyBorrow", undefined, "DELETE", { ma_phieu: slip.maPhieu })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);

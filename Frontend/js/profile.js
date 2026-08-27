@@ -86,6 +86,7 @@
         }
         state.mock = false;
         state.data = mapped;
+        syncSessionName(mapped.hoTen);
         render(mapped);
         document.getElementById("mock-banner").hidden = true;
       })

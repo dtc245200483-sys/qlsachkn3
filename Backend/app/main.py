@@ -37,3 +37,7 @@ app.include_router(export.router)
 app.include_router(profile.router)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Frontend"))
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")

@@ -233,7 +233,7 @@
     if (!ok) {
       return;
     }
-    API.call("confirmReservation", undefined, "PUT", { id: r.maDat })
+    API.call("confirmReservation", undefined, "PUT", { ma_dat: r.maDat })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message || "Lỗi khi xác nhận đặt trước.", "alert-error");
@@ -252,7 +252,7 @@
     if (!ok) {
       return;
     }
-    API.call("cancelReservation", undefined, "PUT", { id: r.maDat }).then(function (res) {
+    API.call("cancelReservation", undefined, "PUT", { ma_dat: r.maDat }).then(function (res) {
       if (!res.ok) {
         showMessage(res.message);
         return;
@@ -269,7 +269,7 @@
     if (!ok) {
       return;
     }
-    API.call("deleteMyReservation", undefined, "DELETE", { id: r.maDat }).then(function (res) {
+    API.call("deleteMyReservation", undefined, "DELETE", { ma_dat: r.maDat }).then(function (res) {
       if (!res.ok) {
         showMessage(res.message);
         return;
@@ -295,7 +295,7 @@
   }
 
   function fulfill(r) {
-    API.call("fulfillReservation", undefined, "PUT", { id: r.maDat }).then(function (res) {
+    API.call("fulfillReservation", undefined, "PUT", { ma_dat: r.maDat }).then(function (res) {
       if (!res.ok) {
         showMessage(res.message);
         return;

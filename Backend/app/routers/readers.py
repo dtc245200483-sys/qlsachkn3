@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Reader, User
+from ..models import Reader, User, BorrowSlip, FineHistory, YeuCau, DatTruoc
 from ..schemas import LockReaderRequest, ReaderCreate, ReaderOut, ReaderUpdate
 from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
 
@@ -141,6 +141,34 @@ def delete_reader(
     reader = db.get(Reader, ma)
     if reader is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
+        
+    active_borrows = db.query(BorrowSlip).filter(
+        BorrowSlip.ma_doc_gia == ma, 
+        BorrowSlip.trang_thai.in_(["dang_muon", "qua_han"])
+    ).count()
+    if active_borrows > 0:
+        raise HTTPException(status_code=400, detail="Không thể xoá độc giả vì đang có phiếu mượn chưa trả sách.")
+        
+    unpaid_fines = db.query(FineHistory).filter(
+        FineHistory.ma_doc_gia == ma,
+        FineHistory.da_thu == False
+    ).count()
+    if unpaid_fines > 0:
+        raise HTTPException(status_code=400, detail="Không thể xoá độc giả vì còn khoản phạt chưa đóng.")
+        
+    pending_requests = db.query(YeuCau).filter(
+        YeuCau.ma_doc_gia == ma,
+        YeuCau.trang_thai == "CHO_XU_LY"
+    ).count()
+    
+    pending_reservations = db.query(DatTruoc).filter(
+        DatTruoc.ma_doc_gia == ma,
+        DatTruoc.trang_thai.in_(["CHO_XU_LY", "SAN_SANG"])
+    ).count()
+    
+    if pending_requests > 0 or pending_reservations > 0:
+        raise HTTPException(status_code=400, detail="Không thể xoá độc giả vì đang có yêu cầu hoặc đặt trước chờ xử lý.")
+        
     write_audit_log(
         db,
         user,

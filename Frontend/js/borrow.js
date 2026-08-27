@@ -319,7 +319,7 @@
   }
 
   function returnSlip(slip) {
-    API.call("returnBorrow", undefined, "PUT", { id: slip.maPhieu })
+    API.call("returnBorrow", undefined, "PUT", { ma: slip.maPhieu })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);
@@ -341,7 +341,7 @@
   }
 
   function renewSlip(slip) {
-    API.call("renewBorrow", undefined, "PUT", { id: slip.maPhieu })
+    API.call("renewBorrow", undefined, "PUT", { ma: slip.maPhieu })
       .then(function (res) {
         if (!res.ok) {
           showMessage(res.message);
@@ -432,7 +432,7 @@
   }
 
   function collectFine(f) {
-    API.call("collectFine", undefined, "POST", { id: f.ma_phieu })
+    API.call("collectFine", undefined, "POST", { ma: f.ma_phieu })
       .then(function (res) {
         if (!res.ok) {
           showMessage(

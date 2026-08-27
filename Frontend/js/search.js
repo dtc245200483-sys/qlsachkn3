@@ -42,7 +42,7 @@
 
   /*
    * Backend đã hỗ trợ q/theLoai/trangThai/sort/order (api_docs 0.13+).
-   * Chỉ lọc client-side cho "het" vì Backend không có giá trị này.
+   * Lọc sách "hết" (soLuong <= 0) client-side.
    */
   function clientFilter(list, filters) {
     return list.filter(function (book) {
