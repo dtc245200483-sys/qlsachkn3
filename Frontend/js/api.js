@@ -22,6 +22,7 @@ window.API = (function () {
       createBook: "/api/books",
       updateBook: "/api/books/{ma}",
       deleteBook: "/api/books/{ma}",
+      uploadBookCover: "/api/books/upload-cover",
       readers: "/api/readers",
       createReader: "/api/readers",
       updateReader: "/api/readers/{ma}",
@@ -97,7 +98,9 @@ window.API = (function () {
         theLoai: "theLoai",
         nxb: "nxb",
         namXb: "namXb",
-        soLuong: "soLuong"
+        soLuong: "soLuong",
+        anhBia: "anhBia",
+        trangThai: "trangThai"
       },
       readerCreate: {
         ma: "ma",
@@ -403,7 +406,8 @@ window.API = (function () {
               code: "HTTP_" + res.status,
               status: res.status,
               message: message,
-              data: data
+              data: data,
+              fieldErrors: data && data.errors ? data.errors : null
             };
           }
           return { ok: true, status: res.status, data: data };
@@ -566,7 +570,8 @@ window.API = (function () {
               code: "HTTP_" + res.status,
               status: res.status,
               message: message,
-              data: data
+              data: data,
+              fieldErrors: data && data.errors ? data.errors : null
             };
           }
           return { ok: true, status: res.status, data: data };

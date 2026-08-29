@@ -52,7 +52,7 @@
 
   function canManage() {
     var user = Auth.currentUser();
-    return !!user && user.role === "admin";
+    return !!user && (user.role === "admin" || user.role === "librarian");
   }
 
   function loadReaders(opts) {

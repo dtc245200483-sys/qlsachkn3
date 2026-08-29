@@ -30,7 +30,7 @@ def _make_book(client, token: str, ma: str) -> None:
     response = client.post(
         "/api/books",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "ten": f"Sách tiếng Việt {ma}",
             "tacGia": "Nguyễn Văn A",
             "theLoai": "Công nghệ",
@@ -162,6 +162,7 @@ def test_export_reservations_csv(client_and_tokens):
     book = client.post(
         "/api/books",
         json={
+            "anhBia": "https://example.com/cover.jpg",
             "ma": "TESTEXPRV1",
             "ten": "Sách Đặt Trước",
             "tacGia": "Tác giả",

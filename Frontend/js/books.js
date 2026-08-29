@@ -6,6 +6,9 @@
   var state = {
     editId: null
   };
+  var allFetchedBooks = [];
+  var currentPage = 1;
+  var itemsPerPage = 6;
   var messageTimer = null;
 
   function showMessage(text, type) {
@@ -80,7 +83,9 @@
           return;
         }
         var list = res.data;
-        renderBooks(list);
+        allFetchedBooks = list;
+        currentPage = 1;
+        renderCurrentPage();
       })
       .catch(function () {
         setLoading(false);
@@ -88,8 +93,62 @@
       });
   }
 
+  function renderCurrentPage() {
+    var start = (currentPage - 1) * itemsPerPage;
+    var end = start + itemsPerPage;
+    var pageItems = allFetchedBooks.slice(start, end);
+    renderBooks(pageItems);
+    renderPagination();
+  }
+
+  function renderPagination() {
+    var container = document.getElementById("pagination-controls");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var totalPages = Math.ceil(allFetchedBooks.length / itemsPerPage);
+    if (totalPages <= 1) return;
+
+    var prevBtn = document.createElement("button");
+    prevBtn.textContent = "Trước";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener("click", function() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderCurrentPage();
+      }
+    });
+    container.appendChild(prevBtn);
+
+    for (var i = 1; i <= totalPages; i++) {
+      (function(page) {
+        var btn = document.createElement("button");
+        btn.textContent = page;
+        if (page === currentPage) {
+          btn.className = "active";
+        }
+        btn.addEventListener("click", function() {
+          currentPage = page;
+          renderCurrentPage();
+        });
+        container.appendChild(btn);
+      })(i);
+    }
+
+    var nextBtn = document.createElement("button");
+    nextBtn.textContent = "Sau";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener("click", function() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderCurrentPage();
+      }
+    });
+    container.appendChild(nextBtn);
+  }
+
   function renderBooks(list) {
-    var tbody = document.getElementById("book-tbody");
+    var tbody = document.getElementById("book-list-container");
     if (!tbody) {
       return;
     }
@@ -125,24 +184,64 @@
   }
 
   function bookRow(book) {
-    var tr = document.createElement("tr");
+    var item = document.createElement("div");
+    item.className = "book-list-item";
 
-    ["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong"].forEach(
-      function (key) {
-        var td = document.createElement("td");
-        td.textContent = book[key] === "" || book[key] === null ? "—" : book[key];
-        tr.appendChild(td);
-      }
-    );
+    var coverDiv = document.createElement("div");
+    coverDiv.className = "book-cover-wrap";
+    
+    var coverImg = document.createElement("img");
+    coverImg.className = "book-cover-placeholder";
+    coverImg.loading = "lazy";
+    if (book.anhBia) {
+      coverImg.src = book.anhBia;
+    } else {
+      coverImg.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(book.ten ? book.ten : "Book") + "&background=random&size=120";
+    }
+    coverImg.style.width = "65px";
+    coverImg.style.height = "90px";
+    coverImg.style.objectFit = "cover";
+    coverImg.style.borderRadius = "4px";
+    coverImg.style.marginBottom = "8px";
 
-    var actionsTd = document.createElement("td");
+    coverDiv.appendChild(coverImg);
+    item.appendChild(coverDiv);
+
+    var infoDiv = document.createElement("div");
+    infoDiv.className = "book-info-wrap";
+
+    var title = document.createElement("h3");
+    title.className = "book-title";
+    title.innerHTML = book.ten + " <span style='font-size: 14px; color: #64748b; font-weight: normal;'>(Mã: " + book.ma + ")</span>";
+    infoDiv.appendChild(title);
+
+    var details = document.createElement("div");
+    details.className = "book-details-row";
+    
+    var props = [
+        { label: "Tác giả:", value: book.tacGia },
+        { label: "Thể loại:", value: book.theLoai },
+        { label: "NXB:", value: book.nxb + (book.namXb ? " (" + book.namXb + ")" : "") },
+        { label: "Số lượng:", value: book.soLuong }
+    ];
+    
+    props.forEach(function(p) {
+        var span = document.createElement("span");
+        span.className = "book-detail-item";
+        span.innerHTML = "<strong>" + p.label + "</strong> " + (p.value || "—");
+        details.appendChild(span);
+    });
+    
+    infoDiv.appendChild(details);
+    item.appendChild(infoDiv);
+
     if (canManage()) {
       var actions = document.createElement("div");
-      actions.className = "row-actions";
+      actions.className = "book-actions";
 
       var editBtn = document.createElement("button");
       editBtn.type = "button";
-      editBtn.className = "btn btn-secondary";
+      editBtn.className = "btn btn-secondary btn-sm";
       editBtn.textContent = "Sửa";
       editBtn.addEventListener("click", function () {
         openForm(book);
@@ -150,7 +249,7 @@
 
       var deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
-      deleteBtn.className = "btn btn-danger";
+      deleteBtn.className = "btn btn-danger btn-sm";
       deleteBtn.textContent = "Xoá";
       deleteBtn.addEventListener("click", function () {
         deleteBook(book);
@@ -158,12 +257,9 @@
 
       actions.appendChild(editBtn);
       actions.appendChild(deleteBtn);
-      actionsTd.appendChild(actions);
-    } else {
-      actionsTd.textContent = "—";
+      item.appendChild(actions);
     }
-    tr.appendChild(actionsTd);
-    return tr;
+    return item;
   }
 
   function openForm(book) {
@@ -177,8 +273,9 @@
     }
     if (form) {
       form.reset();
+      clearInlineErrors(form);
       if (book) {
-        ["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong"].forEach(
+        ["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong", "anhBia"].forEach(
           function (key) {
             var input = form.elements[key];
             if (input) {
@@ -193,6 +290,42 @@
     }
   }
 
+  function loadCategoriesAndPublishers() {
+    if (!canManage()) return;
+
+    API.call("categories", undefined, "GET")
+      .then(function(res) {
+        if (res.ok && Array.isArray(res.data)) {
+          var select = document.getElementById("book-theloai");
+          if (select) {
+            select.innerHTML = '<option value="">-- Chọn thể loại --</option>';
+            res.data.forEach(function(cat) {
+              var opt = document.createElement("option");
+              opt.value = cat.ten;
+              opt.textContent = cat.ten;
+              select.appendChild(opt);
+            });
+          }
+        }
+      });
+
+    API.call("publishers", undefined, "GET")
+      .then(function(res) {
+        if (res.ok && Array.isArray(res.data)) {
+          var select = document.getElementById("book-nxb");
+          if (select) {
+            select.innerHTML = '<option value="">-- Chọn NXB --</option>';
+            res.data.forEach(function(pub) {
+              var opt = document.createElement("option");
+              opt.value = pub.ten;
+              opt.textContent = pub.ten;
+              select.appendChild(opt);
+            });
+          }
+        }
+      });
+  }
+
   function closeForm() {
     var modal = document.getElementById("book-modal");
     if (modal) {
@@ -201,9 +334,41 @@
     state.editId = null;
   }
 
+  function clearInlineErrors(form) {
+    var errs = form.querySelectorAll(".inline-error");
+    for (var i = 0; i < errs.length; i++) {
+      errs[i].remove();
+    }
+    var inputs = form.querySelectorAll(".input-error");
+    for (var i = 0; i < inputs.length; i++) {
+      inputs[i].classList.remove("input-error");
+    }
+  }
+
+  function showInlineErrors(form, errors) {
+    var unhandled = [];
+    Object.keys(errors).forEach(function (key) {
+      var input = form.elements[key];
+      if (input) {
+        input.classList.add("input-error");
+        var errDiv = document.createElement("div");
+        errDiv.className = "inline-error";
+        errDiv.textContent = errors[key];
+        input.parentNode.appendChild(errDiv);
+      } else {
+        unhandled.push(errors[key]);
+      }
+    });
+    if (unhandled.length > 0) {
+      showMessage(unhandled.join("; "));
+    }
+  }
+
   function saveBook(e) {
     e.preventDefault();
     var form = document.getElementById("book-form");
+    clearInlineErrors(form);
+
     var built = API.serializeForm(form, "book");
     if (!built.ok) {
       showMessage(built.message);
@@ -227,7 +392,11 @@
           button.textContent = "Lưu";
         }
         if (!res.ok) {
-          showMessage(res.message);
+          if (res.fieldErrors && Object.keys(res.fieldErrors).length > 0) {
+            showInlineErrors(form, res.fieldErrors);
+          } else {
+            showMessage(res.message);
+          }
           return;
         }
         closeForm();
@@ -298,7 +467,74 @@
       });
     }
 
+    var coverDropZone = document.getElementById("cover-drop-zone");
+    var coverFileInput = document.getElementById("book-anhbia-file");
+    var coverStatus = document.getElementById("cover-upload-status");
+    var coverUrlInput = document.getElementById("book-anhbia");
+
+    if (coverDropZone && coverFileInput) {
+      coverDropZone.addEventListener("click", function () {
+        coverFileInput.click();
+      });
+
+      coverDropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        coverDropZone.style.backgroundColor = "#e2e8f0";
+      });
+
+      coverDropZone.addEventListener("dragleave", function (e) {
+        e.preventDefault();
+        coverDropZone.style.backgroundColor = "#f8fafc";
+      });
+
+      coverDropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        coverDropZone.style.backgroundColor = "#f8fafc";
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleCoverUpload(e.dataTransfer.files[0]);
+        }
+      });
+
+      coverFileInput.addEventListener("change", function () {
+        if (coverFileInput.files && coverFileInput.files.length > 0) {
+          handleCoverUpload(coverFileInput.files[0]);
+        }
+      });
+    }
+
+    function handleCoverUpload(file) {
+      if (!file.type.match("image.*")) {
+        coverStatus.textContent = "Vui lòng chọn một tệp hình ảnh.";
+        coverStatus.style.color = "#ef4444";
+        return;
+      }
+      coverStatus.textContent = "Đang tải lên...";
+      coverStatus.style.color = "#3b82f6";
+
+      API.uploadFile("uploadBookCover", file)
+        .then(function (res) {
+          if (!res.ok) {
+            coverStatus.textContent = "Lỗi tải lên: " + (res.message || "Không xác định");
+            coverStatus.style.color = "#ef4444";
+            return;
+          }
+          if (res.data && res.data.url) {
+            coverUrlInput.value = res.data.url;
+            coverStatus.textContent = "Tải lên thành công!";
+            coverStatus.style.color = "#10b981";
+          } else {
+            coverStatus.textContent = "Không nhận được URL từ máy chủ.";
+            coverStatus.style.color = "#ef4444";
+          }
+        })
+        .catch(function () {
+          coverStatus.textContent = "Lỗi kết nối khi tải lên.";
+          coverStatus.style.color = "#ef4444";
+        });
+    }
+
     loadBooks();
+    loadCategoriesAndPublishers();
   }
 
   document.addEventListener("DOMContentLoaded", init);

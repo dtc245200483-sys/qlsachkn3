@@ -9,7 +9,7 @@ def _make_book(client, token: str, ma: str, ten: str, tac_gia: str, the_loai: st
     response = client.post(
         "/api/books",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "ten": ten,
             "tacGia": tac_gia,
             "theLoai": the_loai,

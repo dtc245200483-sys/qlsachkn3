@@ -57,3 +57,26 @@ function generateRequestCode() {
 ---
 **Kết luận Phần 2:**
 Thông qua các log lịch sử và đối chiếu với mã nguồn thực tế, có thể thấy AI đã tiếp thu cực tốt các Prompt kỹ thuật và biến chúng thành các hàm logic chạy được 100%, pass toàn bộ test case (VD: test 19/19 PASS ở module Borrows).
+
+## 4. Phản hồi của AI: Sinh ID Sách theo Quy tắc Viết tắt (2026-08-28)
+AI đã sinh ra một hàm Python tự động tạo mã sách (`book_id`) từ viết tắt tên sách, đảm bảo không trùng lặp toàn cục trong Database.
+
+**Mã nguồn AI sinh ra (trích từ script update_book_ids.py):**
+```python
+import re
+
+def generate_acronym(title: str) -> str:
+    # Loại bỏ ký tự đặc biệt, lấy chữ cái đầu mỗi từ
+    words = re.sub(r'[^a-zA-ZÀ-ỹ\s]', '', title).split()
+    acronym = ''.join(w[0].upper() for w in words if w)
+    return acronym if acronym else 'BK'
+
+# Đảm bảo 4 chữ số tăng dần TOÀN CỤC, không bị trùng
+counter = 1
+for book in all_books:
+    acronym = generate_acronym(book.ten_sach)
+    new_id = f"{acronym}{str(counter).zfill(4)}"
+    book.ma = new_id
+    counter += 1
+```
+Kết quả: 64 sách có ID duy nhất, đọc hiểu được (VD: `BMTM0005` = Bóng Ma Trên Mạng, sách thứ 5).

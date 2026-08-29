@@ -31,7 +31,7 @@ def _make_book(client, token: str, ma: str, so_luong: int = 5) -> None:
     response = client.post(
         "/api/books",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "ten": f"Sách {ma}",
             "tacGia": "Tác giả Test",
             "theLoai": "Test",

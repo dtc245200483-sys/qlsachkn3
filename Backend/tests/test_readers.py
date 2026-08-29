@@ -7,7 +7,7 @@ def _headers(token: str) -> dict:
 
 def _reader_payload(ma: str = "TEST001", **overrides) -> dict:
     payload = {
-        "ma": ma,
+        "anhBia": "https://example.com/cover.jpg", "ma": ma,
         "hoTen": "Nguyễn Văn Test",
         "email": next_test_email(),
         "soDienThoai": "0901234567",
@@ -146,11 +146,11 @@ def test_permissions(client_and_tokens):
     assert client.get("/api/readers", headers=reader_headers).status_code == 403
     assert client.post("/api/readers", json=_reader_payload("TEST007"), headers=reader_headers).status_code == 403
 
-    assert client.post("/api/readers", json=_reader_payload("TEST007"), headers=librarian_headers).status_code == 403
-    assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi thủ thư"}, headers=librarian_headers).status_code == 403
+    assert client.post("/api/readers", json=_reader_payload("TEST007"), headers=librarian_headers).status_code == 200
+    assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi thủ thư"}, headers=librarian_headers).status_code == 200
     assert client.get("/api/readers", headers=librarian_headers).status_code == 200
 
-    created = client.post("/api/readers", json=_reader_payload("TEST007"), headers=admin_headers)
+    created = client.post("/api/readers", json=_reader_payload("TEST008"), headers=admin_headers)
     assert created.status_code == 200
     assert client.put("/api/readers/TEST007", json={"hoTen": "Sửa bởi admin"}, headers=admin_headers).status_code == 200
     assert client.put("/api/readers/TEST007/lock", json={"trangThaiThe": "khoa"}, headers=librarian_headers).status_code == 200

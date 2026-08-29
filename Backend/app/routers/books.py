@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from ..config import COVERS_DIR
 from ..database import get_db
 from ..deps import get_current_user, require_roles
 from ..models import Book, BorrowDetail, BorrowSlip, Nxb, TheLoai
-from ..schemas import BookBase
+from ..schemas import BookBase, CoverUploadOut
 from ..audit import write_audit_log
 
 router = APIRouter(prefix="/api/books", tags=["books"])
@@ -26,6 +29,7 @@ def list_books(
         pattern = f"%{q}%"
         query = query.filter(
             or_(
+                Book.ma.like(pattern),
                 Book.ten.like(pattern),
                 Book.tacGia.like(pattern),
             )
@@ -79,6 +83,34 @@ def list_books(
     else:
         query = query.order_by(column.asc(), Book.ma.asc())
     return query.all()
+
+
+@router.post("/upload-cover", response_model=CoverUploadOut)
+async def upload_cover(
+    file: UploadFile = File(...),
+    user=Depends(require_roles("librarian", "admin")),
+) -> CoverUploadOut:
+    ext = ".jpg"
+    if file.content_type == "image/png":
+        ext = ".png"
+    elif file.content_type == "image/jpeg":
+        ext = ".jpg"
+    elif file.content_type == "image/webp":
+        ext = ".webp"
+    else:
+        raise HTTPException(status_code=400, detail="Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP.")
+    
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Ảnh bìa tối đa 5MB.")
+
+    os.makedirs(COVERS_DIR, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}{ext}"
+    path = os.path.join(COVERS_DIR, filename)
+    with open(path, "wb") as f:
+        f.write(data)
+
+    return CoverUploadOut(url=f"/static/covers/{filename}")
 
 
 @router.post("", response_model=BookBase)

@@ -13,13 +13,13 @@
       { ma_sach: "S005", ten_sach: "L\u1ecbch s\u1eed Vi\u1ec7t Nam hi\u1ec7n \u0111\u1ea1i", so_lan_muon: 3 }
     ],
     topReaders: [
-      { ma_doc_gia: "DGREADER", ho_ten: "\u0110\u1ed9c gi\u1ea3", so_phieu_muon: 8 },
-      { ma_doc_gia: "DG002", ho_ten: "Nguy\u1ec5n V\u0103n B", so_phieu_muon: 5 },
-      { ma_doc_gia: "DG003", ho_ten: "Tr\u1ea7n Th\u1ecb C", so_phieu_muon: 3 }
+      { ma_doc_gia: "DTCREADER", ho_ten: "\u0110\u1ed9c gi\u1ea3", so_phieu_muon: 8 },
+      { ma_doc_gia: "DTC002", ho_ten: "Nguy\u1ec5n V\u0103n B", so_phieu_muon: 5 },
+      { ma_doc_gia: "DTC003", ho_ten: "Tr\u1ea7n Th\u1ecb C", so_phieu_muon: 3 }
     ],
     overdue: [
-      { ma_phieu: "PM001", ma_sach: "S001", ten_sach: "Nh\u1eadp m\u00f4n tr\u00ed tu\u1ec7 nh\u00e2n t\u1ea1o", ma_doc_gia: "DGREADER", ho_ten: "\u0110\u1ed9c gi\u1ea3", so_ngay_qua_han: 3 },
-      { ma_phieu: "PM002", ma_sach: "S004", ten_sach: "Ng\u01b0\u1eddi xa l\u1ea1", ma_doc_gia: "DG002", ho_ten: "Nguy\u1ec5n V\u0103n B", so_ngay_qua_han: 1 }
+      { ma_phieu: "PM001", ma_sach: "S001", ten_sach: "Nh\u1eadp m\u00f4n tr\u00ed tu\u1ec7 nh\u00e2n t\u1ea1o", ma_doc_gia: "DTCREADER", ho_ten: "\u0110\u1ed9c gi\u1ea3", so_ngay_qua_han: 3 },
+      { ma_phieu: "PM002", ma_sach: "S004", ten_sach: "Ng\u01b0\u1eddi xa l\u1ea1", ma_doc_gia: "DTC002", ho_ten: "Nguy\u1ec5n V\u0103n B", so_ngay_qua_han: 1 }
     ]
   };
 

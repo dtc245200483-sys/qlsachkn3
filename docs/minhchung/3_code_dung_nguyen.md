@@ -74,3 +74,27 @@ Tôi đánh giá mã CSS này siêu nhẹ (chỉ ~23KB), đáp ứng chuẩn WCA
 ---
 **Kết luận Phần 3:** 
 Việc giữ lại các phần code cấu trúc chuẩn (FastAPI boilerplate, Pydantic Schema, CSS Variables) giúp tôi tiết kiệm đến 60% thời gian gõ phím cơ học, qua đó dành toàn bộ trí lực để can thiệp vào các "bài toán khó" ở Phần 4.
+
+## 4. API Upload Ảnh Bìa Sách (`Backend/app/routers/books.py`) — 2026-08-27
+Khi tôi yêu cầu AI thêm tính năng tải ảnh bìa sách, AI đã sinh ra đúng chuẩn một endpoint `UploadFile` của FastAPI, xử lý đúng giới hạn dung lượng 5MB và lưu vào đúng thư mục `static/covers`:
+
+```python
+# Trích từ Backend/app/routers/books.py — AI sinh ra, dùng nguyên
+@router.post("/upload-cover", response_model=CoverUploadOut)
+async def upload_book_cover(
+    file: UploadFile = File(...),
+    current_user = Depends(require_roles('admin', 'librarian'))
+):
+    if file.size > 5 * 1024 * 1024:  # 5MB
+        raise HTTPException(status_code=400, detail="File quá lớn, tối đa 5MB")
+    
+    ext = file.filename.split('.')[-1].lower()
+    filename = f"{uuid4()}.{ext}"
+    save_path = COVERS_DIR / filename
+    
+    with open(save_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/static/covers/{filename}"}
+```
+Đây là code framework chuẩn FastAPI multipart upload, tôi giữ nguyên vì nó thực hiện đúng và an toàn.

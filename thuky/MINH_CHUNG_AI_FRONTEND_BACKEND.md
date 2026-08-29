@@ -327,3 +327,17 @@
 - Frontend log 06:54:40: bỏ toàn bộ nút/hàm Xuất CSV (books/stats/borrow/
   reservations); /api/export/* giữ nguyên; books.html căn chỉnh giao diện.
 - Chức năng 8: chỉ còn demo qua API, không nút UI. YC-015/016/017/018 đóng.
+
+## 25. CẬP NHẬT 2026-08-27 — Sửa lỗi Logic, UI Validation và Mã Độc Giả
+
+- Backend: Sửa lỗi business logic quan trọng ở API DELETE `/api/readers/{ma}` (ngăn xóa độc giả nếu đang nợ phiếu mượn/phạt/đặt trước). Bắt buộc nhập Ảnh bìa cho Sách. Cập nhật mã tự động sang chuẩn `DTC` (sinh viên) và `GV` (giảng viên), migrate toàn bộ DB sang mã mới.
+- Frontend: Sửa hiển thị lỗi Inline Validation thay vì Toast, trang sách có kéo-thả upload ảnh bìa, ô Thể loại/NXB chuyển sang Select. Trang tra cứu tự gọi API lấy danh mục thật. Sửa lỗi syncSessionName trên header.
+
+## 26. CẬP NHẬT 2026-08-28 — Xây dựng Phân trang & Thay máu CSDL Sách chuẩn
+
+- Backend: Dọn dẹp triệt để 60 sách rác và 8 danh mục cũ. Chạy seed quét và chèn tự động 64 cuốn sách chuyên ngành thật (có hình ảnh từ Tiki/Fahasa) chia đều 8 Thể loại chuẩn (CNTT, An toàn mạng, Viễn thông, Kỹ thuật ô tô, Kinh tế, Tài chính, TK Đồ họa, Ngôn ngữ). ID sách được format lại (VD: BMTM0005).
+- Frontend: Bổ sung logic Client-side Pagination (Phân trang) hiển thị 6 sách/trang kèm thanh chuyển trang ở dưới cùng (search.html, books.html).
+
+## 27. CẬP NHẬT 2026-08-29 — Tối ưu và Dọn dẹp Mã nguồn
+
+- Backend/Frontend: Quét và xóa bỏ vĩnh viễn 13 file Python scripts chạy một lần (file sinh sách, cào ảnh, xóa sách, dọn dẹp) để trả lại cấu trúc thư mục sạch sẽ chỉ chứa code chuẩn cho hệ thống chạy.

@@ -216,7 +216,210 @@ File nội bộ, được phép ghi đè mỗi lần quét. Dùng để so sánh
 - File chưa từng xuất hiện trong danh sách này → coi là file mới.
 
 ### Cập nhật 2026-08-09 09:55 (Trợ Lý đồng bộ dữ liệu — Thư Ký nên quét lại để xác nhận)
+- alembic\versions\0004_create_readers_table.py — 09:47 — MỚI (bảng Readers, chức năng 3)
+- alembic\versions\0005_create_borrow_tables.py — 10:25 — MỚI (BorrowSlips, BorrowDetails, FineHistory, so_lan_gia_han — chức năng 4)
+- alembic\versions\0006_add_use_case_compat_tables.py — 17:28 — MỚI (TheLoai, Nxb, YeuCau; Books.theLoaiId/nxbId; Users.reader_id)
+- alembic\versions\0007_create_dat_truoc_table.py — 18:57 — MỚI (bảng DatTruoc, chức năng 6)
+- alembic\versions\0008_add_fine_collection_columns.py — 20:03 — MỚI (FineHistory.da_thu, ngay_thu — UC19)
+- alembic\versions\0009_add_svnet_points.py — 21:50 — MỚI (Readers.diem_svnet mặc định 100)
+- alembic\versions\0010_add_user_contact_columns.py — 02:40 — MỚI (Users.email + so_dien_thoai)
+- alembic\versions\0011_rename_fines_to_points.py — 02:54 — MỚI (so_tien → so_diem; overdue_fine_points_per_day)
+- app\validation.py — 02:39 — MỚI (ho_ten, email ICTU, SĐT VN)
+- app\routers\accounts.py, auth.py, profile.py — 02:39 — ĐÃ SỬA (validation + email/SĐT)
+- app\routers\admin.py, borrows.py, export.py — 02:53 — ĐÃ SỬA (phạt điểm)
+- app\models.py, app\schemas.py — 02:53 — ĐÃ SỬA
+- app\routers\readers.py — 03:56 — ĐÃ SỬA (POST/PUT chỉ admin; thêm PUT /lock)
+- app\schemas.py — 03:56 — ĐÃ SỬA (lockReader body)
+- alembic\versions\0012_extend_yeu_cau_loai.py — 04:46 — MỚI (YeuCau.loai thêm DAT_TRUOC)
+- app\routers\requests.py — 04:46 — ĐÃ SỬA (DAT_TRUOC create + approve → reservation)
+- app\routers\reservations.py — 05:11 — ĐÃ SỬA (DELETE /api/reservations/me/*)
+- app\routers\export.py — 05:21 — ĐÃ SỬA (GET /api/export/reservations.csv)
+- app\routers\accounts.py — 05:41 — ĐÃ SỬA (chỉ tạo thủ thư)
+- app\routers\requests.py + api_docs — 05:29 — ĐÃ SỬA (CHƯA có log; không thấy so_ngay_muon)
+- alembic\versions\0013_add_yeu_cau_so_ngay_muon.py — 05:57 — MỚI (YeuCau.so_ngay_muon)
+- alembic\versions\0014_remove_reader_type_khac.py — 06:17 — MỚI (bỏ loại độc giả khac)
+- app\validation.py — 06:21; routers accounts/export/profile/readers/auth — 06:16-06:30 — ĐÃ SỬA
+- tests\helpers.py + nhiều test — 06:21-06:31 — ĐÃ SỬA
+- app\models.py, app\schemas.py — 04:46 — ĐÃ SỬA
+- tests\test_uc_compat.py, test_notifications.py, test_reservations.py — 04:46-04:49 — ĐÃ SỬA (90/90 PASS tổng)
+- tests\test_reservations.py — 05:11 — ĐÃ SỬA (94/94 PASS tổng)
+- tests\test_export.py, test_uc_compat.py — 05:21 — ĐÃ SỬA (95/95 PASS tổng)
+- app\routers\profile.py — 02:13 — MỚI (API /api/profile/me, password, avatar)
+- app\config.py, app\main.py, app\schemas.py — 02:13 — ĐÃ SỬA (StaticFiles /static, profile schemas)
+- tests\test_profile.py — 02:14 — MỚI (Profile, 82/82 PASS tổng)
+- tests\test_profile.py, test_fines.py, test_uc_compat.py, test_borrows.py, test_export.py, test_stats.py, test_reservations.py, test_notifications.py — 02:40-02:53 — ĐÃ SỬA (86/86 PASS tổng)
+- tests\test_readers.py, test_books_search.py, test_borrows.py — 03:56-03:57 — ĐÃ SỬA (phân quyền 0.17.0, 86/86)
+- static\avatars\ — thư mục avatar (trống khi chưa upload)
+- app\audit.py — 07:54 — MỚI (ghi audit log)
+- app\config.py — 08:03 — ĐÃ SỬA (BACKUP_DIR)
+- app\database.py — không đổi
+- app\deps.py — 07:54 — ĐÃ SỬA (kiểm tra tài khoản khoá khi đăng nhập)
+- app\main.py — 10:25 — ĐÃ SỬA (mount router borrows)
+- app\models.py — 10:25 — ĐÃ SỬA (thêm model BorrowSlip/BorrowDetail/FineHistory)
+- app\schemas.py — 10:25 — ĐÃ SỬA (schema borrows)
+- app\security.py — không đổi
+- app\routers\auth.py — 07:54 — ĐÃ SỬA (chặn tài khoản bị khoá)
+- app\routers\books.py — 10:42 — ĐÃ SỬA (tra cứu q/theLoai/trangThai, chức năng 5)
+- app\routers\admin.py — 09:41 — ĐÃ SỬA
+- app\routers\readers.py — 09:47 — MỚI (API /api/readers, chức năng 3)
+- app\routers\borrows.py — 10:25 — MỚI (API /api/borrows, chức năng 4)
+- app\routers\accounts.py — 17:31 — MỚI (API /api/admin/accounts)
+- app\routers\catalog.py — 17:31 — MỚI (API /api/admin/categories + /api/admin/publishers)
+- app\routers\requests.py — 17:38 — MỚI (API /api/requests + approve/reject)
+- app\routers\reservations.py — 18:57 — MỚI (API /api/reservations, chức năng 6)
+- app\routers\notifications.py — 19:15 — MỚI (API GET /api/notifications, UC11)
+- app\routers\stats.py — 19:23 — MỚI (API /api/stats/*, chức năng 7)
+- app\routers\export.py — 19:34 — MỚI (API /api/export/*.csv, chức năng 8)
+- app\routers\requests.py — 20:18 — ĐÃ SỬA (thêm DELETE /api/requests/me/*)
+- app\routers\books.py — 23:15 — ĐÃ SỬA (sort/order, chức năng 5/KT2)
+- app\routers\auth.py, admin.py, readers.py, borrows.py — 21:50-21:57 — ĐÃ SỬA (diem_svnet, role_display)
+- app\routers\borrows.py — 20:05 — ĐÃ SỬA (collect-fine + fines trong GET)
+- app\routers\borrows.py — 19:01 — ĐÃ SỬA (thêm 2 DELETE /api/borrows/me/*; admin không xử lý mượn/trả)
+- app\routers\auth.py, readers.py, borrows.py, admin.py, main.py, models.py, schemas.py — 17:28-17:38 — ĐÃ SỬA (Đợt A)
+- tests\__init__.py, tests\conftest.py, tests\test_readers.py — 09:48 — MỚI (test chức năng 3, 9/9 PASS)
+- tests\test_borrows.py, tests\conftest.py — 10:27 — ĐÃ SỬA/MỚI (test chức năng 4, 19/19 PASS tổng)
+- tests\test_books_search.py — 10:43 — MỚI (test tra cứu, 28/28 PASS tổng)
+- tests\test_uc_compat.py — 17:32 — MỚI (Đợt A, 38/38 PASS tổng)
+- tests\test_reservations.py — 19:01 — MỚI (chức năng 6, 50/50 PASS tổng)
+- tests\test_notifications.py — 19:15 — MỚI (UC11, 54/54 PASS tổng)
+- tests\test_stats.py — 19:24 — MỚI (chức năng 7, 58/58 PASS tổng)
+- tests\test_export.py — 19:34 — MỚI (chức năng 8, 62/62 PASS tổng)
+- tests\test_fines.py — 20:04 — MỚI (UC19, 67/67 PASS tổng)
+- tests\test_books_sort.py — 23:15 — MỚI (sort/order, 75/75 PASS tổng)
+- scripts\seed_demo.py — 19:46 — MỚI (dữ liệu demo idempotent)
+- app\main.py, tests\conftest.py — 19:34 — ĐÃ SỬA (mount export)
+- Ghi chú: toàn bộ thay đổi Backend đã có log chính thức [BACKEND] 19:34:48 → không ghi thêm dòng quét trùng.
+
+## Frontend (D:\ung dung tri tue nhan ao\app\Frontend)
+- AGENTS.md — 07:54:08 — MỚI (prompt Frontend Agent, tham chiếu DE_BAI.md) — đã ghi log "phát hiện từ quét"
+- UI_DESIGN.md — 09:17:53 — MỚI (spec giao diện mới, WCAG) — đã ghi log quét
+- AGENTS.md — 09:54:52 — ĐÃ SỬA (prompt Frontend) — chưa có log riêng
+- assets\cropped-logoww.png — 08:59:31 — MỚI (logo ICTU)
+- index.html — 09:20:59 — ĐÃ SỬA (giao diện mới)
+- books.html — 10:01:49 — ĐÃ SỬA (giao diện mới + tab Quản lý độc giả)
+- readers.html — 10:01:50 — MỚI (trang Quản lý độc giả)
+- css\style.css — 10:01:51 — ĐÃ SỬA (15949 bytes)
+- js\api.js — 10:01:24 — ĐÃ SỬA (thêm readers/createReader/updateReader/deleteReader + readerOut; CHƯA có /api/admin/*)
+- js\auth.js — 10:00:11 — ĐÃ SỬA (thêm requireStaff)
+- js\books.js — 08:34:50 — ĐÃ SỬA
+- js\admin.js — 08:47:11 — MỚI (khung tiện ích admin, chưa nối API)
+- js\readers.js — 10:01:50 — MỚI (logic trang độc giả)
+- Ghi chú: thay đổi mới nhất đã có log chính thức [FRONTEND] 10:03:12.
+- borrow.html + js\borrow.js — 16:47:53/16:43:04 — MỚI (UI mượn/trả/gia hạn, chức năng 4)
+- search.html + js\search.js — 16:47:53/10:40:14 — MỚI (UI tra cứu sách, chức năng 5)
+- index.html, books.html, readers.html — 16:47 — ĐÃ SỬA (menu điều hướng)
+- css\style.css — 16:43:06 — ĐÃ SỬA (16680 bytes)
+- js\api.js — 16:40:54 — ĐÃ SỬA (thêm createBorrow/borrows/returnBorrow/renewBorrow + queryMap books/borrows; CHƯA có /api/admin/*)
+- js\auth.js — 10:39:05 — ĐÃ SỬA
+- Ghi chú: các thay đổi 16:40-16:47 CHƯA có log Frontend — đã ghi "phát hiện từ quét".
+- register.html + js\register.js — 17:41:47 — MỚI (đăng ký độc giả)
+- my-borrows.html + js\my-borrows.js — 17:41:48 — MỚI (lịch sử mượn của reader)
+- my-borrows.html + js\my-borrows.js — sau 18:08 — ĐÃ SỬA (nút xoá từng phiếu/toàn bộ lịch sử, log 18:17:43)
+- admin-accounts.html + js\admin-accounts.js — 17:43:02/03 — MỚI (quản lý tài khoản)
+- admin-catalog.html + js\admin-catalog.js — 17:43:03/04 — MỚI (danh mục thể loại/NXB)
+- requests.html + js\requests.js — 18:07:02 — MỚI (yêu cầu MUON/TRA/GIA_HAN, so_ngay_muon)
+- borrow.html, borrow.js — 17:56:06 — ĐÃ SỬA
+- books.html, index.html, readers.html, search.html — 17:44 — ĐÃ SỬA (menu)
+- js\api.js — 18:00:56 — ĐÃ SỬA (10121 bytes; nối register/myBorrows/requests/accounts/categories/publishers + soNgayMuon)
+- js\api.js — sau 18:08 — ĐÃ SỬA (thêm deleteMyBorrow, deleteMyBorrows)
+- reservations.html + js\reservations.js + js\reservation-mock.js — 18:32-18:36 — MỚI (UI đặt trước, mock fallback)
+- js\api.js — 18:31:37 — ĐÃ SỬA (thêm reservations/createReservation/cancelReservation/fulfillReservation)
+- js\my-borrows.js — 18:36:46 — ĐÃ SỬA (nối DELETE /api/borrows/me/*)
+- scripts\cleanup_old_data.py — 18:14:04 — MỚI (script dọn dữ liệu test)
+- admin-accounts.html, admin-catalog.html, books.html, borrow.html, my-borrows.html, readers.html, requests.html, search.html — 18:32 — ĐÃ SỬA (menu phân quyền mới)
+- notifications.html — 19:07:35 — MỚI (trang Thông báo UC11)
+- js\notifications-core.js, js\notif-badge.js, js\notifications.js — 19:07-19:11 — MỚI (tổng hợp nhắc hạn trả + SAN_SANG, localStorage tạm)
+- js\api.js — sau 19:03 — ĐÃ SỬA (thêm notifications: "/api/notifications")
+- Các html (admin-accounts, admin-catalog, books, borrow, my-borrows, readers, requests, reservations, search) — 19:08 — ĐÃ SỬA (thêm link Thông báo reader)
+- stats.html — 19:20:11 — MỚI (Dashboard chức năng 7)
+- js\stats.js — 19:20 — MỚI (gọi statsTopBooks/statsTopReaders/statsOverdueBooks + mock)
+- js\api.js — 19:19:44 — ĐÃ SỬA (11957 bytes; thêm 3 endpoint /api/stats/* + fieldMap)
+- Các html — 19:20 — ĐÃ SỬA (thêm link Thống kê admin+librarian)
+- AGENTS.md — 19:21:05 — ĐÃ SỬA (thêm mục LƯU PROMPT) — đã đồng bộ P.3 vào promtAI
+- books.html, borrow.html, stats.html — sau 19:21 — ĐÃ SỬA (3 nút Xuất CSV)
+- js\api.js — sau 19:19 — ĐÃ SỬA (thêm exportBooks/exportBorrows/exportReport + downloadFile)
+- books.html, borrow.html, stats.html — 19:30 — ĐÃ SỬA (nút Xuất CSV hoàn chỉnh)
+- js\api.js — 19:30:11 — ĐÃ SỬA (14092 bytes; downloadFile fetch→blob)
+- js\books.js, js\borrow.js, js\stats.js — 19:31 — ĐÃ SỬA (gắn nút export + gọi downloadFile)
+- admin-config.html — 19:53:46 — MỚI (cấu hình thư viện UC24 + AI UC26 + backup/restore UC27)
+- js\admin-config.js — 19:53:38 — MỚI (7043 bytes; gọi aiConfig/updateAiConfig/updateLibraryConfig/backup/restore)
+- borrow.html — 19:55:58 — ĐÃ SỬA (khu Thu phạt UC19 mock)
+- js\borrow.js — 19:55:18 — ĐÃ SỬA (16052 bytes; MOCK_FINES + collectFine)
+- requests.html — 19:55:56 — ĐÃ SỬA (thêm option DAT_TRUOC)
+- js\requests.js — 19:55:43 — ĐÃ SỬA (14079 bytes; payload DAT_TRUOC)
+- js\api.js — sau 19:30 — ĐÃ SỬA (thêm aiConfig/updateAiConfig/backup/restore/updateLibraryConfig/collectFine)
+- Các html — 19:55-19:56 — ĐÃ SỬA (menu Cấu hình chỉ admin)
+- requests.html — 20:12:21 — ĐÃ SỬA (6712 bytes; nút xoá lịch sử yêu cầu)
+- js\requests.js — 20:14:41 — ĐÃ SỬA (18084 bytes; deleteMyRequest/deleteMyRequests)
+- js\api.js — 20:12:20 — ĐÃ SỬA (15648 bytes; thêm deleteMyRequest/deleteMyRequests)
+- reservations.html + js\reservations.js + js\reservation-mock.js — 20:22 — ĐÃ SỬA (VẪN mock fallback)
+- search.html — 22:41:20 — ĐÃ SỬA (dropdown sắp xếp)
+- js\search.js — 22:40:55 — ĐÃ SỬA (parseSort + gửi sort/order + client sort)
+- js\api.js — 22:40:47 — ĐÃ SỬA (queryMap sort/order + sortBooks + sortBooksBackend: false)
+- js\auth.js — 21:57:40 — ĐÃ SỬA (role_display tiếng Việt)
+- js\admin-accounts.js — 21:57:41 — ĐÃ SỬA (role_display)
+- Các html + css — 22:41 — ĐÃ SỬA (giao diện)
+- profile.html — 02:09:31 — MỚI (trang Hồ sơ)
+- js\profile.js — 02:09:32 — MỚI (10858 bytes; profileMe/update/password/avatar)
+- assets\default-avatar.svg — 02:09:10 — MỚI (avatar mặc định)
+- js\api.js — 02:08:52 — ĐÃ SỬA (19964 bytes; profile endpoints + sortBooksBackend=true)
+- js\auth.js — 02:08:56 — ĐÃ SỬA (6370 bytes)
+- js\borrow.js — 01:52:48 — ĐÃ SỬA (16466 bytes; bỏ MOCK_FINES, nối phạt thật)
+- Các html — 02:09:53 — ĐÃ SỬA (thêm link Hồ sơ)
+- js\api.js — 02:46:53 — ĐÃ SỬA (19977 bytes; email/SĐT, overdueFinePointsPerDay; fineOut VẪN soTien)
+- js\auth.js — 02:29:13 — ĐÃ SỬA; js\profile.js — 02:29:19 — ĐÃ SỬA (email/SĐT)
+- js\admin-config.js — 02:47:06 — ĐÃ SỬA (overdue_fine_points_per_day)
+- js\borrow.js — 02:47:12; js\my-borrows.js — 02:47:17 — ĐÃ SỬA (vẫn dùng fine.soTien → chờ YC-013)
+- Các html — 02:47:23 — ĐÃ SỬA
+- js\api.js, js\borrow.js, js\my-borrows.js — 03:07 — ĐÃ SỬA (soDiem/so_diem, so_diem_da_thu, diem_con_lai) — có log 03:07:07
+- js\api.js — 03:54:32 — ĐÃ SỬA (20908 bytes; thêm lockReader)
+- js\readers.js — 03:54:34 — ĐÃ SỬA (9888 bytes; lock qua lockReader, nút thêm admin)
+- readers.html — 03:54:39 — ĐÃ SỬA (menu librarian; nút Thêm admin) → YC-014
+- readers.html — 04:31:48 — ĐÃ SỬA (menu admin,librarian) → YC-014 xong
+- js\api.js — 04:31:43 — ĐÃ SỬA (20972 bytes)
+- js\borrow.js — 04:21:55 — ĐÃ SỬA (16739 bytes)
+- js\reservation-mock.js, js\reservations.js, reservations.html — 04:16-04:51 — ĐÃ SỬA (mock vẫn còn)
+- js\api.js — 05:14:54 — ĐÃ SỬA (21429 bytes; deleteMyReservation/deleteMyReservations)
+- js\reservations.js — 05:15:14 — ĐÃ SỬA (11551 bytes; nút xoá lịch sử)
+- reservations.html — 05:15:27 — ĐÃ SỬA (4789 bytes; 2 nút "Xoá lịch sử đã xử lý"; mock vẫn tải)
+- js\admin-accounts.js — 05:15:21 — ĐÃ SỬA (9090 bytes; chỉ tạo thủ thư)
+- books.html, stats.html — 05:15:27 — ĐÃ SỬA (VẪN CÒN nút Xuất CSV)
+- requests.html — 05:15:27 — ĐÃ SỬA (vẫn chưa disable nút Gửi yêu cầu)
+- readers.html — 05:39:15 — ĐÃ SỬA
+- js\requests.js — 06:04:31 — ĐÃ SỬA (19267 bytes; updateSubmitState disable nút) → YC-017 xong
+- stats.html + js\stats.js — 06:42 — ĐÃ SỬA (ĐÃ BỎ nút Xuất CSV + hàm export) — có log Frontend 06:45:01
+- books.html — 06:10:05 — ĐÃ SỬA (VẪN CÒN nút Xuất CSV)
+- reservations.html — 06:10:05 — ĐÃ SỬA (THÊM nút Xuất CSV librarian)
+- admin-config.html — 06:42:47; admin-accounts.html — 06:10:05 — ĐÃ SỬA (UI bỏ UC)
+- js\admin-config.js, admin-accounts.js, readers.js, reservations.js, register.js, search.js, api.js — 06:04-06:13 — ĐÃ SỬA
+- books.js — 06:51:19; borrow.js — 06:51:18; reservations.js — 06:51:17; stats.js — 06:42:47 — ĐÃ SỬA (BỎ hàm export)
+- Các html — 06:51:36 — ĐÃ SỬA (BỎ nút Xuất CSV; books.html căn chỉnh nút + sắp xếp)
+- css\style.css — 06:51:30 — ĐÃ SỬA
+- js\auth.js — 17:41:22 — ĐÃ SỬA
+- Ghi chú: requests có log 18:01:49 + 18:07:45; các trang còn lại CHƯA có log riêng.
+
+## AI_Engine (D:\ung dung tri tue nhan ao\app\AI_Engine)
+- AI.txt — 07:54:08 — 4854 bytes — ĐÃ SỬA (prompt tham chiếu DE_BAI.md) — đã ghi log "phát hiện từ quét"
+- Chưa có code AI-1/2/3 và chưa có code dùng cấu hình AI.
+
+## hỗ trợ (tài liệu dự án, mới xuất hiện)
+- DE_BAI.md (07:45:44), KE_HOACH_9_TUAN.md (07:45:44), REQUIREMENTS_QA.md (07:45:45), TIEU_CHI_DANH_GIA.md (07:45:45), QUY_TRINH_CHAY_TUAN_TU.md (07:45:46), AGENT_TRỢ_LÝ_DỰ_ÁN.md (06:21:10), FRONTEND_AGENT_PROMPT.md (07:54:09)
+- Đã đọc DE_BAI.md + QUY_TRINH_CHAY_TUAN_TU.md; đã ghi log "phát hiện từ quét".
+
+## Ghi chú lần quét sau
+- File nào có LastWriteTime mới hơn 08:09:34 → coi là mới/vừa sửa.
+- File chưa từng xuất hiện trong danh sách này → coi là file mới.
+
+### Cập nhật 2026-08-09 09:55 (Trợ Lý đồng bộ dữ liệu — Thư Ký nên quét lại để xác nhận)
 - Frontend: AGENTS.md, index.html, books.html, UI_DESIGN.md, assets/cropped-logoww.png, css/style.css, js/admin.js, js/api.js, js/auth.js, js/books.js. ĐÃ XOÁ: admin-librarians.html, js/admin-librarians.js.
 - Backend: đã xoá `/api/admin/librarians*`; ĐÃ THÊM chức năng 3 (`/api/readers`, migration 0004, api_docs 0.3.0) — server chưa restart nên API chưa live.
 - AI_Engine: chỉ có AI.txt.
 - DB: 5 sách S001-S005; 3 tài khoản login admin/librarian/reader.
+
+### Giai đoạn Kiểm thử & Sửa lỗi
+- **Ngày 2026-08-10 (06:45:01 - 09:20:00)**: Chạy test tích hợp Backend (đạt 101/101 PASS). Vá các lỗ hổng biến bị thiếu (`so_ngay_muon`) và sai kiểu dữ liệu.
+- **Ngày 2026-08-27 (07:10:00 - 22:20:00)**: Frontend cải thiện UI/UX toàn diện (hiển thị lỗi inline). Nối API cho tất cả tính năng (Mượn trả, Thống kê, Quản lý tài khoản, Đặt trước). Backend phân quyền lại router cho Admin.
+
+### Cập nhật Tổng duyệt
+- **Ngày 2026-08-28 (01:40:00 - 03:00:00)**: DB dọn dẹp sách cũ. Seed thành công 64 sách chất lượng cao chia làm 8 danh mục. Áp dụng chuẩn ID mới (Viết tắt + 4 số tăng dần toàn cục).
+- **Ngày 2026-08-29 (13:15:00 - 15:00:00)**: Frontend & Backend cập nhật ràng buộc khóa ngoại (kiểm tra phiếu mượn, phạt, đặt trước) trước khi cho phép xoá Độc giả. Thư mục `docs/minhchung/` đã được kiểm duyệt chéo, dữ liệu 100% nhất quán với raw logs theo từng giờ phút để nộp bài hoàn chỉnh.

@@ -5,6 +5,10 @@
   var messageTimer = null;
   var theLoaiSet = {};
 
+  var allFetchedBooks = [];
+  var currentPage = 1;
+  var itemsPerPage = 6;
+
   function showMessage(text, type) {
     var el = document.getElementById("page-message");
     if (!el) {
@@ -53,23 +57,24 @@
     });
   }
 
-  function addTheLoaiOptions(list) {
-    var select = document.getElementById("search-theloai");
-    if (!select) {
-      return;
-    }
-    var current = select.value;
-    list.forEach(function (book) {
-      var value = book.theLoai;
-      if (value && !theLoaiSet[value]) {
-        theLoaiSet[value] = true;
-        var option = document.createElement("option");
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-      }
-    });
-    select.value = current;
+  function loadCategories() {
+    API.call("categories", undefined, "GET")
+      .then(function(res) {
+        if (res.ok && Array.isArray(res.data)) {
+          var select = document.getElementById("search-theloai");
+          if (select) {
+            var current = select.value;
+            select.innerHTML = '<option value="">Tất cả thể loại</option>';
+            res.data.forEach(function(cat) {
+              var opt = document.createElement("option");
+              opt.value = cat.ten;
+              opt.textContent = cat.ten;
+              select.appendChild(opt);
+            });
+            select.value = current;
+          }
+        }
+      });
   }
 
   function parseSort(value) {
@@ -108,12 +113,13 @@
           showMessage("API trả về danh sách sách không đúng định dạng.");
           return;
         }
-        addTheLoaiOptions(res.data);
         var list = clientFilter(res.data, { q: q, theLoai: theLoai, trangThai: trangThai });
         if (!API.config.sortBooksBackend) {
           list = API.sortBooks(list, sortParsed.sort, sortParsed.order);
         }
-        render(list);
+        allFetchedBooks = list;
+        currentPage = 1;
+        renderCurrentPage();
       })
       .catch(function () {
         setLoading(false);
@@ -121,20 +127,73 @@
       });
   }
 
+  function renderCurrentPage() {
+    var start = (currentPage - 1) * itemsPerPage;
+    var end = start + itemsPerPage;
+    var pageItems = allFetchedBooks.slice(start, end);
+    render(pageItems);
+    renderPagination();
+  }
+
+  function renderPagination() {
+    var container = document.getElementById("pagination-controls");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var totalPages = Math.ceil(allFetchedBooks.length / itemsPerPage);
+    if (totalPages <= 1) return;
+
+    var prevBtn = document.createElement("button");
+    prevBtn.textContent = "Trước";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener("click", function() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderCurrentPage();
+      }
+    });
+    container.appendChild(prevBtn);
+
+    for (var i = 1; i <= totalPages; i++) {
+      (function(page) {
+        var btn = document.createElement("button");
+        btn.textContent = page;
+        if (page === currentPage) {
+          btn.className = "active";
+        }
+        btn.addEventListener("click", function() {
+          currentPage = page;
+          renderCurrentPage();
+        });
+        container.appendChild(btn);
+      })(i);
+    }
+
+    var nextBtn = document.createElement("button");
+    nextBtn.textContent = "Sau";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener("click", function() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderCurrentPage();
+      }
+    });
+    container.appendChild(nextBtn);
+  }
+
   function render(list) {
-    var tbody = document.getElementById("search-tbody");
+    var tbody = document.getElementById("book-list-container");
     if (!tbody) {
       return;
     }
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-      var emptyRow = document.createElement("tr");
-      var emptyCell = document.createElement("td");
-      emptyCell.className = "empty-row";
-      emptyCell.colSpan = 9;
-      emptyCell.textContent = "Không tìm thấy sách nào phù hợp.";
-      emptyRow.appendChild(emptyCell);
+      var emptyRow = document.createElement("div");
+      emptyRow.className = "empty-list";
+      emptyRow.style.padding = "20px";
+      emptyRow.style.textAlign = "center";
+      emptyRow.textContent = "Không tìm thấy sách nào phù hợp.";
       tbody.appendChild(emptyRow);
       return;
     }
@@ -149,43 +208,78 @@
   }
 
   function row(book) {
-    var tr = document.createElement("tr");
-    var values = [
-      book.ma,
-      book.ten,
-      book.tacGia,
-      book.theLoai,
-      book.nxb,
-      book.namXb,
-      book.soLuong
-    ];
-    values.forEach(function (value) {
-      var td = document.createElement("td");
-      td.textContent = value === "" || value === null ? "—" : value;
-      tr.appendChild(td);
-    });
+    var item = document.createElement("div");
+    item.className = "book-list-item";
 
-    var statusTd = document.createElement("td");
-    var available = Number(book.soLuong) > 0;
-    var badge = document.createElement("span");
-    if (available) {
-      badge.className = "status-badge status-badge--active";
-      badge.textContent = "Còn";
+    var coverDiv = document.createElement("div");
+    coverDiv.className = "book-cover-wrap";
+    
+    var coverImg = document.createElement("img");
+    coverImg.className = "book-cover-placeholder";
+    coverImg.loading = "lazy";
+    if (book.anhBia) {
+      coverImg.src = book.anhBia;
     } else {
-      badge.className = "status-badge status-badge--warning";
-      badge.textContent = "Hết sách";
+      coverImg.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(book.ten ? book.ten : "Book") + "&background=random&size=120";
     }
-    statusTd.appendChild(badge);
-    tr.appendChild(statusTd);
+    coverImg.style.width = "65px";
+    coverImg.style.height = "90px";
+    coverImg.style.objectFit = "cover";
+    coverImg.style.borderRadius = "4px";
+    coverImg.style.marginBottom = "8px";
+    
+    coverDiv.appendChild(coverImg);
+    item.appendChild(coverDiv);
 
-    var actionsTd = document.createElement("td");
+    var infoDiv = document.createElement("div");
+    infoDiv.className = "book-info-wrap";
+
+    var title = document.createElement("h3");
+    title.className = "book-title";
+    title.innerHTML = book.ten + " <span style='font-size: 14px; color: #64748b; font-weight: normal;'>(Mã: " + book.ma + ")</span>";
+    infoDiv.appendChild(title);
+
+    var details = document.createElement("div");
+    details.className = "book-details-row";
+    
+    var props = [
+        { label: "Tác giả:", value: book.tacGia },
+        { label: "Thể loại:", value: book.theLoai },
+        { label: "NXB:", value: book.nxb + (book.namXb ? " (" + book.namXb + ")" : "") },
+        { label: "Số lượng:", value: book.soLuong }
+    ];
+    
+    props.forEach(function(p) {
+        var span = document.createElement("span");
+        span.className = "book-detail-item";
+        span.innerHTML = "<strong>" + p.label + "</strong> " + (p.value || "—");
+        details.appendChild(span);
+    });
+    
+    infoDiv.appendChild(details);
+    item.appendChild(infoDiv);
+
+    var available = Number(book.soLuong) > 0;
+    var statusText = available ? "Còn sách" : "Hết sách";
+    if (book.trangThai === "dang_muon") statusText = "Đang mượn";
+    
+    var statusSpan = document.createElement("span");
+    statusSpan.style.marginLeft = "auto";
+    statusSpan.style.fontWeight = "bold";
+    statusSpan.style.color = available ? "#10b981" : "#ef4444";
+    statusSpan.textContent = statusText;
+    
+    var actions = document.createElement("div");
+    actions.className = "book-actions";
+    actions.appendChild(statusSpan);
+
     var user = Auth.currentUser();
-    if (user && user.role === "reader" && Number(book.soLuong) <= 0) {
+    if (user && user.role === "reader" && !available) {
       var reserveBtn = document.createElement("button");
-      reserveBtn.type = "button";
-      reserveBtn.className = "btn btn-primary";
+      reserveBtn.className = "btn btn-primary btn-sm";
+      reserveBtn.style.marginLeft = "10px";
       reserveBtn.textContent = "Đặt trước";
-      reserveBtn.addEventListener("click", function () {
+      reserveBtn.onclick = function() {
         reserveBtn.disabled = true;
         reserveBtn.textContent = "Đã gửi...";
         API.call("createReservation", { ma_sach: book.ma }, "POST").then(function (res) {
@@ -198,13 +292,12 @@
           reserveBtn.textContent = "Đã đặt trước";
           showMessage("Đã gửi yêu cầu đặt trước sách " + book.ten + ".", "alert-success");
         });
-      });
-      actionsTd.appendChild(reserveBtn);
-    } else {
-      actionsTd.textContent = "—";
+      };
+      actions.appendChild(reserveBtn);
     }
-    tr.appendChild(actionsTd);
-    return tr;
+    item.appendChild(actions);
+    
+    return item;
   }
 
   function init() {
@@ -240,6 +333,7 @@
       });
     }
 
+    loadCategories();
     loadBooks();
 
     var accessMsg = sessionStorage.getItem("thuvien_access_msg");

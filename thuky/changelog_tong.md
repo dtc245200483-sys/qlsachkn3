@@ -407,3 +407,258 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
 [FRONTEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi tham số API do sai field id thành ma trên hàng loạt file (reservations.js, borrow.js, my-borrows.js, books.js, readers.js, notifications-core.js). Sửa lỗi không cập nhật tên người dùng trên thanh điều hướng sau khi lưu hồ sơ (gọi syncSessionName trong profile.js).
 
 [BACKEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi business logic quan trọng ở API DELETE /api/readers/{ma}. Bổ sung kiểm tra chặt chẽ: ngăn chặn việc xoá độc giả nếu độc giả đó đang có phiếu mượn chưa trả (đang mượn, quá hạn), còn nợ tiền phạt chưa thu, hoặc đang có yêu cầu/đặt trước chờ xử lý. Trả về HTTP 400 kèm thông báo rõ ràng cho Admin. - Chức năng đề bài liên quan: 3, 4, 6
+[FRONTEND] 2026-08-27 21:05:00 - Thay đổi: 
+- books.html: Thêm khu vực kéo thả (drag & drop) và input tải file ảnh bìa. Đổi trường nhập Thể loại và Nhà xuất bản từ text sang thẻ select (dropdown).
+- books.js: Bổ sung hàm handleCoverUpload để tải file ảnh lên qua API và gán link tự động. Bổ sung hàm loadCategoriesAndPublishers nạp danh sách vào 2 thẻ select, gỡ bỏ tuỳ chọn cho phép tự do nhập ngoài danh mục, ép buộc thủ thư phải chọn từ danh mục của admin.
+- api.js: Thêm endpoint uploadBookCover.
+- Chức năng đề bài liên quan: Quản lý sách, thêm sách (Minh chứng 2.9).
+- Ảnh hưởng Backend: Có (Cần thêm endpoint upload và nới quyền lấy danh mục).
+
+[BACKEND] 2026-08-27 21:05:00 - Thay đổi: 
+- routers/books.py: Thêm API POST /api/books/upload-cover giới hạn 5MB để lưu file vào static/covers.
+- routers/catalog.py: Đổi require_roles('admin') thành require_roles('admin', 'librarian') cho GET /api/admin/categories và GET /api/admin/publishers để thủ thư nạp được dữ liệu.
+- config.py: Thêm cấu hình COVERS_DIR.
+- schemas.py: Thêm CoverUploadOut.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Cập nhật lấy danh mục chuẩn cho trang tra cứu)
+
+[FRONTEND] 2026-08-27 21:15:00 - Thay đổi: Trang Tra cứu sách (search.js) tự động gọi API lấy danh mục Thể loại chuẩn từ Backend thay vì tự trích xuất từ danh sách sách hiện có. Giúp ô lọc Thể loại chính xác và đồng bộ 100% với danh mục của Admin.
+[BACKEND] 2026-08-27 21:15:00 - Thay đổi: Nới lỏng quyền endpoint GET /api/admin/categories cho phép cả role 'reader' (Độc giả) truy cập để trang Tra cứu sách có thể tải danh mục Thể loại.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Tối ưu hóa hiển thị lỗi xác thực nội tuyến - Inline Validation)
+
+[FRONTEND] 2026-08-27 21:26:00 - Thay đổi: Chuyển đổi hiển thị lỗi xác thực (validation errors) từ dạng thông báo chung (toast) sang dạng lỗi nội tuyến (inline error) nằm ngay dưới từng ô nhập liệu tương ứng trong form Thêm/Sửa sách. Thêm class CSS .inline-error và .input-error (viền đỏ) để tăng UX.
+[BACKEND] 2026-08-27 21:26:00 - Thay đổi: Cập nhật hàm validation_exception_handler trong main.py để ngoài trả về chuỗi thông báo gộp, còn trả về một object 'errors' chứa mapping giữa tên trường và thông báo lỗi tiếng Việt, hỗ trợ Frontend bắt đúng trường báo lỗi.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Bắt buộc điền ảnh bìa khi thêm/sửa sách)
+
+[FRONTEND] 2026-08-27 21:30:00 - Thay đổi: Không có thay đổi logic code mới (sử dụng lại cơ chế hiển thị lỗi nội tuyến vừa thêm ở trên để tự động bắt và hiện lỗi "Vui lòng nhập ảnh bìa" khi Backend trả về lỗi 422 do bỏ trống trường này).
+[BACKEND] 2026-08-27 21:30:00 - Thay đổi: Cập nhật schemas.py (BookBase) và models.py (Book) đổi thuộc tính anhBia từ tùy chọn (nullable) sang bắt buộc (required/NOT NULL). Thêm migration make_anhbia_required. Đồng thời cập nhật main.py để bắt lỗi và hiển thị 'Vui lòng nhập ảnh bìa.' khi người dùng bỏ trống.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Cập nhật định dạng mã Độc giả sang chuẩn DTC)
+
+[FRONTEND] 2026-08-27 22:05:00 - Thay đổi: Không có thay đổi logic code (giao diện tự động cập nhật danh sách độc giả với mã DTC mới do Backend trả về).
+[BACKEND] 2026-08-27 22:05:00 - Thay đổi: Cập nhật API Đăng ký (auth.py) đổi tiền tố sinh mã tự động từ "DG" sang "DTC" cho đồng bộ với mã sinh viên. Viết script chạy thẳng vào Database quy hoạch lại toàn bộ mã độc giả cũ (các mã DG, QADG, QDD... đều đổi thành DTC) và cập nhật đồng loạt các khóa ngoại ở các bảng liên quan (Users, BorrowSlips, FineHistory, YeuCau...).
+- Chức năng đề bài liên quan: Quản lý độc giả (Dữ liệu nền tảng).
+
+## 2026-08-27 — Log Trợ Lý (Quy định riêng cho mã Giảng viên)
+
+[FRONTEND] 2026-08-27 22:20:00 - Thay đổi: Không có thay đổi logic code mới.
+[BACKEND] 2026-08-27 22:20:00 - Thay đổi: Thiết lập quy định mới trong auth.py: nếu đăng ký là Sinh viên (sinh_vien) sẽ lấy mã bắt đầu bằng "DTC" + 9 số ngẫu nhiên; nếu là Giảng viên (giang_vien) sẽ lấy mã bắt đầu bằng "GV" + 6 số ngẫu nhiên (ví dụ GV123456). Đồng thời chạy script migrate_giang_vien.py quét toàn bộ DB để chuyển đổi các Giảng viên đang bị gắn nhầm mã DTC sang mã chuẩn GV.
+- Chức năng đề bài liên quan: Quản lý độc giả (Minh chứng 2.9/3.0).
+
+## 2026-08-28 — Log Trợ Lý (Khởi tạo dữ liệu Sách và Xây dựng chức năng Phân trang)
+## 2026-08-10 — Log agent tự báo cáo (Frontend, lần 12 — Bỏ toàn bộ nút Xuất CSV + căn chỉnh books.html)
+
+[FRONTEND] 2026-08-10 06:54:40 - Thay đổi: Bỏ toàn bộ nút/hàm "Xuất CSV" trên giao diện (books, stats, borrow, reservations) — Backend /api/export/* GIỮ NGUYÊN; căn chỉnh nút "+ Thêm sách" khớp khung "Sắp xếp theo" ở books.html - Chức năng đề bài: 8 (UI) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-10 06:54:40 - Agent: Frontend - File: books.js/borrow.js/reservations.js/stats.js (06:51:17-19) + các html (06:51:36) + css (06:51:30) - Suy đoán thay đổi: đã bỏ toàn bộ nút/hàm export (rg không còn "Xuất CSV" và không còn lời gọi export*); api.js vẫn giữ config + downloadFile (chỉ cấu hình) - Chức năng đề bài liên quan: 8 (UI)
+
+[PHÁT HIỆN TỪ QUÉT] 2026-08-09 19:22:31 - Agent: Frontend - File: D:\ung dung tri tue nhan ao\app\Frontend\AGENTS.md - Suy đoán thay đổi: AGENTS.md cập nhật 19:21:05 — thêm mục "LƯU PROMPT (bắt buộc)" + checklist; bản promtAI/FRONTEND_AGENT_PROMPT.md CHƯA được agent cập nhật dù log nói "đã lưu" → Thư Ký đã đồng bộ PHIÊN BẢN 3 (19:21:05) - Chức năng đề bài liên quan: toàn bộ
+
+## 2026-08-09 09:55 — Đồng bộ dữ liệu toàn bộ file (Trợ Lý ghi theo yêu cầu người dùng, không phải log agent tự báo cáo)
+
+[TRỢ LÝ GHI] 2026-08-09 09:55 - Thay đổi: Xoá tính năng "Quản lý tài khoản thủ thư" vì KHÔNG có trong đề bài — xoá Frontend/admin-librarians.html + js/admin-librarians.js, bỏ link menu + endpoints/fieldMap trong js/api.js; xoá 4 API /api/admin/librarians* + 3 schema Librarian trong Backend; cập nhật api_docs.md + README.md - Chức năng đề bài liên quan: 1 - Ảnh hưởng Frontend: có - Ảnh hưởng AI Engine: không
+
+[TRỢ LÝ GHI] 2026-08-09 09:55 - Thay đổi: Tạo 5 sách mẫu S001-S005 qua API POST /api/books (admin) với tiếng Việt chuẩn; xác minh GET /api/books trả đủ 5 cuốn - Chức năng đề bài liên quan: 2 - Ảnh hưởng Frontend: có
+
+[TRỢ LÝ GHI] 2026-08-09 09:55 - Thay đổi: Backend đã hoàn thiện chức năng 3 (log 09:49:03, api_docs 0.3.0, test 9/9) — server đang chạy cần restart để /api/readers hoạt động; đã ghi nhận và sẽ restart + xác minh - Chức năng đề bài liên quan: 3 - Ảnh hưởng Frontend: có
+
+[TRỢ LÝ GHI] 2026-08-09 09:55 - Thay đổi: YC-2026-08-09-003 (Thư Ký tạo cho Frontend: UI độc giả + hoàn tất UI admin) — đính chính: mục "quản lý tài khoản thủ thư" đã bị xoá theo quyết định người dùng, KHÔNG làm lại; bước kế tiếp theo vòng lặp là AI Engine (AI-1), UI độc giả sẽ vào lượt Frontend vòng sau - Chức năng đề bài liên quan: 1, 3
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 17:08:34 - Thao tác: Tạo file MINH_CHUNG_AI_FRONTEND_BACKEND.md trong thuky theo yêu cầu người dùng — tổng hợp timeline, log chính thức nguyên văn, file code, kết quả test và phát hiện từ quét của Frontend + Backend từ đầu tới nay - Chức năng đề bài liên quan: toàn bộ (1-8, AI-1/2/3)
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 17:13:53 - Thao tác: Thêm quy tắc — mỗi lần người dùng gọi "cập nhật thư ký"/quét lại, Thư Ký PHẢI cập nhật luôn MINH_CHUNG_AI_FRONTEND_BACKEND.md (minh chứng AI cần nộp); đã lưu vào THU_KY_AGENT.md + ghi_nho_project.md - Chức năng đề bài liên quan: toàn bộ
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 17:14 - Thao tác: Tạo thư mục promtAI với 3 prompt riêng (BACKEND_AGENT_PROMPT.md, FRONTEND_AGENT_PROMPT.md, AI_ENGINE_AGENT_PROMPT.md) theo yêu cầu người dùng, sao chép từ Backend/AGENTS.md, Frontend/AGENTS.md, AI_Engine/AI.txt - Chức năng đề bài liên quan: toàn bộ
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 17:20 - Thao tác: Cập nhật 3 file prompt trong promtAI — lưu nguyên văn TỪ ĐẦU ĐẾN NAY: Backend (P.1 06:11:05 + P.2 07:54), Frontend (P.1 07:54:08 + P.2 09:54:52), AI Engine (P.1 06:12:29 + P.2 07:54:08) - Chức năng đề bài liên quan: toàn bộ
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 17:22 - Thao tác: Đính chính promtAI/AI_ENGINE_AGENT_PROMPT.md — phiên bản 1 (06:12:29) KHÔNG có dòng "ĐỀ BÀI GỐC" (dòng này chỉ có từ phiên bản 2), đã sửa cho đúng nguyên văn - Chức năng đề bài liên quan: toàn bộ
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 18:22 - Thao tác: Tạo bản sao MINH_CHUNG_AI_FRONTEND_BACKEND.md trong promtAI theo yêu cầu người dùng (lưu chung prompt + minh chứng để nộp); quy tắc: mỗi lần cập nhật phải đồng bộ cả thuky và promtAI - Chức năng đề bài liên quan: toàn bộ
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 18:23:55 - Thao tác: Thêm QUY TẮC LUÔN LƯU PROMPT — mỗi lần quét/cập nhật phải kiểm tra Backend/AGENTS.md, Frontend/AGENTS.md, AI_Engine/AI.txt; nếu thay đổi thì cập nhật ngay bản sao trong promtAI (lịch sử phiên bản, không xoá bản cũ); đã lưu vào THU_KY_AGENT.md + ghi_nho_project.md - Chức năng đề bài liên quan: toàn bộ
+
+[HOSO] 2026-08-09 20:40 - Thay đổi: Ý 3 — tạo docs/ (SRS.md, USE_CASE.md, ERD.md, KIEN_TRUC.md, AI_DESIGN.md), Backend/.env.example, README.md gốc, .gitignore; bổ sung mục 16 (5 minh chứng chuẩn prompt→phản hồi→chỉnh sửa→kiểm chứng) vào promtAI/MINH_CHUNG_AI_FRONTEND_BACKEND.md; chuẩn bị git init + commit phân đoạn - Chức năng đề bài liên quan: toàn bộ - Ảnh hưởng: tài liệu
+
+[GHI CHÚ THƯ KÝ] 2026-08-09 19:30 - Thao tác: Rà soát đồng bộ prompt — 3 file trong promtAI đều khớp nội dung prompt gốc hiện tại (Backend 09:54:52, Frontend 19:21:05, AI Engine 07:54:08); đính chính nhãn PHIÊN BẢN 2 Backend từ "07:54" → "09:54:52" (bản trung gian 07:54 không còn bản gốc riêng) - Chức năng đề bài liên quan: toàn bộ
+## 2026-08-09 - Log agent tự báo cáo (Frontend, sửa hiển thị đặt trước chức năng 6)
+
+[FRONTEND] 2026-08-09 20:23:33 - Thay đổi: Sửa lỗi hiển thị đặt trước (chức năng 6) — bỏ lọc sai theo mã DG_<username> trong js/reservations.js, reader hiển thị trực tiếp dữ liệu GET /api/reservations (Backend đã tự lọc theo reader_id); js/reservation-mock.js lọc đúng theo role reader khi Backend chưa có API; test Chrome headless: reader (DGREADER) hiện "Chưa có đặt trước nào." (đúng vì RV001/RV002 thuộc DG001/DG002), librarian vẫn thấy đủ 2 phiếu; đã lưu prompt promtAI - Chức năng đề bài: 6 - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-09 - Log QA tự báo cáo (đợt kiểm thử Backend + Frontend + AI)
+
+[QA] 2026-08-09 21:15 - Đã test: toàn bộ 8 chức năng quản lý (đăng nhập/phân quyền, sách, độc giả, mượn/trả/gia hạn/phạt, tra cứu, đặt trước, thống kê, xuất CSV) + admin (tài khoản, danh mục, cấu hình, audit) trên DB QA riêng LibraryDB_QA + review Frontend 14 màn hình + đối chiếu API - Kết quả: QA suite 96/96 PASS; bộ test gốc Backend 66/67 PASS (1 fail do test không cô lập dữ liệu, BUG-007); kiểm tra tĩnh Frontend PASS - Lỗi phát hiện: có, 8 bug (BUG-001..006, BUG-008) + AI-1/2/3 chưa triển khai (chưa test được 3 tình huống chatbot bắt buộc) - Agent cần sửa: Frontend (BUG-001/003/004/005/006/008), Backend (BUG-002/007 + xác nhận DAT_TRUOC/so_ngay_muon), AI Engine (triển khai AI-1/2/3 + endpoint /ai/*)
+
+## 2026-08-09 - Log agent tự báo cáo (Frontend, đổi nhãn vai trò sang tiếng Việt)
+
+[FRONTEND] 2026-08-09 21:58:09 - Thay đổi: Đổi nhãn vai trò hiển thị sang tiếng Việt — auth.js thêm roleLabel (admin → Quản trị viên, librarian → Thủ thư, reader → Độc giả) áp dụng cho badge vai trò toàn bộ trang; admin-accounts.js map role đầy đủ cả admin; bump version auth.js lên ?v=20260809-11 trên 14 trang HTML; test Chrome headless 3/3 PASS (Độc giả / Thủ thư / Quản trị viên); đã lưu prompt promtAI - Chức năng đề bài: 1 - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-09 - Log agent tự báo cáo (Frontend, bổ sung sắp xếp sách chức năng 5)
+
+[FRONTEND] 2026-08-09 22:41:56 - Thay đổi: Bổ sung dropdown "Sắp xếp theo" trên search.html + books.html (Tên A-Z/Z-A, Tác giả A-Z, Năm XB mới nhất/cũ nhất, Số lượng nhiều/ít); khi đổi lựa chọn gọi GET /api/books kèm query sort=ten|tacGia|namXb|soLuong + order=asc|desc, kết hợp được q/theLoai/trangThai; api.js thêm queryMap sort/order + flag sortBooksBackend=false + hàm API.sortBooks() (Backend chưa hỗ trợ sort/order nên Frontend sắp xếp client tạm, vẫn gửi query sẵn sàng); test Chrome headless 2/2 PASS (search ?sort=soLuong&order=desc ra S001 5 cuốn; books ?sort=namXb&order=desc ra S002 2023); đã lưu prompt promtAI - Chức năng đề bài: 5 - Ảnh hưởng Backend: có (cần bổ sung sort/order vào GET /api/books) - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, tạo trang Hồ sơ cá nhân)
+
+[FRONTEND] 2026-08-10 02:10:33 - Thay đổi: Tạo profile.html + js/profile.js dùng cho 3 vai trò (avatar mặc định, họ tên, username, vai trò, email, SĐT, loại độc giả nếu reader; đổi ảnh PNG/JPG ≤2MB; form cập nhật thông tin; form đổi mật khẩu ≥6 ký tự + xác nhận); auth.js thêm link "Hồ sơ" vào menu mọi trang + bấm tên vào profile.html; api.js thêm config chờ profileMe/updateProfileMe/changeProfilePassword/uploadProfileAvatar (GET/PUT /api/profile/me, PUT /api/profile/me/password, POST /api/profile/me/avatar multipart) + fieldMap profileOut/profileUpdate/profilePassword + hàm API.uploadFile; Backend chưa có API nên hiện mock tạm + banner chờ; test Chrome headless 3 role PASS (reader thấy loại độc giả, librarian/admin ẩn; link Hồ sơ + bấm tên vào trang; validate mật khẩu); đã lưu prompt promtAI - Chức năng đề bài: 1, 3 (mở rộng Profile) - Ảnh hưởng Backend: có (cần 4 API /api/profile/*) - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, gộp nhãn tên/vai trò trùng)
+
+[FRONTEND] 2026-08-10 02:29:45 - Thay đổi: Sửa hiển thị trùng nhãn — tài khoản seed có name trùng role label (Độc giả/Thủ thư/Quản trị viên) nên header + profile hiện 2 chữ giống nhau; auth.js ẩn tên nếu trùng hoặc rỗng (chỉ giữ badge vai trò), profile.js ẩn họ tên trùng trên trang hồ sơ, syncSessionName tự hiện lại khi người dùng đổi sang tên thật; test Chrome headless reader+librarian PASS (header và profile chỉ còn 1 nhãn); đã lưu prompt promtAI - Chức năng đề bài: 1, 3 (mở rộng Profile) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log Frontend cập nhật dữ liệu demo (họ tên/email/SĐT)
+
+[FRONTEND] 2026-08-10 02:33:44 - Thay đổi: Cập nhật dữ liệu demo qua API — admin (Nguyễn Văn Huy), librarian (Trần Thị Thu Hà), reader (Lê Văn Nam + Reader DGREADER: DTC245200488@ictu.edu.vn, 0912345004), docgia1 (Nguyễn Văn An), docgia2 (Trần Thị Bích); DG001–DG003 đã có sẵn họ tên/email @ictu.edu.vn/SĐT hợp lệ; LƯU Ý: bảng Users không có cột email/SĐT nên admin + librarian chỉ cập nhật được họ tên — cần Backend bổ sung cột hoặc bảng hồ sơ nhân sự nếu muốn lưu email/SĐT cho 2 vai này; đã lưu prompt promtAI - Chức năng đề bài: 1, 3 (mở rộng Profile) - Ảnh hưởng Backend: có (cần bổ sung email/SĐT cho tài khoản thủ thư/admin + cập nhật seed_demo.py) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log Frontend xoá dữ liệu độc giả DG003
+
+[FRONTEND] 2026-08-10 02:36:41 - Thay đổi: Xoá độc giả DG003 (Lê Minh Cường) qua DELETE /api/readers/DG003 — đã kiểm tra không có phiếu mượn/đặt trước tham chiếu, xoá thành công (HTTP 200); danh sách độc giả còn DG001, DG002, DGREADER; LƯU Ý: seed_demo.py vẫn còn DG003 nên nếu Backend chạy lại seed sẽ tạo lại — cần Backend bỏ DG003 khỏi DEMO_READERS; đã lưu prompt promtAI - Chức năng đề bài: 3 - Ảnh hưởng Backend: có (cập nhật seed_demo.py) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, ẩn cấu hình AI/backup + phạt bằng điểm)
+
+[FRONTEND] 2026-08-10 02:47:50 - Thay đổi: admin-config.html ẩn 2 khu vực Cấu hình AI Engine (UC26) + Sao lưu & phục hồi (UC27), chỉ giữ Cấu hình thư viện (Backend vẫn giữ API); đổi nhãn Phạt quá hạn (đồng/ngày) → (điểm/ngày), field gửi overdue_fine_points_per_day (mặc định 2), thêm ghi chú trừ điểm; api.js libraryConfig map overdue_fine_points_per_day; borrow.js/my-borrows.js đổi hiển thị phạt từ đồng → điểm, nhãn bảng Số tiền/Phạt → Điểm phạt; lưu ý header CSV export/report "Phạt" → "Điểm phạt" nằm ở Backend (/api/export/report.csv) cần Backend đổi; test Chrome headless PASS (2 section ẩn, chỉ còn Cấu hình thư viện, label + value 2, bảng Điểm phạt); đã lưu prompt promtAI - Chức năng đề bài: 4 (mở rộng UC24) - Ảnh hưởng Backend: có (đổi field overdue_fine_per_day → overdue_fine_points_per_day + header CSV) - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, YC-2026-08-10-013 — phạt bằng điểm)
+
+[FRONTEND] 2026-08-10 03:07:07 - Thay đổi: Cập nhật theo Backend 0.16.0 — api.js fineOut đổi soTien/so_tien → soDiem/so_diem, thêm fieldMap collectFineOut (message/so_diem_da_thu/diem_con_lai/ngay_thu); borrow.js thông báo trả/gia hạn + bảng thu phạt dùng soDiem, collectFine hiển thị "Trừ X điểm, điểm còn lại Y"; my-borrows.js lịch sử phạt dùng soDiem; test Chrome headless PASS (bảng Thu phạt hiện "4 điểm" từ so_diem, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 4 (mở rộng UC19/UC24) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, phân quyền quản lý độc giả)
+
+[FRONTEND] 2026-08-10 03:55:09 - Thay đổi: readers.html/readers.js phân quyền mới — admin giữ Thêm/Sửa/Khoá-Mở khoá/Xoá; librarian chỉ thấy nút Khoá/Mở khoá thẻ (ẩn + Thêm, Sửa, Xoá); api.js thêm config lockReader PUT /api/readers/{id}/lock (body trangThaiThe) + fieldMap lockReader; Backend chưa có endpoint nên thủ thư bấm Khoá sẽ nhận 404 "Not Found" (hiện rõ lỗi, không giả mạo); test Chrome headless PASS (admin đủ nút, librarian chỉ Khoá thẻ, request đúng /lock); đã lưu prompt promtAI - Chức năng đề bài: 3 - Ảnh hưởng Backend: có (cần thêm PUT /api/readers/{id}/lock) - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, xoá lịch sử đặt trước của độc giả)
+
+[FRONTEND] 2026-08-10 05:10:07 - Thay đổi: reservations.html thêm nút "Xoá lịch sử đã xử lý" (ẩn khi không có HUY/DA_MUON); reservations.js reader hiện nút Xoá cho phiếu HUY/DA_MUON, giữ Huỷ cho CHO_XU_LY, không xoá CHO_XU_LY/SAN_SANG; api.js thêm deleteMyReservation DELETE /api/reservations/me/{id} + deleteMyReservations DELETE /api/reservations/me; reservation-mock.js thêm deleteOne/deleteAll fallback; test Chrome headless PASS (docgia1/docgia2 thấy nút Xoá cho phiếu Đã huỷ, nút xoá toàn bộ hiện); Backend chưa có endpoint nên gọi sẽ 404 — cần Backend bổ sung; đã lưu prompt promtAI - Chức năng đề bài: 6 (mở rộng UC10) - Ảnh hưởng Backend: có - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bổ sung Xoá đặt trước cho thủ thư)
+
+[FRONTEND] 2026-08-10 05:12:27 - Thay đổi: reservations.html/reservations.js bổ sung Xoá cho phần "Danh sách đặt trước (xử lý)" — phiếu HUY/DA_MUON hiện nút Xoá, thêm nút "Xoá lịch sử đã xử lý" (ẩn khi không có); dùng chung deleteOne/deleteAll (endpoint /api/reservations/me/{id}, /me — cần Backend cho phép librarian hoặc bổ sung endpoint staff); test Chrome headless PASS (9 phiếu đã xử lý đều có nút Xoá, nút xoá toàn bộ hiện); đã lưu prompt promtAI - Chức năng đề bài: 6 (mở rộng UC10) - Ảnh hưởng Backend: có (hỗ trợ xoá cho librarian) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, Xuất CSV đặt trước + admin xem + tạo tài khoản chỉ thủ thư)
+
+[FRONTEND] 2026-08-10 05:17:04 - Thay đổi: reservations.html thêm nút "Xuất CSV" (GET /api/export/reservations.csv qua API.downloadFile); admin được vào trang Đặt trước (nav data-roles admin,librarian,reader ở 13 trang; section danh sách data-roles admin,librarian) nhưng admin chỉ XEM + XUẤT — ẩn Sẵn sàng/Xác nhận đã lấy/Huỷ/Xoá và nút Xoá lịch sử; thủ thư giữ đầy đủ; admin-accounts.html/js form tạo tài khoản chỉ còn Vai trò Thủ thư (bỏ Độc giả; khi sửa tài khoản độc giả thì tự thêm lại option + hiện mã độc giả); api.js thêm exportReservations /api/export/reservations.csv; test Chrome headless PASS (admin thấy khu vực + nút Xuất, không có nút xử lý; thủ thư đủ nút; reader vẫn vào được; form tạo chỉ Thủ thư, sửa reader vẫn đủ); LƯU Ý Backend: admin đang bị 403 khi GET /api/reservations + cần API /api/export/reservations.csv cho admin/librarian; đã lưu prompt promtAI - Chức năng đề bài: 6, 8 (mở rộng UC18/UC23) - Ảnh hưởng Backend: có - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, YC-016 + YC-017 + bỏ reservation mock)
+
+[FRONTEND] 2026-08-10 05:55:57 - Thay đổi: YC-016 — xoá nút Xuất CSV + hàm exportBooks/exportReport + listener ở books.html/stats.html (giữ borrow.html); YC-017 — nút Gửi yêu cầu disabled tới khi có ≥1 dòng sách hợp lệ (theo dõi change book + input số lượng, enable khi hợp lệ, vẫn kiểm tra khi bấm); YC-007 — bỏ script reservation-mock ở 6 trang (search/requests/notifications/profile/reservations/my-borrows), chuyển window.Reservation.* sang API trực tiếp (reservations.js list/create/cancel/fulfill/deleteOne/deleteAll, search.js createReservation, notifications-core.js reservations), xoá file js/reservation-mock.js, gỡ mock-banner reservations/notifications; test Chrome headless PASS (books/stats hết nút Xuất, borrow còn; submit requests đúng 4 trạng thái; không còn script mock; không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 6, 8 - Ảnh hưởng Backend: có (so_ngay_muon chờ Backend) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, validation tiếng Việt + bỏ đặt trước ở admin)
+
+[FRONTEND] 2026-08-10 06:14:17 - Thay đổi: Validation tiếng Việt theo từng ô — register.js (username ≥6, email @ictu.edu.vn, SĐT 10 số đầu 0, mật khẩu ≥6, xác nhận khớp, thêm ô xác nhận mật khẩu, bỏ loại Khác); admin-accounts thêm trường email/SĐT (Backend 0.16 hỗ trợ) + validation y hệt; readers.js validation mã/họ tên/email/SĐT/loại/trạng thái + bỏ loại Khác; admin-config.js validation số ngày/điểm phạt/giới hạn sách (chưa nhập + âm/ngoài khoảng); BỎ ĐẶT TRƯỚC Ở ADMIN — menu Đặt trước data-roles reader,librarian ở tất cả trang, reservations.html admin mở bị chuyển về search.html kèm thông báo "Bạn không có quyền truy cập trang này.", nút Xuất CSV chỉ librarian; test Chrome headless PASS (đăng ký 5 lỗi đúng message, dropdown hết Khác, tài khoản chỉ Thủ thư, độc giả/cấu hình đúng lỗi, admin bị chặn đặt trước); đã lưu prompt promtAI - Chức năng đề bài: 1, 3, 6 (mở rộng) - Ảnh hưởng Backend: có (email/SĐT tài khoản) - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bỏ Xuất CSV ở Thống kê + bỏ hậu tố UC)
+
+[FRONTEND] 2026-08-10 06:43:12 - Thay đổi: stats.html + stats.js xoá nút "Xuất CSV" (export-report-button) + hàm exportReport/exportStamp + listener (Backend /api/export/report.csv giữ nguyên); admin-config.html bỏ "(UC24)"/"(UC26)"/"(UC27)" khỏi tiêu đề; rà toàn bộ HTML admin không còn hậu tố (UCxx); bump stats.js ?v=20260810-3; test Chrome headless PASS (stats hết nút/chữ Xuất CSV, admin-config tiêu đề sạch, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 7, 8 (mở rộng UC24/25/26/27) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bỏ Xuất CSV toàn bộ + căn chỉnh nút Thêm sách)
+
+[FRONTEND] 2026-08-10 06:52:01 - Thay đổi: Xoá nút "Xuất CSV" + hàm/listener ở reservations.html/js (exportReservations/exportStamp), borrow.html/js (exportBorrows/exportStamp), books.html/js (exportBooks/exportStamp); sau bước này KHÔNG còn nút Xuất CSV trên web (Backend /api/export/* giữ nguyên); books.html căn chỉnh nút "+ Thêm sách" khớp select "Sắp xếp theo" — style.css .toolbar thêm align-items:flex-end + select/.btn height 43px + padding 10px 12px + border-radius 8px; test Chrome headless PASS (3 trang hết nút/chữ Xuất CSV, button và select cùng height 43px cùng padding/radius cùng bottom, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 6, 4, 2, 8 (mở rộng UI) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+## 2026-08-10 - Log QA tự báo cáo (rà soát lại Backend 0.25.0 + Frontend)
+
+[QA] 2026-08-10 08:30 - Đã test: toàn bộ Backend 0.25.0 (đăng nhập/validation DTC, sách/sort, độc giả/lock, mượn-trả-gia hạn-phạt điểm SVNET, đặt trước + xoá lịch sử + xác nhận đã lấy, yêu cầu MUON/TRA/GIA_HAN/DAT_TRUOC + so_ngay_muon, hồ sơ cá nhân/đổi mật khẩu/avatar, thông báo, thống kê, xuất CSV, admin accounts/cấu hình/danh mục/restore) trên DB QA riêng LibraryDB_QA + review Frontend 15 màn hình + đối chiếu API - Kết quả: QA suite 116/116 PASS; bộ test gốc Backend 101/101 PASS trên DB sạch, 100/101 trên DB có dữ liệu (BUG-007 test không cô lập); kiểm tra tĩnh Frontend PASS - Lỗi phát hiện: có, 16 mã bug (BUG-001, BUG-004 đã sửa; BUG-002/008 sửa một phần; BUG-003/005/006/007 mở; BUG-009..016 mới) + AI-1/2/3 chưa triển khai - Agent cần sửa: Frontend (BUG-002/003/005/006/008/009/010/011/012/013/014), Backend (BUG-002/007/015/016 + xác nhận quyền export reservations), AI Engine (triển khai AI-1/2/3)
+
+## 2026-08-10 - QA sửa bug theo yêu cầu người dùng (trừ AI)
+
+[QA] 2026-08-10 09:20 - Đã sửa: BUG-001..016 (không sửa AI theo yêu cầu) — Backend: BorrowCreate + POST /api/borrows nhận so_ngay_muon (1-max, vượt 400); DELETE /api/reservations/me[/{ma_dat}] cho librarian (reader chỉ phiếu mình); tests/conftest.py + helpers.py đổi email test DTC700 + xoá Users trước Readers + pattern DatTruoc đồng bộ; tests/test_stats.py lọc prefix TEST; tests/test_reservations.py cập nhật kỳ vọng librarian; README + api_docs sửa nội dung cũ (phạt điểm, khac, đăng ký, export reservations chỉ librarian). Frontend: api.js/search.js/requests.js/borrow.js dọn comment cũ; search.js sửa lọc het/dang_muon; requests.js disable nút Gửi đúng lúc; notifications-core.js dùng GET /api/notifications; admin-config.js gắn AI/backup/restore; bỏ loại "Khác" (profile.html/readers.js/profile.js); xoá reservation-mock.js + bỏ thẻ script 6 trang; nav Quản lý sách cho admin (15 HTML). Kết quả: QA suite 118/118 PASS; bộ test gốc Backend 101/101 PASS cả DB sạch lẫn DB có dữ liệu; kiểm tra tĩnh Frontend PASS - Lỗi còn: AI-1/2/3 chưa triển khai (chưa cần theo yêu cầu) - Agent cần sửa: không (trừ AI khi người dùng yêu cầu)
+
+## 2026-08-10 - Log agent tự báo cáo (Frontend, chỉnh banner header theo mẫu ICTU)
+
+[FRONTEND] 2026-08-10 08:11:51 - Thay đổi: Chỉnh .app-banner ở 13 trang theo mẫu header ICTU — copy logo tròn chính thức thành Frontend/assets/logo-ictu-round.png (nguồn img/cropped-logoww.png, viền tròn xanh, nền trắng, sách mở); banner dùng logo 48x48 bo tròn; chữ IN HOA đậm màu navy #0A2E5C (dòng mô tả #1E4B8C), bỏ chữ trắng + text-shadow; nền banner sáng/trắng dùng assets/bg_header.png + gradient trắng mờ, viền dưới xanh; GIỮ NGUYÊN .app-header__inner + .admin-nav (logo thanh nav vẫn cropped-logoww.png, menu/user-info/badge không đổi); bump css/style.css ?v=20260810-3 ở mọi trang; test Chrome headless PASS (logo 48px, chữ hoa navy không shadow, nền sáng bg_header, nav giữ nguyên, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, gộp user-info vào hàng admin-nav + nền banner bg_header)
+
+[FRONTEND] 2026-08-10 08:19:27 - Thay đổi: Header 13 trang — bỏ khung .app-header__inner (xóa block .brand logo/tên trang), chuyển .user-info (tên, vai trò, Đăng xuất) xuống cùng hàng với .admin-nav qua wrapper .app-header__nav-row (flex, nav trái, user-info phải); nền .app-banner đổi sang dùng ảnh bg_header.png (đồng bộ từ img/bg_header.png vào assets), bỏ gradient phủ; giữ nguyên .admin-nav và user-info hoạt động; CSS thêm .app-header__nav-row + responsive mobile (flex-wrap); bump css/style.css ?v=20260810-4 mọi trang; test Chrome headless PASS (hết app-header__inner/brand, user-info thẳng hàng nav, banner bg_header.png, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, tương thích web + responsive mobile)
+
+[FRONTEND] 2026-08-10 08:22:45 - Thay đổi: Rà soát/tinh chỉnh layout cho tương thích web trước và di chuyển khung đúng khi chuyển điện thoại — CSS mobile: banner thu gọn (logo 40px, chữ 14/11px), .app-header__nav-row flex-wrap + admin-nav full-width, user-info xuống dưới hàng nav, search-bar form-group 100%; giữ bảng cuộn trong .table-wrap (overflow-x auto), không tràn trang; test Chrome headless 12 trang × 2 viewport (1280×800 + 390×844) PASS — không trang nào tràn ngang, không khung đè nhau, mobile user-info nằm dưới nav; bump css/style.css ?v=20260810-5 mọi trang; đã lưu prompt promtAI - Chức năng đề bài: giao diện (mở rộng) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, nút thông báo dùng API thật)
+
+[FRONTEND] 2026-08-10 08:28:18 - Thay đổi: Chuyển thông báo sang API thật — GET /api/notifications lấy danh sách + da_doc (localStorage chỉ fallback); bấm đọc 1: PUT /api/notifications/{id}/read; bấm đọc tất cả: PUT /api/notifications/read-all (trả so_da_doc); api.js thêm markNotificationRead/markAllNotificationsRead; notifications-core.js map đủ loại thông báo (SAP_HET_HAN/QUA_HAN/SACH_SAN_SANG/YEU_CAU_DA_DUYET/DAT_TRUOC_DA_MUON) + markRead/markAllRead gọi API, giữ localStorage fallback; notifications.js await API rồi load lại; test Chrome headless PASS (list từ API, đọc 1 gửi PUT /{id}/read, đọc tất cả gửi PUT /read-all, item chuyển (đã đọc), unread=0, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 4, 6 (mở rộng UC11) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, khôi phục bản thông báo cũ)
+
+[FRONTEND] 2026-08-10 08:30:50 - Thay đổi: Khôi phục bản thông báo cũ — notifications-core.js quay lại lấy danh sách từ GET /api/notifications + đánh dấu đã đọc bằng localStorage (không gọi PUT); notifications.js bỏ await API (markRead/markAllRead ghi localStorage rồi load lại); api.js gỡ markNotificationRead/markAllNotificationsRead; test Chrome headless PASS (chỉ còn GET /api/notifications, không có PUT /read hay /read-all, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: 4, 6 (mở rộng UC11) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, MainLayout dùng chung)
+
+[FRONTEND] 2026-08-10 08:35:59 - Thay đổi: Tạo Frontend/js/layout.js (vanilla JS) — AppHeader banner cố định (logo tròn ICTU + chữ in hoa đậm #0B5ED7, nền sáng bg_header) + AppNavbar theo role (reader/librarian/admin đúng menu, user info + Đăng xuất, active theo pageKey) + MainLayout.init(pageKey); thay toàn bộ <header class="app-header">…</header> ở 13 trang sau login bằng <header id="app-header-root">, thêm script layout.js + window.Layout.init("<pageKey>") sau auth.js; index.html/register.html giữ nguyên; css strong banner đổi #0B5ED7 + bump css ?v=20260810-6, layout.js ?v=20260810-1; giải thích: header trước đây lặp thủ công từng trang nên dễ lệch, giờ render 1 nơi theo role; test Chrome headless 3 tài khoản × 20 trang PASS (mọi trang có banner tầng 1, menu đúng role, active đúng, badge thông báo hoạt động, không lỗi JS); đã lưu prompt promtAI - Chức năng đề bài: giao diện (layout dùng chung) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, nút Xoá thông báo của độc giả)
+
+[FRONTEND] 2026-08-10 08:42:18 - Thay đổi: notifications.js mỗi thẻ thông báo thêm nút "Xoá" (btn-danger btn-sm, cạnh nút Đánh dấu đã đọc / nhãn Đã đọc), confirm "Xoá thông báo này khỏi danh sách?", gọi window.Notif.remove(item) rồi reload; notifications-core.js thêm remove(item) → API.call("deleteNotification", DELETE, {id}); api.js thêm deleteNotification -> DELETE /api/notifications/{id}; css thêm .btn-sm; test Chrome headless PASS (mỗi thẻ có Xoá + nhãn Đã đọc, bấm Xoá gửi DELETE /api/notifications/{id}, không lỗi JS); Backend chưa có DELETE endpoint nên sẽ 404 — cần Backend bổ sung; đã lưu prompt promtAI - Chức năng đề bài: 6 (mở rộng UC11) - Ảnh hưởng Backend: có - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, sửa CSS navbar dàn đều + nội dung full-width)
+
+[FRONTEND] 2026-08-10 08:44:33 - Thay đổi: Sửa 2 lỗi CSS sau refactor MainLayout — (1) .admin-nav gap 4px → 8px 28px (menu-item cách đều 28px), layout.js gán class nav-item cho từng link, .app-header__nav-row giữ display:flex + align-items:center + justify-content:space-between (menu trái / user-info phải); (2) bỏ max-width 1200px gây co cụm: .app-header__nav-row max-width:none + .app-header__nav-row .admin-nav max-width:none + .page max-width:none (giữ padding 24px, mobile 16px), thêm html/body width:100%; test Chrome headless 1920/1366/900/390 PASS — nav-row và page full-width từ mép trái đến mép phải, menu cách nhau 28px, không tràn ngang; bump css ?v=20260810-8 + layout.js ?v=20260810-2; đã lưu prompt promtAI - Chức năng đề bài: giao diện (layout dùng chung) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, sửa footer trôi/cắt bằng sticky footer flexbox)
+
+[FRONTEND] 2026-08-10 08:50:08 - Thay đổi: Sửa lỗi footer bị đẩy trôi/cắt — nguyên nhân .page dùng min-height calc(100vh - 220px) (hack cũ) làm footer thừa khoảng trống/trôi khỏi luồng; chuyển sang sticky footer chuẩn: html/body height 100%, body display:flex + flex-direction:column + min-height:100vh, .page flex:1 0 auto (bỏ min-height calc), .site-footer flex-shrink:0; footer luôn nằm ngay sau nội dung, nội dung ngắn thì footer sát đáy viewport, nội dung dài thì footer ở cuối trang; test Chrome headless 13 trang PASS (body flex column, page flex 1 0 auto, footer shrink 0, footerBottom = scrollHeight, trang ngắn footerBottom = viewport 768, không overflowX, login vẫn căn giữa); bump css ?v=20260810-9; đã lưu prompt promtAI - Chức năng đề bài: giao diện (sticky footer) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, bỏ hộp xác nhận khi xoá thông báo)
+
+[FRONTEND] 2026-08-10 08:53:00 - Thay đổi: Bỏ hộp xác nhận khi xoá thông báo, bấm Xoá gọi DELETE /api/notifications/{id} và xoá khỏi danh sách ngay. - Chức năng đề bài liên quan: 6 (mở rộng UC11) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+
+Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.remove(item) (DELETE /api/notifications/{id}, endpoint deleteNotification đã có trong api.js); thành công → load(), lỗi → "Không thể xoá thông báo."; giữ nguyên nút Đánh dấu đã đọc / Đánh dấu tất cả; test Chrome headless reader PASS (bấm Xoá không có dialog, thông báo biến mất ngay, F5 không hiện lại, reader khác vẫn thấy của mình, không lỗi JS); bump notifications.js ?v=20260810-6.
+## 2026-08-10 - Log agent tự báo cáo (Frontend, đồng bộ max-width khung + bỏ margin auto co cụm)
+
+[FRONTEND] 2026-08-10 08:57:43 - Thay đổi: Rà toàn bộ style.css — sửa .app-header__inner max-width 1200px → none và .admin-nav (bản gốc) max-width 1200px → none; phát hiện thêm nguyên nhân gây co cụm: sau khi body thành flex-column, .page/.app-header__nav-row còn margin: 0 auto khiến flex item co theo nội dung → bỏ margin auto (margin: 0) + .page width:100%; layout.js xác nhận render đúng .app-header__nav-row (không dùng .app-header__inner); hiện style.css KHÔNG còn max-width:1200px nào (chỉ giữ max-width 480px login-shell và 640px modal-box); test Chrome headless 13 trang × 1920/1366 PASS — banner/nav-row/page đều full-width 0→viewport, không còn khoảng trắng hai bên; bump css ?v=20260810-11; đã lưu prompt promtAI - Chức năng đề bài: giao diện (layout full-width) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-10 - Log agent tự báo cáo (Frontend, responsive mobile + hamburger menu)
+
+[FRONTEND] 2026-08-10 09:02:27 - Thay đổi: Hoàn thiện responsive cho mọi trang MainLayout — layout.js thêm hamburger button (#nav-toggle) trong .app-header__nav-row, bấm mở/đóng menu dropdown dọc theo role, mỗi mục min-height 44px, đóng khi chọn mục hoặc bấm ngoài, aria-expanded; CSS: .nav-toggle ẩn desktop (>768px), mobile ≤768 menu chuyển dropdown dọc (position absolute, navy, z-index 120, scroll nội bộ), user-info dồn phải; thêm breakpoint ≤480px (banner logo 36px, chữ 12/10px, page/card padding 12-16px, user-info gọn); .table-wrap max-width:100% cuộn riêng; test Chrome headless 3 role × 375/390/768 PASS (toggle hiện, menu đóng/mở đúng, mục 44px, click ngoài đóng, overflow 0, table-wrap cuộn nội bộ) + desktop 1280 PASS (toggle ẩn, menu ngang giữ nguyên); bump css ?v=20260810-12 + layout.js ?v=20260810-3; đã lưu prompt promtAI - Chức năng đề bài: giao diện (responsive) - Ảnh hưởng Backend: không - Ảnh hưởng AI Engine: không
+## 2026-08-27 — Log Trợ Lý (Vá lỗi UI và Business Logic)
+
+[FRONTEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi tham số API do sai field id thành ma trên hàng loạt file (reservations.js, borrow.js, my-borrows.js, books.js, readers.js, notifications-core.js). Sửa lỗi không cập nhật tên người dùng trên thanh điều hướng sau khi lưu hồ sơ (gọi syncSessionName trong profile.js).
+
+[BACKEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi business logic quan trọng ở API DELETE /api/readers/{ma}. Bổ sung kiểm tra chặt chẽ: ngăn chặn việc xoá độc giả nếu độc giả đó đang có phiếu mượn chưa trả (đang mượn, quá hạn), còn nợ tiền phạt chưa thu, hoặc đang có yêu cầu/đặt trước chờ xử lý. Trả về HTTP 400 kèm thông báo rõ ràng cho Admin. - Chức năng đề bài liên quan: 3, 4, 6
+[FRONTEND] 2026-08-27 21:05:00 - Thay đổi: 
+- books.html: Thêm khu vực kéo thả (drag & drop) và input tải file ảnh bìa. Đổi trường nhập Thể loại và Nhà xuất bản từ text sang thẻ select (dropdown).
+- books.js: Bổ sung hàm handleCoverUpload để tải file ảnh lên qua API và gán link tự động. Bổ sung hàm loadCategoriesAndPublishers nạp danh sách vào 2 thẻ select, gỡ bỏ tuỳ chọn cho phép tự do nhập ngoài danh mục, ép buộc thủ thư phải chọn từ danh mục của admin.
+- api.js: Thêm endpoint uploadBookCover.
+- Chức năng đề bài liên quan: Quản lý sách, thêm sách (Minh chứng 2.9).
+- Ảnh hưởng Backend: Có (Cần thêm endpoint upload và nới quyền lấy danh mục).
+
+[BACKEND] 2026-08-27 21:05:00 - Thay đổi: 
+- routers/books.py: Thêm API POST /api/books/upload-cover giới hạn 5MB để lưu file vào static/covers.
+- routers/catalog.py: Đổi require_roles('admin') thành require_roles('admin', 'librarian') cho GET /api/admin/categories và GET /api/admin/publishers để thủ thư nạp được dữ liệu.
+- config.py: Thêm cấu hình COVERS_DIR.
+- schemas.py: Thêm CoverUploadOut.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Cập nhật lấy danh mục chuẩn cho trang tra cứu)
+
+[FRONTEND] 2026-08-27 21:15:00 - Thay đổi: Trang Tra cứu sách (search.js) tự động gọi API lấy danh mục Thể loại chuẩn từ Backend thay vì tự trích xuất từ danh sách sách hiện có. Giúp ô lọc Thể loại chính xác và đồng bộ 100% với danh mục của Admin.
+[BACKEND] 2026-08-27 21:15:00 - Thay đổi: Nới lỏng quyền endpoint GET /api/admin/categories cho phép cả role 'reader' (Độc giả) truy cập để trang Tra cứu sách có thể tải danh mục Thể loại.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Tối ưu hóa hiển thị lỗi xác thực nội tuyến - Inline Validation)
+
+[FRONTEND] 2026-08-27 21:26:00 - Thay đổi: Chuyển đổi hiển thị lỗi xác thực (validation errors) từ dạng thông báo chung (toast) sang dạng lỗi nội tuyến (inline error) nằm ngay dưới từng ô nhập liệu tương ứng trong form Thêm/Sửa sách. Thêm class CSS .inline-error và .input-error (viền đỏ) để tăng UX.
+[BACKEND] 2026-08-27 21:26:00 - Thay đổi: Cập nhật hàm validation_exception_handler trong main.py để ngoài trả về chuỗi thông báo gộp, còn trả về một object 'errors' chứa mapping giữa tên trường và thông báo lỗi tiếng Việt, hỗ trợ Frontend bắt đúng trường báo lỗi.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Bắt buộc điền ảnh bìa khi thêm/sửa sách)
+
+[FRONTEND] 2026-08-27 21:30:00 - Thay đổi: Không có thay đổi logic code mới (sử dụng lại cơ chế hiển thị lỗi nội tuyến vừa thêm ở trên để tự động bắt và hiện lỗi "Vui lòng nhập ảnh bìa" khi Backend trả về lỗi 422 do bỏ trống trường này).
+[BACKEND] 2026-08-27 21:30:00 - Thay đổi: Cập nhật schemas.py (BookBase) và models.py (Book) đổi thuộc tính anhBia từ tùy chọn (nullable) sang bắt buộc (required/NOT NULL). Thêm migration make_anhbia_required. Đồng thời cập nhật main.py để bắt lỗi và hiển thị 'Vui lòng nhập ảnh bìa.' khi người dùng bỏ trống.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9).
+
+## 2026-08-27 — Log Trợ Lý (Cập nhật định dạng mã Độc giả sang chuẩn DTC)
+
+[FRONTEND] 2026-08-27 22:05:00 - Thay đổi: Không có thay đổi logic code (giao diện tự động cập nhật danh sách độc giả với mã DTC mới do Backend trả về).
+[BACKEND] 2026-08-27 22:05:00 - Thay đổi: Cập nhật API Đăng ký (auth.py) đổi tiền tố sinh mã tự động từ "DG" sang "DTC" cho đồng bộ với mã sinh viên. Viết script chạy thẳng vào Database quy hoạch lại toàn bộ mã độc giả cũ (các mã DG, QADG, QDD... đều đổi thành DTC) và cập nhật đồng loạt các khóa ngoại ở các bảng liên quan (Users, BorrowSlips, FineHistory, YeuCau...).
+- Chức năng đề bài liên quan: Quản lý độc giả (Dữ liệu nền tảng).
+
+## 2026-08-27 — Log Trợ Lý (Quy định riêng cho mã Giảng viên)
+
+[FRONTEND] 2026-08-27 22:20:00 - Thay đổi: Không có thay đổi logic code mới.
+[BACKEND] 2026-08-27 22:20:00 - Thay đổi: Thiết lập quy định mới trong auth.py: nếu đăng ký là Sinh viên (sinh_vien) sẽ lấy mã bắt đầu bằng "DTC" + 9 số ngẫu nhiên; nếu là Giảng viên (giang_vien) sẽ lấy mã bắt đầu bằng "GV" + 6 số ngẫu nhiên (ví dụ GV123456). Đồng thời chạy script migrate_giang_vien.py quét toàn bộ DB để chuyển đổi các Giảng viên đang bị gắn nhầm mã DTC sang mã chuẩn GV.
+- Chức năng đề bài liên quan: Quản lý độc giả (Minh chứng 2.9/3.0).
+
+## 2026-08-28 — Log Trợ Lý (Khởi tạo dữ liệu Sách và Xây dựng chức năng Phân trang)
+
+[FRONTEND] 2026-08-28 01:40:00 - Thay đổi: Bổ sung logic phân trang ở Client-side cho trang Tra cứu sách (search.js/search.html) và Quản lý sách (books.js/books.html) để giới hạn chỉ hiển thị 6 cuốn sách/trang. Thiết kế thêm thanh chuyển trang (trước, trang 1, 2, sau) ở dưới cùng. Bổ sung style css cho `.pagination`.
+[BACKEND] 2026-08-28 01:40:00 - Thay đổi: Chạy script tự động (seed_books.py) điền thêm 34 cuốn sách mới (5 cuốn cho mỗi thể loại) kèm ảnh bìa mặc định vào Database.
+- Chức năng đề bài liên quan: Quản lý sách (Minh chứng 2.9/3.0).
+
+## 2026-08-29 — Log Trợ Lý (Chuẩn hóa toàn bộ Cơ sở dữ liệu Sách)
+
+[FRONTEND] 2026-08-28 03:00:00 - Thay đổi: Không có thay đổi logic code frontend.
+[BACKEND] 2026-08-28 03:00:00 - Thay đổi: Dọn dẹp triệt để 60 cuốn sách mẫu cũ và 8 danh mục thể loại cũ không nằm trong yêu cầu. Quét và insert tự động 64 cuốn sách chuyên ngành chất lượng cao vào 8 Thể loại mới (CNTT, An toàn mạng, Viễn thông, Kỹ thuật ô tô, Kinh tế, Tài chính, Thiết kế đồ họa, Ngôn ngữ). Cập nhật toàn bộ ID sách theo cú pháp viết tắt của Tên Sách + 4 số tăng dần (ví dụ BMTM0005). Tất cả 64 sách đều có ảnh bìa chuẩn được lấy tự động từ Fahasa/Tiki.
+- Chức năng đề bài liên quan: Quản lý sách, Dữ liệu mẫu (Minh chứng 2.9/3.0).
+
+## 2026-08-29 — Log Trợ Lý (Dọn dẹp và Tối ưu mã nguồn)
+
+[BACKEND] 2026-08-29 13:15:00 - Thay đổi: Quét và dọn dẹp toàn bộ 13 file Python scripts chạy một lần (gồm 8 file chèn sách, file xóa sách, file cập nhật mã Độc giả/Sách, file cào ảnh, và file dọn rác ở frontend) nhằm làm sạch dự án sau khi hoàn tất Migrate Database Sách. Trả lại cấu trúc thư mục gọn gàng, chỉ chứa mã nguồn chính thức.
+- Chức năng đề bài liên quan: Quản lý mã nguồn, Tối ưu cấu trúc dự án.

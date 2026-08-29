@@ -7,6 +7,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 AVATAR_DIR = os.path.join(STATIC_DIR, "avatars")
+COVERS_DIR = os.path.join(STATIC_DIR, "covers")
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",

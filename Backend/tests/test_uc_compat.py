@@ -32,7 +32,7 @@ def _make_book(client, token: str, ma: str, so_luong: int = 5) -> None:
     response = client.post(
         "/api/books",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "ten": f"Sách {ma}",
             "tacGia": "Tác giả Test",
             "theLoai": "Test",
@@ -64,7 +64,7 @@ def test_register_reader_and_login(client_and_tokens):
     assert registered.status_code == 200, registered.text
     data = registered.json()
     assert data["role"] == "reader"
-    assert data["reader_ma"].startswith("DG")
+    assert data["reader_ma"].startswith("DTC")
 
     dup_username = _register(client, "tmp_backend_test_reg1", reg1b_email)
     assert dup_username.status_code == 409
@@ -343,7 +343,7 @@ def test_categories_publishers_crud(client_and_tokens):
     book = client.post(
         "/api/books",
         json={
-            "ma": "TESTUCB5",
+            "anhBia": "https://example.com/cover.jpg", "ma": "TESTUCB5",
             "ten": "Sách danh mục",
             "tacGia": "Tác giả",
             "theLoai": "Thể loại test 2",

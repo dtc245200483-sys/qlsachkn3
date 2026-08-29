@@ -34,7 +34,7 @@ def list_readers(
 def create_reader(
     body: ReaderCreate,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin")),
+    user=Depends(require_roles("admin", "librarian")),
 ) -> ReaderOut:
     if db.get(Reader, body.ma) is not None:
         raise HTTPException(status_code=409, detail="Mã độc giả đã tồn tại.")
@@ -69,7 +69,7 @@ def update_reader(
     ma: str,
     body: ReaderUpdate,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin")),
+    user=Depends(require_roles("admin", "librarian")),
 ) -> ReaderOut:
     reader = db.get(Reader, ma)
     if reader is None:

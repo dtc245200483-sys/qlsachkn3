@@ -84,11 +84,10 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
 
     reader_ma = None
     for _ in range(5):
-        candidate = (
-            "DG"
-            + datetime.now().strftime("%Y%m%d%H%M%S")
-            + f"{secrets.randbelow(1000):03d}"
-        )
+        if body.loaiDocGia == "giang_vien":
+            candidate = f"GV{secrets.randbelow(10**6):06d}"
+        else:
+            candidate = f"DTC{secrets.randbelow(10**9):09d}"
         if db.get(Reader, candidate) is None:
             reader_ma = candidate
             break

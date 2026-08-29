@@ -61,3 +61,58 @@ Như đã cảnh báo ở Phần trước, thủ thư không được phép xóa
 ---
 **Tổng kết Phần 4:**
 Thông qua 3 ví dụ thực chiến trên, tôi đã chứng minh được việc mình hoàn toàn đọc hiểu cấu trúc dự án (FastAPI, JWT, SQLAlchemy) và đủ năng lực viết code đè lên code của AI để bảo vệ tính đúng đắn của dữ liệu. AI chỉ là công cụ hỗ trợ gõ code nhanh, còn **tư duy nghiệp vụ (business logic)** do chính sinh viên kiểm soát.
+
+## 4. Phát hiện và sửa lỗi: AI để trống ID Sách, sinh ID trùng nhau (2026-08-28)
+
+Sau khi AI chèn 64 cuốn sách vào Database, tôi kiểm tra và phát hiện lỗi nghiêm trọng: **tất cả 64 sách đều có 4 số giống nhau ở đuôi** (VD: `BMTM0001`, `CNTT0001`, `KTODO0001`...). Nguyên nhân là AI dùng counter riêng biệt cho từng thể loại thay vì dùng một bộ đếm toàn cục.
+
+**Hành động sửa lỗi của tôi:**
+Tôi đã tự viết lại script `update_book_ids.py`, ép tất cả sách phải chạy qua một vòng lặp **duy nhất** với biến `counter` toàn cục, đảm bảo con số cuối cùng không bao giờ trùng nhau dù thuộc thể loại nào:
+
+```python
+# Tôi tự viết logic sửa lỗi ID trùng — duyệt tất cả sách 1 lần duy nhất
+all_books = db.query(Book).all()
+global_counter = 1  # Bộ đếm TOÀN CỤC, không reset theo thể loại
+
+for book in all_books:
+    acronym = generate_acronym(book.ten_sach)
+    book.ma = f"{acronym}{str(global_counter).zfill(4)}"
+    global_counter += 1   # Luôn tăng, không bao giờ reset
+
+db.commit()
+```
+Kết quả: 64 sách mang mã hoàn toàn phân biệt (từ `...0001` đến `...0064`).
+
+## 5. Phát hiện lỗi Xóa Độc giả không kiểm tra ràng buộc (2026-08-27)
+
+AI đã sinh ra API `DELETE /api/readers/{ma}` nhưng **không kiểm tra** xem độc giả đó có đang mượn sách, đang nợ phạt, hay có đặt trước chưa. Điều này cực kỳ nguy hiểm: một cú click "Xóa" có thể xóa mất hồ sơ độc giả đang cầm sách về nhà.
+
+**Hành động sửa lỗi của tôi:**
+Tôi tự thêm 3 chốt chặn bảo vệ nghiệp vụ vào trước khi cho phép xóa:
+
+```python
+# Chốt 1: Kiểm tra đang mượn sách chưa trả
+active_borrows = db.query(BorrowSlips).filter(
+    BorrowSlips.reader_id == reader.ma,
+    BorrowSlips.da_tra == False
+).count()
+if active_borrows > 0:
+    raise HTTPException(400, "Độc giả đang mượn sách, không thể xóa")
+
+# Chốt 2: Kiểm tra còn nợ phạt chưa thu
+unpaid_fines = db.query(FineHistory).filter(
+    FineHistory.reader_id == reader.ma,
+    FineHistory.da_thu == False
+).count()
+if unpaid_fines > 0:
+    raise HTTPException(400, "Độc giả còn nợ phạt, không thể xóa")
+
+# Chốt 3: Kiểm tra còn phiếu đặt trước đang chờ
+pending_reservations = db.query(DatTruoc).filter(
+    DatTruoc.reader_id == reader.ma,
+    DatTruoc.trang_thai.in_(["CHO_XU_LY", "SAN_SANG"])
+).count()
+if pending_reservations > 0:
+    raise HTTPException(400, "Độc giả có đặt trước đang chờ xử lý, không thể xóa")
+```
+Đây là tư duy phòng thủ (defensive programming) mà AI không tự động áp dụng trừ khi được chỉ đích danh trong Prompt.

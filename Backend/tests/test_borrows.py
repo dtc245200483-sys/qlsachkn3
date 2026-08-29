@@ -13,7 +13,7 @@ def _make_reader(client, token: str, ma: str = "TESTDG1", trang_thai: str = "hoa
     response = client.post(
         "/api/readers",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "hoTen": "Độc giả Test",
             "email": next_test_email(),
             "soDienThoai": "0900000000",
@@ -29,7 +29,7 @@ def _make_book(client, token: str, ma: str = "TESTB1", so_luong: int = 5) -> Non
     response = client.post(
         "/api/books",
         json={
-            "ma": ma,
+            "anhBia": "https://example.com/cover.jpg", "ma": ma,
             "ten": f"Sách {ma}",
             "tacGia": "Tác giả Test",
             "theLoai": "Test",

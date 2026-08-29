@@ -21,7 +21,7 @@ def _nxb_out(item: Nxb) -> NxbOut:
 @router.get("/categories", response_model=list[CategoryOut])
 def list_categories(
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin")),
+    user=Depends(require_roles("admin", "librarian", "reader")),
 ) -> list[CategoryOut]:
     return [_category_out(item) for item in db.query(TheLoai).order_by(TheLoai.ma.asc()).all()]
 
@@ -80,7 +80,7 @@ def delete_category(
 @router.get("/publishers", response_model=list[NxbOut])
 def list_publishers(
     db: Session = Depends(get_db),
-    user=Depends(require_roles("admin")),
+    user=Depends(require_roles("admin", "librarian")),
 ) -> list[NxbOut]:
     return [_nxb_out(item) for item in db.query(Nxb).order_by(Nxb.ma.asc()).all()]
 
