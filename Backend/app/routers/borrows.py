@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Book, BorrowDetail, BorrowSlip, DatTruoc, FineHistory, LibraryConfig, Reader
+from ..models import Book, BookCopy, BorrowDetail, BorrowSlip, DatTruoc, FineHistory, LibraryConfig, Reader
 from ..schemas import (
     BorrowCreate,
     BorrowDetailOut,
@@ -59,6 +59,7 @@ def _slip_out(db: Session, slip: BorrowSlip) -> BorrowSlipOut:
                 ten_sach=db.get(Book, detail.ma_sach).ten if db.get(Book, detail.ma_sach) is not None else "",
                 so_luong=detail.so_luong,
                 ngay_tra_chi_tiet=detail.ngay_tra_chi_tiet,
+                copy_id=detail.copy_id,
             )
             for detail in details
         ],
@@ -85,31 +86,43 @@ def _perform_create_borrow(
     ma_doc_gia: str,
     items: list[BorrowItemCreate],
     so_ngay_muon: int | None = None,
+    assigned_copies: dict[str, str] | None = None,
 ) -> BorrowSlip:
     if db.get(BorrowSlip, ma_phieu) is not None:
         raise HTTPException(status_code=409, detail="Mã phiếu mượn đã tồn tại.")
 
-    reader = db.get(Reader, ma_doc_gia)
+    reader = db.get(Reader, ma_doc_gia, with_for_update=True)
     if reader is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
     if reader.trangThaiThe != "hoat_dong":
         raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
 
-    # Gộp trùng mã sách (VD: 2 dòng cùng S005) để không trùng khóa chính BorrowDetails
+    # Gộp trùng mã sách
     merged: dict[str, int] = {}
     for item in items:
         merged[item.ma_sach] = merged.get(item.ma_sach, 0) + item.so_luong
 
     cfg = _get_library_config(db)
     total_books = sum(merged.values())
-    if total_books > cfg.max_books_at_once:
+    
+    from sqlalchemy.sql import func
+    from ..models import BorrowDetail
+    current_borrowed_count = db.query(func.sum(BorrowDetail.so_luong)).join(
+        BorrowSlip, BorrowSlip.ma_phieu == BorrowDetail.ma_phieu
+    ).filter(
+        BorrowSlip.ma_doc_gia == ma_doc_gia,
+        BorrowSlip.trang_thai == "dang_muon"
+    ).scalar() or 0
+    
+    if current_borrowed_count + total_books > cfg.max_books_at_once:
         raise HTTPException(
             status_code=400,
-            detail=f"Vượt quá giới hạn {cfg.max_books_at_once} sách/lần mượn.",
+            detail=f"Thao tác thất bại: Bạn đã mượn quá giới hạn {cfg.max_books_at_once} cuốn sách.",
         )
 
+    # Validate book exist and lock rows
     for ma_sach, qty in merged.items():
-        book = db.get(Book, ma_sach)
+        book = db.query(Book).filter(Book.ma == ma_sach).with_for_update().first()
         if book is None:
             raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {ma_sach}.")
         if book.soLuong <= 0 or book.soLuong < qty:
@@ -130,6 +143,7 @@ def _perform_create_borrow(
         han_tra = ngay_muon + timedelta(days=so_ngay_muon)
     else:
         han_tra = ngay_muon + timedelta(days=cfg.max_borrow_days)
+        
     slip = BorrowSlip(
         ma_phieu=ma_phieu,
         ma_doc_gia=ma_doc_gia,
@@ -139,17 +153,46 @@ def _perform_create_borrow(
         so_lan_gia_han=0,
     )
     db.add(slip)
+    
     for ma_sach, qty in merged.items():
-        book = db.get(Book, ma_sach)
+        book = db.query(Book).filter(Book.ma == ma_sach).first()
         book.soLuong -= qty
-        db.add(
-            BorrowDetail(
-                ma_phieu=ma_phieu,
-                ma_sach=ma_sach,
-                so_luong=qty,
-                ngay_tra_chi_tiet=None,
+        
+        assigned_copy_id = assigned_copies.get(ma_sach) if assigned_copies else None
+        
+        for i in range(qty):
+            if i == 0 and assigned_copy_id:
+                copy_id = assigned_copy_id
+                copy = db.query(BookCopy).filter(BookCopy.copy_id == copy_id).with_for_update().first()
+                if copy:
+                    copy.status = "Đang mượn"
+                    db.flush()
+            else:
+                available_copy = (
+                    db.query(BookCopy)
+                    .filter(BookCopy.book_id == ma_sach, BookCopy.status == "Có sẵn")
+                    .with_for_update(skip_locked=True)
+                    .first()
+                )
+                if not available_copy:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Sách {ma_sach} không còn đủ bản vật lý 'Có sẵn'."
+                    )
+                copy_id = available_copy.copy_id
+                available_copy.status = "Đang mượn"
+                db.flush()
+            
+            db.add(
+                BorrowDetail(
+                    ma_phieu=ma_phieu,
+                    ma_sach=ma_sach,
+                    so_luong=1,
+                    ngay_tra_chi_tiet=None,
+                    copy_id=copy_id,
+                )
             )
-        )
+        
     write_audit_log(
         db,
         user,
@@ -164,7 +207,7 @@ def _perform_create_borrow(
 
 
 def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
-    slip = db.get(BorrowSlip, ma)
+    slip = db.get(BorrowSlip, ma, with_for_update=True)
     if slip is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiếu mượn.")
     if slip.trang_thai == "da_tra":
@@ -181,7 +224,7 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
         .all()
     )
     for detail in details:
-        book = db.get(Book, detail.ma_sach)
+        book = db.get(Book, detail.ma_sach, with_for_update=True)
         if book is not None:
             book.soLuong += detail.so_luong
         detail.ngay_tra_chi_tiet = ngay_tra
@@ -190,21 +233,27 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
     slip.trang_thai = "da_tra"
 
     for detail in details:
-        promoted = 0
-        while promoted < detail.so_luong:
-            pending = (
-                db.query(DatTruoc)
-                .filter(
-                    DatTruoc.ma_sach == detail.ma_sach,
-                    DatTruoc.trang_thai == "CHO_XU_LY",
-                )
-                .order_by(DatTruoc.ngay_dat.asc(), DatTruoc.ma_dat.asc())
-                .first()
+        copy = None
+        if detail.copy_id:
+            copy = db.get(BookCopy, detail.copy_id, with_for_update=True)
+
+        pending = (
+            db.query(DatTruoc)
+            .filter(
+                DatTruoc.ma_sach == detail.ma_sach,
+                DatTruoc.trang_thai == "CHO_XU_LY",
             )
-            if pending is None:
-                break
+            .order_by(DatTruoc.ngay_dat.asc(), DatTruoc.ma_dat.asc())
+            .with_for_update(skip_locked=True)
+            .first()
+        )
+        if pending is not None:
             pending.trang_thai = "SAN_SANG"
             pending.ngay_xu_ly = ngay_tra
+            if copy:
+                pending.copy_id = copy.copy_id
+                pending.han_nhan = ngay_tra + timedelta(hours=48)
+                copy.status = "Đang giữ chỗ"
             write_audit_log(
                 db,
                 user,
@@ -213,7 +262,9 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
                 entity_id=pending.ma_dat,
                 details=f"ma_sach={detail.ma_sach}",
             )
-            promoted += 1
+        else:
+            if copy:
+                copy.status = "Có sẵn"
 
     fine = None
     days = _overdue_days(slip.han_tra, ngay_tra)
@@ -246,7 +297,7 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
 
 
 def _perform_renew_borrow(db: Session, user, ma: str) -> BorrowRenewOut:
-    slip = db.get(BorrowSlip, ma)
+    slip = db.get(BorrowSlip, ma, with_for_update=True)
     if slip is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiếu mượn.")
     if slip.trang_thai == "da_tra":
@@ -473,7 +524,7 @@ def collect_fine(
     db: Session = Depends(get_db),
     user=Depends(require_roles("librarian")),
 ) -> CollectFineOut:
-    slip = db.get(BorrowSlip, ma)
+    slip = db.get(BorrowSlip, ma, with_for_update=True)
     if slip is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiếu mượn.")
     if slip.trang_thai != "da_tra":

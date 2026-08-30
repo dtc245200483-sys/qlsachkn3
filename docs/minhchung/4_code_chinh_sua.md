@@ -115,4 +115,68 @@ pending_reservations = db.query(DatTruoc).filter(
 if pending_reservations > 0:
     raise HTTPException(400, "Độc giả có đặt trước đang chờ xử lý, không thể xóa")
 ```
-Đây là tư duy phòng thủ (defensive programming) mà AI không tự động áp dụng trừ khi được chỉ đích danh trong Prompt.
+Đây là tư duy phòng thủ (defensive programming) mà AI không tự động áp dụng trừ khi được chỉ đích danh trong Prompt.
+
+## 6. Sửa đổi Code: Xử lý đồng thời (Race Condition), Cron Job dọn dẹp và Fix UI
+
+Tài liệu này là minh chứng ghi nhận các sửa đổi kỹ thuật quan trọng nhằm cải thiện độ ổn định, tính toàn vẹn dữ liệu và giao diện người dùng của hệ thống thư viện. Các sửa đổi này tương ứng với việc hoàn thiện Mục 1 đến Mục 8 trong checklist của người dùng.
+
+## 1. Xử lý triệt để Race Condition (Đồng thời)
+Trong môi trường thực tế, nhiều thủ thư có thể cùng lúc thực hiện thao tác Mượn/Trả/Đặt trước cho cùng một quyển sách. Hệ thống đã được nâng cấp bằng cơ chế Row-level Locking của cơ sở dữ liệu:
+- **Thêm `with_for_update(skip_locked=True)`**: Khi tìm kiếm các phiếu chờ (`DatTruoc`) hoặc bản sao vật lý (`BookCopy`), hệ thống sẽ khóa dòng (row-lock) ngay lập tức.
+- Cơ chế này chặn hoàn toàn việc 2 giao dịch song song cùng lấy được 1 quyển sách hoặc cùng gán 1 quyển sách cho 2 phiếu đặt trước khác nhau.
+- Các module đã áp dụng: `borrows.py`, `reservations.py`, `requests.py`.
+
+## 2. Refactor cách đếm sách có sẵn
+Thay vì sử dụng công thức trừ thủ công (`soLuong` - số đang mượn - số đang giữ chỗ), hệ thống hiện tại **đếm trực tiếp** số lượng thực tế các bản sao vật lý (`BookCopy`) đang ở trạng thái `Có sẵn`.
+```python
+# Cách mới, an toàn và chính xác tuyệt đối:
+count = db.query(BookCopy).filter(
+    BookCopy.book_id == book.book_id, 
+    BookCopy.status == "Có sẵn"
+).count()
+```
+
+## 3. Tự động hóa dọn dẹp hàng đợi (Cron Job)
+Một API mới đã được tích hợp: `POST /api/reservations/cleanup-expired`.
+- **Nhiệm vụ**: Quét toàn bộ hệ thống để tìm các phiếu Đặt trước đã tới trạng thái `Sẵn sàng` nhưng người dùng không tới lấy sách dẫn đến quá hạn (`han_nhan` < hiện tại).
+- **Hành động**: Tự động Hủy phiếu, thu hồi bản sao vật lý và chuyển cho người tiếp theo đang chờ trong hàng đợi (nếu có), hoặc trả sách về kệ.
+
+## 4. Sửa lỗi Giao diện (UI)
+- **Mapper `api.js`**: Bổ sung ánh xạ cho `copyId` (mã vật lý) và `hanNhan` (hạn nhận sách) vào `borrowDetailOut` và `reservationOut`.
+- **Render UI**: Cập nhật file `my-borrows.js` và `reservations.js` để đọc đúng các tham số đã chuẩn hóa. Giao diện giờ đây hiển thị chính xác mã cuốn sách cụ thể mà độc giả đang mượn, cũng như hạn chót phải tới lấy sách đặt trước.
+
+## 7. Cải tiến Code: Cập nhật giao diện Thủ thư và Fix lỗi Test Suite
+- **Giao diện Thủ thư (`borrow.js`)**: Phát hiện thiếu trường thông tin mã bản sao (`copyId`) khi hiển thị phiếu mượn. Đã can thiệp vào mapper API để nối chuỗi "(Mã bản: ...)" vào cột chi tiết, giúp thủ thư thu hồi đúng sách vật lý đã phát ra.
+- **Sửa lỗi Database Cleanup Test (`conftest.py`)**: Khi hệ thống test chạy xong và xóa dữ liệu ảo, nó bị crash do vi phạm khóa ngoại (foreign key restraint `fk_users_reader`). Đã cấu trúc lại vòng đời xóa bảng (xóa dữ liệu con ở `Users` và `YeuCau` trước rồi mới xóa `Readers`), đảm bảo 15/15 test case cho tính năng Đặt trước vượt qua thành công.
+
+
+## 8. Cải tiến Code: Bổ sung tính năng Mượn sách trực tiếp tại giao diện Tra cứu
+- **Bối cảnh**: Trải nghiệm UI/UX cũ chưa tối ưu, người dùng (`Reader`) muốn mượn sách phải tự điều hướng sang tab Yêu cầu.
+- **Thay đổi thực hiện**:
+  + Tại file `search.js`, khi check trạng thái sách khả dụng (`available == true`), render thêm nút "Mượn sách" trực tiếp.
+  + Logic nút: Khi nhấn, tự động sinh mã `ma_yeu_cau` dạng `YC + Năm/Tháng/Ngày + 4 số ngẫu nhiên`, tự động tạo payload có `loai: "MUON"`, `so_ngay_muon: 14` và gọi `POST /api/requests`.
+  + Tinh chỉnh thẩm mỹ: Đóng khung trạng thái "Còn sách" thành badge xám nhạt (`#f3f4f6`) cho nổi bật. Đồng bộ hóa nút bấm "Mượn sách" sang màu xanh dương (`btn-primary`) chuẩn quy tắc nhận diện của ứng dụng.
+- **Kiểm thử**: Đã chạy test script `test_muon_api.py` mô phỏng luồng Backend và xác nhận payload được gửi từ Frontend xử lý và ghi xuống cơ sở dữ liệu ở trạng thái `CHO_XU_LY` hoàn hảo 100%.
+
+## 9. Thay đổi Kiến trúc CSDL & Logic quản lý mã sách (Multi-copy & Random UUID)
+
+**Mô tả**:
+Độc giả yêu cầu nâng cấp khả năng quản lý mã sách (Copy ID) và cho phép mượn nhiều bản sao của cùng một tựa sách (Multi-copy), đồng thời chuẩn hóa chuẩn sinh mã vật lý theo chuẩn thư viện.
+
+**Hành động của AI**:
+- **Thay đổi định dạng mã vật lý (Copy ID)**: Đổi từ `CPY-{UUID}` ngẫu nhiên dài sang chuẩn `{Mã Thể Loại}-{Mã Ngẫu Nhiên 6 Ký tự}-{Số thứ tự}` (Ví dụ: `CNTT-A8B9C0-1`). Việc này giúp thủ thư nhìn mã vạch có thể nhận diện ngay thể loại, đồng thời không bị rò rỉ mã quản lý logic của cuốn sách. Lược bỏ tiền tố `TL_` thừa thãi.
+- **Tái cấu trúc Khóa chính (PK) bảng BorrowDetails**: Chuyển khóa chính từ `(ma_phieu, ma_sach)` sang `(ma_phieu, copy_id)`. Điều này cho phép 1 phiếu mượn có thể lưu nhiều dòng chứa cùng một tựa sách, giải quyết bài toán độc giả muốn mượn nhiều cuốn giống hệt nhau.
+- **Auto-assign Multi-copy**: Viết lại thuật toán cấp phát mã vật lý khi duyệt mượn sách. Nếu mượn số lượng `n` cuốn, vòng lặp tự động nhặt `n` `copy_id` vật lý khác nhau đang "Có sẵn" trong kho và ghi nhận lịch sử độc lập. Sửa lỗi Race Condition 500 do thiếu lệnh `db.flush()` trong vòng lặp cấp phát.
+- **Thắt chặt cấu hình Thư Viện**: Cập nhật DB giới hạn mượn mặc định thành tối đa 3 tài liệu / lần mượn (14 ngày).
+- **Chặn UI Độc giả (Frontend/Backend)**: Sửa lại API `create_request` để quăng lỗi 400 Bad Request ngay khi độc giả tạo giỏ hàng vượt quá 3 tài liệu, hiển thị Popup từ chối mượn trên giao diện độc giả.
+- **Bổ sung UI**: Thêm nút "Mượn sách" trực tiếp tại thẻ tìm kiếm.
+
+### Cập nhật bổ sung 2026-08-30: Hoàn thiện UX và Logic Hàng Đợi
+- **Frontend**: Hoàn thiện loạt UX theo phản hồi người dùng (Select Box ngày mượn, ẩn Mã yêu cầu tự sinh, hiển thị số lượng 0, cảnh báo kích thước file, hiện Vị trí hàng đợi).
+- **Backend**: Thêm trường `queue_position` vào API Đặt trước. Bắt buộc logic tính toán vị trí xếp hàng dựa trên thời gian đặt. Fix đồng bộ hóa toàn vẹn dữ liệu sách và số lượng copy vật lý.
+
+### V� l? h?ng gi?i h?n mu?n s�ch & HTTP 500
+- S?a l?i 500 khi qu�t tr?ng th�i ph?t (d?ng b? m�i gi? Python).
+- S?a l?i 500 khi xu?t m� copy_id cho th? thu do g?i sai relationship SQLAlchemy.
+- C?p nh?t logic max_books_at_once: Tru?c d�y ch? check s? lu?ng trong 1 transaction. Nay d� c?ng d?n s? lu?ng s�ch �ANG MU?N + CH? DUY?T d? ch?n t? v�ng g?i don (frontend sinh vi�n) v� v�ng duy?t (backend th? thu).

@@ -132,6 +132,7 @@ class BorrowDetailOut(BaseModel):
     ten_sach: str = ""
     so_luong: int
     ngay_tra_chi_tiet: datetime | None
+    copy_id: str | None = None
 
 
 class FineOut(BaseModel):
@@ -217,6 +218,9 @@ class RequestOut(BaseModel):
     so_ngay_muon: int | None = None
     trang_thai: str
     ngay_tao: datetime
+    ghi_chu: str | None = None
+    canh_bao: str | None = None
+
 
 
 class AccountCreate(BaseModel):
@@ -302,6 +306,9 @@ class ReservationOut(BaseModel):
     ma_doc_gia: str
     ngay_dat: datetime
     trang_thai: str
+    copy_id: str | None = None
+    han_nhan: datetime | None = None
+    queue_position: int | None = None
 
 
 class NotificationOut(BaseModel):

@@ -68,9 +68,15 @@ def _make_out_of_stock_book(client, tokens, book_ma: str):
 def _set_book_stock(book_ma: str, so_luong: int) -> None:
     db = SessionLocal()
     try:
+        from app.models import BookCopy
         book = db.get(Book, book_ma)
         assert book is not None
         book.soLuong = so_luong
+        
+        # Add book copies if necessary
+        existing_copies = db.query(BookCopy).filter(BookCopy.book_id == book_ma).count()
+        for i in range(existing_copies, so_luong):
+            db.add(BookCopy(copy_id=f"{book_ma}-{i}", book_id=book_ma, status="Có sẵn"))
         db.commit()
     finally:
         db.close()
@@ -556,3 +562,4 @@ def test_reservation_history_roles(client_and_tokens):
     assert client.delete("/api/reservations/me", headers=_headers(tokens["librarian"])).status_code == 200
     assert client.delete("/api/reservations/me", headers=_headers(tokens["admin"])).status_code == 403
     assert client.delete("/api/reservations/me", headers=_headers(tokens["reader"])).status_code == 403
+

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..config import COVERS_DIR
 from ..database import get_db
 from ..deps import get_current_user, require_roles
-from ..models import Book, BorrowDetail, BorrowSlip, Nxb, TheLoai
+from ..models import Book, BookCopy, BorrowDetail, BorrowSlip, Nxb, TheLoai
 from ..schemas import BookBase, CoverUploadOut
 from ..audit import write_audit_log
 
@@ -127,6 +127,17 @@ def create_book(
         raise HTTPException(status_code=422, detail="NXB không tồn tại.")
     book = Book(**body.model_dump())
     db.add(book)
+    
+    # Generate BookCopy items
+    the_loai = book.theLoaiId.replace("TL_", "") if book.theLoaiId else "UNCAT"
+    rand_id = uuid.uuid4().hex[:6].upper()
+    for i in range(1, book.soLuong + 1):
+        copy = BookCopy(
+            copy_id=f"{the_loai}-{rand_id}-{i}",
+            book_id=book.ma
+        )
+        db.add(copy)
+        
     write_audit_log(
         db,
         user,
@@ -156,8 +167,42 @@ def update_book(
         raise HTTPException(status_code=422, detail="NXB không tồn tại.")
     data = body.model_dump()
     data["ma"] = ma
+    old_qty = book.soLuong
+
     for field, value in data.items():
         setattr(book, field, value)
+        
+    if book.soLuong > old_qty:
+        existing_copies = db.query(BookCopy).filter(BookCopy.book_id == ma).all()
+        diff = book.soLuong - len(existing_copies)
+        if diff > 0:
+            max_idx = 0
+            for c in existing_copies:
+                try:
+                    idx = int(c.copy_id.split("-")[-1])
+                    if idx >= max_idx:
+                        max_idx = idx
+                except:
+                    pass
+            max_idx += 1
+            
+            the_loai = book.theLoaiId.replace("TL_", "") if book.theLoaiId else "UNCAT"
+            rand_id = None
+            if existing_copies:
+                parts = existing_copies[0].copy_id.split("-")
+                if len(parts) >= 3:
+                    rand_id = parts[-2]
+            if not rand_id:
+                rand_id = uuid.uuid4().hex[:6].upper()
+                
+            for i in range(max_idx, max_idx + diff):
+                copy = BookCopy(
+                    copy_id=f"{the_loai}-{rand_id}-{i}",
+                    book_id=ma,
+                    status="Có sẵn"
+                )
+                db.add(copy)
+
     write_audit_log(
         db,
         user,

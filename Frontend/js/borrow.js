@@ -270,7 +270,12 @@
     var detailsText = (slip.details || [])
       .map(function (d) {
         var detail = API.mapResponse("borrowDetailOut", d);
-        return detail ? (detail.tenSach || detail.maSach) + " x" + detail.soLuong : "";
+        if (!detail) return "";
+        var text = (detail.tenSach || detail.maSach) + " x" + detail.soLuong;
+        if (detail.copyId) {
+          text += " (Mã bản: " + detail.copyId + ")";
+        }
+        return text;
       })
       .filter(Boolean)
       .join(", ");

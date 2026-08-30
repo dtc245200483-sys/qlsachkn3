@@ -81,7 +81,7 @@
       var emptyRow = document.createElement("tr");
       var emptyCell = document.createElement("td");
       emptyCell.className = "empty-row";
-      emptyCell.colSpan = 5;
+      emptyCell.colSpan = 7;
       emptyCell.textContent = "Chưa có đặt trước nào.";
       emptyRow.appendChild(emptyCell);
       tbody.appendChild(emptyRow);
@@ -93,12 +93,14 @@
         r.maDat,
         r.tenSach || r.maSach,
         r.ngayDat ? new Date(r.ngayDat).toLocaleString("vi-VN") : "—",
+        r.hanNhan ? new Date(r.hanNhan).toLocaleString("vi-VN") : "—",
         TRANG_THAI_LABEL(r.trangThai),
+        r.queue_position !== null && r.queue_position !== undefined ? r.queue_position : "—",
         null
       ];
       values.forEach(function (v, index) {
         var td = document.createElement("td");
-        if (index === 4) {
+        if (index === 6) {
           if (r.trangThai === "CHO_XU_LY") {
             var actions = document.createElement("div");
             actions.className = "row-actions";
@@ -165,12 +167,13 @@
         r.tenSach || "—",
         r.maDocGia || "—",
         r.ngayDat ? new Date(r.ngayDat).toLocaleString("vi-VN") : "—",
+        r.hanNhan ? new Date(r.hanNhan).toLocaleString("vi-VN") : "—",
         TRANG_THAI_LABEL(r.trangThai),
         null
       ];
       values.forEach(function (v, index) {
         var td = document.createElement("td");
-        if (index === 6) {
+        if (index === 7) {
           if (isAdmin) {
             td.textContent = "—";
           } else {

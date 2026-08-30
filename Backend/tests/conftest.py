@@ -57,7 +57,7 @@ def _cleanup_test_data() -> None:
         db.execute(
             text(
                 "DELETE FROM YeuCau WHERE ma_yeu_cau LIKE 'YCTEST%' OR ma_yeu_cau LIKE 'YCRDT%' OR ma_yeu_cau LIKE 'TEST%'"
-                " OR ma_yeu_cau LIKE 'YCSO%'"
+                " OR ma_yeu_cau LIKE 'YCSO%' OR ma_doc_gia LIKE 'TEST%' OR ma_doc_gia IN (SELECT ma FROM Readers WHERE email LIKE 'DTC700%@ictu.edu.vn')"
             )
         )
         db.execute(
@@ -75,12 +75,12 @@ def _cleanup_test_data() -> None:
                 "DELETE FROM BorrowSlips WHERE ma_phieu LIKE 'PMTEST%' OR ma_phieu LIKE 'PMYC%' OR ma_phieu LIKE 'PMHIST%' OR ma_phieu LIKE 'PMRSV%' OR ma_phieu LIKE 'PMNTF%' OR ma_phieu LIKE 'PMSTT%' OR ma_phieu LIKE 'PMEXP%' OR ma_phieu LIKE 'PMFINE%' OR ma_phieu LIKE 'TEST%'"
             )
         )
+        db.execute(text("DELETE FROM BookCopies WHERE copy_id LIKE 'TEST%'"))
         db.execute(text("DELETE FROM Books WHERE ma LIKE 'TEST%'"))
-        db.execute(text("DELETE FROM Users WHERE username LIKE 'tmp_backend_test_%'"))
         db.execute(
             text(
                 "DELETE FROM Users WHERE username LIKE 'tmp_backend_test_%' "
-                "AND reader_id IN (SELECT ma FROM Readers WHERE ma LIKE 'TEST%' "
+                "OR reader_id IN (SELECT ma FROM Readers WHERE ma LIKE 'TEST%' "
                 "OR email LIKE 'DTC700%@ictu.edu.vn')"
             )
         )

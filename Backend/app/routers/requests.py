@@ -15,7 +15,7 @@ from .reservations import _available_count, _generate_ma_dat
 router = APIRouter(prefix="/api/requests", tags=["requests"])
 
 
-def _request_out(req: YeuCau) -> RequestOut:
+def _request_out(req: YeuCau, ghi_chu: str | None = None, canh_bao: str | None = None) -> RequestOut:
     items = [BorrowItemCreate(**item) for item in json.loads(req.items or "[]")]
     return RequestOut(
         ma_yeu_cau=req.ma_yeu_cau,
@@ -26,6 +26,8 @@ def _request_out(req: YeuCau) -> RequestOut:
         so_ngay_muon=req.so_ngay_muon,
         trang_thai=req.trang_thai,
         ngay_tao=req.ngay_tao,
+        ghi_chu=ghi_chu,
+        canh_bao=canh_bao,
     )
 
 
@@ -66,10 +68,12 @@ def create_request(
                     detail=f"Không tìm thấy sách {item.ma_sach}.",
                 )
         effective_items = body.items or []
+        
+        cfg = db.get(LibraryConfig, 1)
+        if cfg is None:
+            raise HTTPException(status_code=500, detail="Chưa có cấu hình thư viện.")
+            
         if body.so_ngay_muon is not None:
-            cfg = db.get(LibraryConfig, 1)
-            if cfg is None:
-                raise HTTPException(status_code=500, detail="Chưa có cấu hình thư viện.")
             if body.so_ngay_muon > cfg.max_borrow_days:
                 raise HTTPException(
                     status_code=400,
@@ -104,6 +108,40 @@ def create_request(
         if body.loai == "GIA_HAN" and slip.so_lan_gia_han >= 1:
             raise HTTPException(status_code=400, detail="Phiếu mượn đã gia hạn tối đa 1 lần.")
         effective_items = []
+
+    if body.loai in ("MUON", "DAT_TRUOC"):
+        cfg = db.get(LibraryConfig, 1)
+        total_books = sum(item.so_luong for item in effective_items)
+        
+        from sqlalchemy.sql import func
+        from ..models import BorrowSlip, BorrowDetail
+        
+        current_borrowed_count = db.query(func.sum(BorrowDetail.so_luong)).join(
+            BorrowSlip, BorrowSlip.ma_phieu == BorrowDetail.ma_phieu
+        ).filter(
+            BorrowSlip.ma_doc_gia == user.reader_id,
+            BorrowSlip.trang_thai == "dang_muon"
+        ).scalar() or 0
+        
+        pending_reqs = db.query(YeuCau).filter(
+            YeuCau.ma_doc_gia == user.reader_id,
+            YeuCau.trang_thai == "CHO_XU_LY",
+            YeuCau.loai.in_(["MUON", "DAT_TRUOC"])
+        ).all()
+        
+        pending_count = 0
+        for r in pending_reqs:
+            try:
+                its = json.loads(r.items or "[]")
+                pending_count += sum(i.get("so_luong", 1) for i in its)
+            except:
+                pass
+                
+        if current_borrowed_count + pending_count + total_books > cfg.max_books_at_once:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Thao tác thất bại: Bạn đã mượn quá giới hạn {cfg.max_books_at_once} cuốn sách.",
+            )
 
     items_json = json.dumps(
         [item.model_dump() for item in effective_items],
@@ -151,7 +189,42 @@ def list_requests(
         if trangThai not in ("CHO_XU_LY", "DA_DUYET", "TU_CHOI"):
             raise HTTPException(status_code=422, detail="trangThai không hợp lệ.")
         query = query.filter(YeuCau.trang_thai == trangThai)
-    return [_request_out(req) for req in query.order_by(YeuCau.ngay_tao.desc()).all()]
+    results = query.order_by(YeuCau.ngay_tao.desc()).all()
+    if user.role in ("librarian", "admin"):
+        from ..models import FineHistory, BorrowSlip
+        from datetime import datetime
+        
+        now = datetime.now()
+        out = []
+        for req in results:
+            canh_bao = None
+            if req.ma_doc_gia:
+                # Check overdue slips
+                overdue_count = db.query(BorrowSlip).filter(
+                    BorrowSlip.ma_doc_gia == req.ma_doc_gia,
+                    BorrowSlip.trang_thai == "dang_muon",
+                    BorrowSlip.han_tra < now
+                ).count()
+                
+                # Check unpaid fines
+                unpaid_fines = db.query(FineHistory).filter(
+                    FineHistory.ma_doc_gia == req.ma_doc_gia,
+                    FineHistory.da_thu == False
+                ).count()
+                
+                warnings = []
+                if overdue_count > 0:
+                    warnings.append(f"{overdue_count} phiếu quá hạn")
+                if unpaid_fines > 0:
+                    warnings.append(f"{unpaid_fines} khoản phạt chưa nộp")
+                    
+                if warnings:
+                    canh_bao = "⚠️ " + ", ".join(warnings)
+            
+            out.append(_request_out(req, canh_bao=canh_bao))
+        return out
+    
+    return [_request_out(req) for req in results]
 
 
 @router.put("/{ma}/approve", response_model=RequestOut)
@@ -167,6 +240,7 @@ def approve_request(
     if req.trang_thai != "CHO_XU_LY":
         raise HTTPException(status_code=400, detail="Yêu cầu không ở trạng thái chờ xử lý.")
 
+    ghi_chu = None
     if req.loai == "MUON":
         items = [BorrowItemCreate(**item) for item in json.loads(req.items)]
         so_ngay_muon = None
@@ -183,6 +257,10 @@ def approve_request(
             so_ngay_muon=so_ngay_muon,
         )
         req.ma_phieu = slip.ma_phieu
+        
+        from ..models import BorrowDetail
+        details = db.query(BorrowDetail).filter(BorrowDetail.ma_phieu == slip.ma_phieu).all()
+        ghi_chu = ", ".join([d.copy_id for d in details if getattr(d, 'copy_id', None)])
     elif req.loai == "DAT_TRUOC":
         items = json.loads(req.items or "[]")
         if len(items) != 1:
@@ -195,7 +273,10 @@ def approve_request(
         if book is None:
             raise HTTPException(status_code=404, detail=f"Không tìm thấy sách {ma_sach}.")
         if _available_count(db, book) > 0:
-            raise HTTPException(status_code=400, detail="Sách còn, không cần đặt trước")
+            raise HTTPException(
+                status_code=400, 
+                detail="Thao tác thất bại: Sách này hiện vẫn còn bản vật lý trong thư viện. Độc giả không cần đặt trước mà có thể mượn trực tiếp."
+            )
         active = (
             db.query(DatTruoc)
             .filter(
@@ -244,7 +325,7 @@ def approve_request(
     )
     db.commit()
     db.refresh(req)
-    return _request_out(req)
+    return _request_out(req, ghi_chu=ghi_chu)
 
 
 @router.put("/{ma}/reject", response_model=RequestOut)

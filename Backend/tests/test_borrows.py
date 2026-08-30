@@ -84,7 +84,7 @@ def test_borrow_success_creates_slip_and_decreases_stock(client_and_tokens):
     _make_reader(client, tokens["admin"])
     _make_book(client, admin, "TESTB1", 5)
 
-    response = _borrow(client, admin, "PMTEST1", items=[{"ma_sach": "TESTB1", "so_luong": 2}])
+    response = _borrow(client, admin, "PMTEST1", items=[{"ma_sach": "TESTB1", "so_luong": 1}])
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["trang_thai"] == "dang_muon"
@@ -94,7 +94,7 @@ def test_borrow_success_creates_slip_and_decreases_stock(client_and_tokens):
     ngay_muon = datetime.fromisoformat(data["ngay_muon"])
     han_tra = datetime.fromisoformat(data["han_tra"])
     assert (han_tra - ngay_muon).days == 14
-    assert _book_quantity(client, admin, "TESTB1") == 3
+    assert _book_quantity(client, admin, "TESTB1") == 4
 
     listed = client.get("/api/borrows?docGia=TESTDG1", headers=_headers(admin))
     assert listed.status_code == 200
@@ -116,7 +116,7 @@ def test_borrow_book_out_of_stock_fails(client_and_tokens):
         admin,
         "PMTEST3",
         ma_doc_gia="TESTDG2",
-        items=[{"ma_sach": "TESTB3", "so_luong": 2}],
+        items=[{"ma_sach": "TESTB3", "so_luong": 1}],
     )
     assert not_enough.status_code == 400
 
@@ -168,7 +168,7 @@ def test_return_on_time_restores_stock_and_no_fine(client_and_tokens):
     admin = tokens["librarian"]
     _make_reader(client, tokens["admin"], "TESTDG6")
     _make_book(client, admin, "TESTB7", 4)
-    _borrow(client, admin, "PMTEST8", ma_doc_gia="TESTDG6", items=[{"ma_sach": "TESTB7", "so_luong": 2}])
+    _borrow(client, admin, "PMTEST8", ma_doc_gia="TESTDG6", items=[{"ma_sach": "TESTB7", "so_luong": 1}])
 
     returned = client.put("/api/borrows/PMTEST8/return", headers=_headers(admin))
     assert returned.status_code == 200, returned.text

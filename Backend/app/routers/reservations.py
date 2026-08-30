@@ -17,21 +17,25 @@ RESERVATION_STATUSES = ("CHO_XU_LY", "SAN_SANG", "DA_MUON", "HUY")
 
 
 def _available_count(db: Session, book: Book) -> int:
-    borrowed = (
-        db.query(func.coalesce(func.sum(BorrowDetail.so_luong), 0))
-        .join(BorrowSlip, BorrowSlip.ma_phieu == BorrowDetail.ma_phieu)
-        .filter(
-            BorrowDetail.ma_sach == book.ma,
-            BorrowSlip.trang_thai == "dang_muon",
-            BorrowDetail.ngay_tra_chi_tiet.is_(None),
-        )
-        .scalar()
+    from ..models import BookCopy
+    return (
+        db.query(BookCopy)
+        .filter(BookCopy.book_id == book.ma, BookCopy.status == "Có sẵn")
+        .count()
     )
-    return book.soLuong - (borrowed or 0)
 
 
 def _out(db: Session, res: DatTruoc) -> ReservationOut:
     book = db.get(Book, res.ma_sach)
+    
+    queue_pos = None
+    if res.trang_thai in ["CHO_XU_LY", "CHO_XEP_HANG"]:
+        queue_pos = db.query(DatTruoc).filter(
+            DatTruoc.ma_sach == res.ma_sach,
+            DatTruoc.trang_thai.in_(["CHO_XU_LY", "CHO_XEP_HANG", "SAN_SANG"]),
+            DatTruoc.ngay_dat <= res.ngay_dat
+        ).count()
+        
     return ReservationOut(
         ma_dat=res.ma_dat,
         ma_sach=res.ma_sach,
@@ -39,6 +43,7 @@ def _out(db: Session, res: DatTruoc) -> ReservationOut:
         ma_doc_gia=res.ma_doc_gia,
         ngay_dat=res.ngay_dat,
         trang_thai=res.trang_thai,
+        queue_position=queue_pos,
     )
 
 
@@ -241,7 +246,7 @@ def borrow_from_reservation(
     db: Session = Depends(get_db),
     user=Depends(require_roles("librarian")),
 ) -> ReservationOut:
-    res = db.get(DatTruoc, ma_dat)
+    res = db.get(DatTruoc, ma_dat, with_for_update=True)
     if res is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
     if res.trang_thai != "SAN_SANG":
@@ -249,12 +254,12 @@ def borrow_from_reservation(
             status_code=400,
             detail="Chỉ lập phiếu mượn khi đặt trước ở trạng thái sẵn sàng.",
         )
-    reader = db.get(Reader, res.ma_doc_gia)
+    reader = db.get(Reader, res.ma_doc_gia, with_for_update=True)
     if reader is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy độc giả.")
     if reader.trangThaiThe != "hoat_dong":
         raise HTTPException(status_code=400, detail="Thẻ độc giả đang bị khoá.")
-    book = db.get(Book, res.ma_sach)
+    book = db.get(Book, res.ma_sach, with_for_update=True)
     if book is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy sách.")
     if book.soLuong <= 0:
@@ -262,6 +267,15 @@ def borrow_from_reservation(
     cfg = db.get(LibraryConfig, 1)
     if cfg is None:
         raise HTTPException(status_code=500, detail="Chưa có cấu hình thư viện.")
+
+    from ..models import BookCopy
+    copy = None
+    if res.copy_id:
+        copy = db.query(BookCopy).with_for_update().get(res.copy_id)
+        if copy is None or copy.status != "Đang giữ chỗ":
+            raise HTTPException(status_code=400, detail="Bản vật lý không sẵn sàng hoặc đã bị lỗi trạng thái.")
+    else:
+        raise HTTPException(status_code=400, detail="Phiếu đặt trước không có bản sao vật lý hợp lệ.")
 
     now = datetime.now()
     ma_phieu = "PM" + res.ma_dat[2:]
@@ -285,8 +299,10 @@ def borrow_from_reservation(
             ma_sach=res.ma_sach,
             so_luong=1,
             ngay_tra_chi_tiet=None,
+            copy_id=copy.copy_id,
         )
     )
+    copy.status = "Đang mượn"
     book.soLuong -= 1
     res.trang_thai = "DA_MUON"
     res.ngay_xu_ly = now
@@ -309,7 +325,7 @@ def fulfill_reservation(
     db: Session = Depends(get_db),
     user=Depends(require_roles("librarian")),
 ) -> ReservationOut:
-    res = db.get(DatTruoc, ma_dat)
+    res = db.get(DatTruoc, ma_dat, with_for_update=True)
     if res is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy đặt trước.")
     if res.trang_thai != "CHO_XU_LY":
@@ -317,16 +333,29 @@ def fulfill_reservation(
             status_code=400,
             detail="Chỉ chuyển SAN_SANG từ trạng thái chờ xử lý.",
         )
-    book = db.get(Book, res.ma_sach)
+    book = db.get(Book, res.ma_sach, with_for_update=True)
     if book is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy sách.")
-    if _available_count(db, book) <= 0:
+    
+    from ..models import BookCopy
+    copy = (
+        db.query(BookCopy)
+        .with_for_update()
+        .filter(BookCopy.book_id == book.ma, BookCopy.status == "Có sẵn")
+        .first()
+    )
+    if not copy:
         raise HTTPException(
             status_code=400,
             detail="Chưa có sách để sẵn sàng — chờ độc giả trả sách về.",
         )
+    
+    res.copy_id = copy.copy_id
+    copy.status = "Đang giữ chỗ"
     res.trang_thai = "SAN_SANG"
-    res.ngay_xu_ly = datetime.now()
+    now = datetime.now()
+    res.ngay_xu_ly = now
+    res.han_nhan = now + timedelta(hours=48)
     write_audit_log(
         db,
         user,
@@ -338,3 +367,43 @@ def fulfill_reservation(
     db.commit()
     db.refresh(res)
     return _out(db, res)
+
+
+@router.post("/cleanup-expired")
+def cleanup_expired(db: Session = Depends(get_db)):
+    """
+    Cron job endpoint: Scan and cancel reservations that have expired (passed han_nhan)
+    """
+    now = datetime.now()
+    expired = (
+        db.query(DatTruoc)
+        .filter(DatTruoc.trang_thai == "SAN_SANG", DatTruoc.han_nhan < now)
+        .with_for_update(skip_locked=True)
+        .all()
+    )
+    
+    count = 0
+    from ..models import BookCopy
+    for res in expired:
+        res.trang_thai = "HUY"
+        if res.copy_id:
+            copy = db.get(BookCopy, res.copy_id, with_for_update=True)
+            if copy and copy.status == "Đang giữ chỗ":
+                pending = (
+                    db.query(DatTruoc)
+                    .filter(DatTruoc.ma_sach == res.ma_sach, DatTruoc.trang_thai == "CHO_XU_LY")
+                    .order_by(DatTruoc.ngay_dat.asc(), DatTruoc.ma_dat.asc())
+                    .with_for_update(skip_locked=True)
+                    .first()
+                )
+                if pending:
+                    pending.trang_thai = "SAN_SANG"
+                    pending.copy_id = copy.copy_id
+                    pending.ngay_xu_ly = now
+                    pending.han_nhan = now + timedelta(hours=48)
+                else:
+                    copy.status = "Có sẵn"
+        count += 1
+    
+    db.commit()
+    return {"message": "Success", "cleaned": count}

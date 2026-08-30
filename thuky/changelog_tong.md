@@ -662,3 +662,99 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
 
 [BACKEND] 2026-08-29 13:15:00 - Thay đổi: Quét và dọn dẹp toàn bộ 13 file Python scripts chạy một lần (gồm 8 file chèn sách, file xóa sách, file cập nhật mã Độc giả/Sách, file cào ảnh, và file dọn rác ở frontend) nhằm làm sạch dự án sau khi hoàn tất Migrate Database Sách. Trả lại cấu trúc thư mục gọn gàng, chỉ chứa mã nguồn chính thức.
 - Chức năng đề bài liên quan: Quản lý mã nguồn, Tối ưu cấu trúc dự án.
+
+## 2026-08-29 — Log agent tự báo cáo (Backend + Frontend - UC06: BookCopy & Cấp phát FIFO)
+
+[BACKEND/FRONTEND] 2026-08-29 21:16:52 - Thay đổi: Hoàn thiện tính năng quản lý bản sách vật lý (BookCopy) và cấp phát FIFO cho đặt trước.
+- Backend: Sửa `Backend/app/models.py` (Thêm BookCopy, thêm cột copy_id vào BorrowDetail, DatTruoc, thêm han_nhan vào DatTruoc). Cập nhật Pydantic schemas trong `Backend/app/schemas.py`. Tạo migration script thêm cột (alembic upgrade head). Sửa `requests.py` để duyệt yêu cầu mượn/đặt trước cấp phát copy_id với row-level locking (with_for_update). Sửa `borrows.py` để logic trả sách tự động phân bổ copy_id cho người đặt trước sớm nhất (ngay_dat asc). Bổ sung API `POST /api/admin/reservations/cleanup_expired` ở `reservations.py` để dọn dẹp hàng đợi quá hạn và phân bổ lại copy_id. 
+- Frontend: Cập nhật `Frontend/my-borrows.html` và `Frontend/js/my-borrows.js` thêm cột "Mã bản sách (Copy ID)". Cập nhật `Frontend/reservations.html` và `Frontend/js/reservations.js` thêm cột "Hạn nhận sách".
+- Chức năng đề bài liên quan: 4, 6 (Quản lý mượn/trả, Đặt trước)
+- Ảnh hưởng: Toàn bộ hệ thống quản lý mượn/trả và đặt trước đã sử dụng mã vật lý thay vì chỉ số lượng chung.
+
+## 2026-08-29 - Log Trợ Lý (Kiểm thử & Sửa lỗi theo 9 Mục)
+
+[BACKEND/FRONTEND] 2026-08-29 22:37:43 - Thay đổi: Hoàn thiện và sửa lỗi triệt để theo checklist 9 mục của người dùng.
+- Backend:
+  + (Mục 1, 2, 3, 5): Áp dụng row-level locking (with_for_update) toàn diện cho mọi truy vấn Book, BookCopy, BorrowSlip, và DatTruoc trong luồng mượn/trả sách, giải quyết dứt điểm lỗi Race Condition khi nhiều thủ thư thao tác đồng thời. Kế thừa chính xác copy_id từ phiếu đặt trước sang phiếu mượn.
+  + (Mục 4): Refactor hàm _available_count để đếm trực tiếp số lượng bản sao (BookCopy) ở trạng thái 'Có sẵn' thay vì dùng công thức trừ thủ công, đảm bảo chính xác tuyệt đối.
+  + (Mục 6): Tích hợp cron job endpoint POST /api/reservations/cleanup-expired để tự động dọn dẹp các phiếu đặt trước quá hạn (han_nhan), tự động chuyển bản sao cho người chờ tiếp theo hoặc hoàn trả vào kho.
+- Frontend:
+  + (Mục 7): Sửa lỗi hiển thị UI, thêm trường copyId vào api.js mapper và fix lỗi render copyIdsText trong my-borrows.js.
+  + (Mục 8): Sửa lỗi hiển thị hạn nhận, thêm trường hanNhan vào mapper và fix biến r.hanNhan trong reservations.js.
+- Chức năng đề bài liên quan: 4, 6 (Quản lý mượn/trả, Đặt trước).
+
+## 2026-08-29 - Log Trợ Lý (Tiếp tục hoàn thiện UI và Test)
+
+[BACKEND/FRONTEND] 2026-08-29 23:27:14 - Thay đổi: Hoàn thiện nốt 2 đề xuất của hệ thống sau khi dọn dẹp file.
+- Frontend: Bổ sung mã bản sao vật lý (`copyId`) vào giao diện Quản lý mượn/trả sách của Thủ thư (`borrow.js`). Mã vật lý được đính kèm vào cột "Chi tiết" để Thủ thư quản lý chính xác từng cuốn sách cụ thể khi xuất/nhập kho.
+- Backend: Sửa lỗi cascade delete trong Test Suite (`conftest.py`). Cập nhật logic `_cleanup_test_data()` để ưu tiên xóa các bảng phụ thuộc (`Users`, `YeuCau`) trước khi xóa bảng `Readers`, giúp khắc phục lỗi khóa ngoại `fk_users_reader`, đảm bảo bộ test `test_reservations.py` chạy thành công 100%.
+
+## 2026-08-30 - Log Trợ Lý (Dọn dẹp và Báo cáo Minh chứng KTR2)
+
+[HỆ THỐNG] 2026-08-30 01:09:04 - Thay đổi:
+- Xóa thành công 24 file script, text, và log dư thừa khỏi thư mục gốc và thư mục `Backend/`, giúp mã nguồn sạch tuyệt đối.
+- Gộp thành công nội dung của 2 file `6_quan_ly_book_copy_va_hang_doi.md` và `6_xu_ly_dong_thoi_va_cronjob.md` vào lần lượt các file `2_phan_hoi_ai_code.md` (Mục 5) và `4_code_chinh_sua.md` (Mục 6), đảm bảo cấu trúc minh chứng 4 phần cực kỳ chuẩn xác theo barem KTR2.
+- Kiểm tra thư mục `Backend/alembic/versions/` xác nhận 100% sạch sẽ, chỉ chứa đúng 22 file lịch sử database hợp lệ, không có file mồ côi.
+
+[FRONTEND] 2026-08-30 01:15:42 - Thay đổi (Yêu cầu thêm): Bổ sung tính năng Mượn sách nhanh.
+- Thêm nút "Mượn sách" trực tiếp tại giao diện Tra cứu sách (`search.js`) dành cho người dùng (`Reader`).
+- Nếu sách khả dụng (Còn sách), nút "Mượn sách" màu xanh sẽ hiển thị bên cạnh trạng thái. Nhấn nút này sẽ tự động sinh mã Yêu cầu và gửi payload `createRequest` lên Backend để tạo Yêu cầu mượn sách.
+
+[FRONTEND] 2026-08-30 01:42:10 - Thay đổi UI (Theo yêu cầu người dùng): Tinh chỉnh giao diện nút Mượn sách và nhãn trạng thái.
+- Đổi màu nhãn "Còn sách" thành dạng khung mác (badge) màu xám nhạt (bg: #f3f4f6), viền cong nhẹ, chữ xám đậm.
+- Đổi nút "Mượn sách" sang màu xanh dương (class `btn-primary btn-sm`) để đồng bộ hoàn toàn với ngôn ngữ thiết kế chung của toàn bộ trang web (tone-sur-tone với nút Đặt trước).
+
+[BACKEND] 2026-08-30 01:48:08 - Sửa lỗi (Bug fix): Thiếu Mã bản vật lý (Copy ID) trong kết quả trả về của Phiếu mượn.
+- Sửa hàm `_slip_out` trong `borrows.py` để bổ sung trường `copy_id=detail.copy_id` vào `BorrowDetailOut`. Trước đó hệ thống ánh xạ thiếu trường này dẫn đến Frontend bị ẩn Mã vật lý của sách.
+
+[BACKEND] 2026-08-30 01:53:34 - Thay đổi Kiến trúc (Theo yêu cầu người dùng): Tách biệt Mã bản vật lý khỏi Mã sách.
+- Định dạng cũ: Mã vật lý bị phụ thuộc vào Mã sách (Ví dụ: `BTHPC0001-0`, `BTHPC0001-1`).
+- Định dạng mới: Sử dụng mã ngẫu nhiên độc lập 12 ký tự (Ví dụ: `CPY-A1B2C3D4`) sinh ra từ UUID để đại diện cho từng bản in vật lý độc lập.
+- Script xử lý (`migrate_copies.py`) đã tự động chuyển đổi an toàn 320 bản ghi sách vật lý hiện tại trong DB sang chuẩn mới và cập nhật toàn bộ các khoá ngoại ở bảng `BorrowDetails` và `DatTruoc` để không gây gãy liên kết.
+- Sửa hàm `create_book` và `update_book` trong `books.py` để từ nay hệ thống luôn tự động cấp phát ID hoàn toàn ngẫu nhiên khi số lượng sách tăng.
+
+[BACKEND] 2026-08-30 02:01:11 - Thay đổi Kiến trúc (Theo yêu cầu người dùng): Cập nhật lại chuẩn sinh Mã bản vật lý (Copy ID).
+- Định dạng mới: `{Mã Thể Loại}-{Mã Sách}-{Số thứ tự duy nhất}`.
+- Ví dụ: `TL_CNTT-BCA0004-1`, `TL_CNTT-BCA0004-2`.
+- Hệ thống đã tự động gia tăng kích thước cột `copy_id` từ 20 lên 50 ký tự trong cơ sở dữ liệu (`BookCopies`, `BorrowDetails`, `DatTruoc`) bằng script raw SQL để tránh giới hạn độ dài.
+- Script migrate v2 (`migrate_copies_v2.py`) đã chuyển đổi thành công toàn bộ 320 bản ghi sách vật lý hiện tại trong DB sang chuẩn Mã thể loại này một cách an toàn mà không làm hỏng khóa ngoại.
+- Đã sửa code tự sinh mã trong `create_book` và `update_book` của `books.py` theo đúng chuẩn trên.
+
+[BACKEND] 2026-08-30 02:04:55 - Thay đổi Kiến trúc (Theo yêu cầu người dùng): Tách biệt hoàn toàn Mã số logic của sách khỏi Mã bản vật lý (Copy ID).
+- Định dạng mới nhất: `{Mã Thể Loại}-{Mã Ngẫu Nhiên 6 Ký Tự}-{Số thứ tự duy nhất}`.
+- Ví dụ: `TL_CNTT-A8B9C0-1`, `TL_KT-1234F6-2`.
+- Hệ thống không còn sử dụng Mã sách logic (như `BCA0004` hay `7TQHQ0003`) trong Copy ID để tránh rò rỉ mã quản lý và đảm bảo mỗi cuốn vật lý có một chuỗi ID Random duy nhất không trùng lặp, chia sẻ chung ID Random cho các cuốn cùng loại nhưng khác đuôi số thứ tự.
+- Script migrate v3 (`migrate_copies_v3.py`) đã chuyển đổi thành công toàn bộ 320 bản ghi sách vật lý hiện tại trong DB sang chuẩn mới này.
+- Đã sửa code tự sinh mã trong `create_book` và `update_book` của `books.py` theo đúng chuẩn trên.
+
+[BACKEND] 2026-08-30 02:07:46 - Tinh chỉnh Mã bản vật lý (Copy ID).
+- Lược bỏ tiền tố `TL_` ở phần Mã Thể loại để làm mã ngắn gọn và đẹp mắt hơn (Ví dụ: từ `TL_CNTT-A8B9C0-1` thành `CNTT-A8B9C0-1`).
+- Script `migrate_copies_v4.py` đã dọn dẹp và chuẩn hoá toàn bộ 320 mã sách trên Database theo chuẩn mới này, đồng thời cập nhật an toàn các liên kết.
+- Hàm sinh mã tự động trong `books.py` đã được cập nhật để loại bỏ tự động `TL_` khi cấp mã mới.
+
+[BACKEND] 2026-08-30 02:18:08 - Hỗ trợ mượn nhiều bản sao của cùng một tựa sách:
+- Cập nhật cấu hình hệ thống (`LibraryConfig`): Tổng số sách tối đa 1 lần mượn = 3, số ngày = 14 (chuẩn thư viện thực tế).
+- Đã gỡ bỏ luật "Chỉ được mượn tối đa 1 bản cho mỗi tựa sách" trong mã nguồn.
+- Sửa đổi cấu trúc CSDL `BorrowDetails` (đổi Khóa chính PK thành `Mã Phiếu + Copy ID`).
+- Cập nhật Logic cấp phát sách: Nếu độc giả mượn 3 quyển cùng mã, hệ thống sẽ tự động quét kho lấy ra 3 bản vật lý khác nhau (3 `copy_id` riêng rẽ), và gắn vào 3 dòng Phiếu mượn chi tiết riêng biệt. Đảm bảo theo dõi được lịch sử và hạn trả của từng cuốn sách độc lập.
+
+## 2026-08-30 — Log Trợ Lý (Hoàn thiện UX, Hàng đợi Đặt trước và Đồng bộ CSDL)
+
+[FRONTEND] 2026-08-30 14:15:43 - Thay đổi: 
+1. Ẩn input nhập "Mã yêu cầu" (được sinh tự động) ở phía Độc giả trên trang Tạo yêu cầu (requests.html).
+2. Sửa ô nhập Số ngày mượn từ thẻ input text sang dropdown (thẻ select) giới hạn 1-14 ngày.
+3. Cập nhật placeholder tìm kiếm từ "Nhập từ khóa..." thành "Nhập mã sách, tên sách, tác giả..." trong search.html.
+4. Bổ sung thông báo cảnh báo về dung lượng (<2MB) và định dạng ảnh (JPG/PNG) tại trang hồ sơ (profile.html).
+5. Xử lý hiển thị "Vị trí hàng đợi" khi độc giả Đặt trước sách (search.js) và trong danh sách quản lý mượn (reservations.js).
+6. Sửa lỗi hiển thị "—" thay vì "0" khi sách hết hàng (search.js).
+
+[BACKEND] 2026-08-30 14:15:43 - Thay đổi:
+1. Bổ sung tính toán `queue_position` vào schema `ReservationOut` (schemas.py) và logic trả về vị trí hàng đợi dựa trên thời gian đặt trước trong `_out` (reservations.py).
+2. Dọn dẹp và đồng bộ Database: Fix lỗi sai lệch dữ liệu "Số lượng" (Books) và số bản vật lý thực tế "Có sẵn" (BookCopies) do hậu quả của dữ liệu test cũ. Xóa sạch 5 cuốn sách "mồ côi" (không thuộc 8 danh mục gốc) cùng với các bản copy, lịch sử mượn và đặt trước liên quan để đảm bảo Database đồng nhất 100%.
+
+- Chức năng đề bài liên quan: Trải nghiệm người dùng (UX), Quản lý hàng đợi Đặt trước, Chuẩn hóa Cơ sở dữ liệu (Minh chứng nâng cao).
+
+- **UX/Logic Fixes (Librarian Request Flow):**
+  - �� fix l?i HTTP 500 do xung d?t m�i gi? khi qu�t phi?u qu� h?n.
+  - �� fix l?i HTTP 500 do g?i sai thu?c t�nh (slip.chi_tiet) khi hi?n th? copy_id cho th? thu l�c duy?t don.
+  - **[B?o m?t Logic]:** S?a l? h?ng vu?t qu� gi?i h?n mu?n s�ch. B? sung h�m c?ng d?n s? s�ch dang mu?n (dang_muon) v� s? s�ch ch? duy?t (CHO_XU_LY) ? c? 2 ch?t ch?n: Sinh vi�n t?o don v� Th? thu duy?t don.

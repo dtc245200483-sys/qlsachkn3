@@ -52,7 +52,7 @@
       var emptyRow = document.createElement("tr");
       var emptyCell = document.createElement("td");
       emptyCell.className = "empty-row";
-      emptyCell.colSpan = 8;
+      emptyCell.colSpan = 9;
       emptyCell.textContent = "Chưa có phiếu mượn nào.";
       emptyRow.appendChild(emptyCell);
       tbody.appendChild(emptyRow);
@@ -85,9 +85,17 @@
       .filter(Boolean)
       .join("; ");
 
+    var copyIdsText = (slip.details || [])
+      .map(function(d) {
+        var detail = API.mapResponse("borrowDetailOut", d);
+        return (detail && detail.copyId) ? detail.copyId : "—";
+      })
+      .join(", ");
+
     var status = slip.trangThai === "dang_muon" ? "Đang mượn" : "Đã trả";
     var values = [
       slip.maPhieu,
+      copyIdsText,
       detailsText,
       slip.ngayMuon ? new Date(slip.ngayMuon).toLocaleString("vi-VN") : "—",
       slip.hanTra ? new Date(slip.hanTra).toLocaleString("vi-VN") : "—",

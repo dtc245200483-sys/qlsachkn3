@@ -136,7 +136,8 @@ window.API = (function () {
         maSach: "ma_sach",
         tenSach: "ten_sach",
         soLuong: "so_luong",
-        ngayTraChiTiet: "ngay_tra_chi_tiet"
+        ngayTraChiTiet: "ngay_tra_chi_tiet",
+        copyId: "copy_id"
       },
       borrowReturnOut: {
         message: "message",
@@ -192,7 +193,9 @@ window.API = (function () {
         items: "items",
         soNgayMuon: "so_ngay_muon",
         trangThai: "trang_thai",
-        ngayTao: "ngay_tao"
+        ngayTao: "ngay_tao",
+        canhBao: "canh_bao",
+        ghiChu: "ghi_chu"
       },
       accountCreate: {
         username: "username",
@@ -252,7 +255,9 @@ window.API = (function () {
         tenSach: "ten_sach",
         maDocGia: "ma_doc_gia",
         ngayDat: "ngay_dat",
-        trangThai: "trang_thai"
+        trangThai: "trang_thai",
+        hanNhan: "han_nhan",
+        copyId: "copy_id"
       },
       statsBookOut: {
         maSach: "ma_sach",

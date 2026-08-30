@@ -74,6 +74,27 @@ class Book(Base):
     )
 
 
+class BookCopy(Base):
+    __tablename__ = "BookCopies"
+
+    copy_id: Mapped[str] = mapped_column(Unicode(50), primary_key=True)
+    book_id: Mapped[str] = mapped_column(
+        Unicode(20),
+        ForeignKey("Books.ma"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(Unicode(50), nullable=False, default="Có sẵn")
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('Có sẵn', 'Đang mượn', 'Đang giữ chỗ', 'Hỏng', 'Mất')",
+            name="ck_book_copies_status",
+        ),
+        Index("ix_book_copies_book_id", "book_id"),
+        Index("ix_book_copies_book_id_status", "book_id", "status"),
+    )
+
+
 class LibraryConfig(Base):
     __tablename__ = "LibraryConfig"
 
@@ -185,9 +206,14 @@ class BorrowDetail(Base):
     __tablename__ = "BorrowDetails"
 
     ma_phieu: Mapped[str] = mapped_column(Unicode(20), primary_key=True)
-    ma_sach: Mapped[str] = mapped_column(Unicode(20), primary_key=True)
+    ma_sach: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     so_luong: Mapped[int] = mapped_column(Integer, nullable=False)
     ngay_tra_chi_tiet: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    copy_id: Mapped[str] = mapped_column(
+        Unicode(50),
+        ForeignKey("BookCopies.copy_id"),
+        primary_key=True,
+    )
 
     __table_args__ = (
         CheckConstraint("so_luong > 0", name="ck_borrow_details_so_luong"),
@@ -293,6 +319,12 @@ class DatTruoc(Base):
     ngay_dat: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     trang_thai: Mapped[str] = mapped_column(Unicode(20), nullable=False)
     ngay_xu_ly: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    copy_id: Mapped[str | None] = mapped_column(
+        Unicode(50),
+        ForeignKey("BookCopies.copy_id"),
+        nullable=True,
+    )
+    han_nhan: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     __table_args__ = (
         CheckConstraint(

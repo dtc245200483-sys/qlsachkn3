@@ -429,7 +429,7 @@
       var values = [
         itemsText || "—",
         LOAI_LABEL(req.loai),
-        req.maDocGia,
+        req.maDocGia + (req.canhBao ? ' <span class="badge badge-warning" title="' + req.canhBao + '">⚠️</span>' : ''),
         req.maPhieu || "—",
         (req.items || []).map(function (i) { return i.ma_sach; }).join(", ") || "—",
         req.soNgayMuon || "—",
@@ -438,7 +438,9 @@
       ];
       values.forEach(function (v, index) {
         var td = document.createElement("td");
-        if (index === 7) {
+        if (index === 2) {
+          td.innerHTML = v;
+        } else if (index === 7) {
           var actions = document.createElement("div");
           actions.className = "row-actions";
           var approve = document.createElement("button");
@@ -490,10 +492,11 @@
           showMessage(res.message);
           return;
         }
-        showMessage(
-          action === "approve" ? "Đã duyệt yêu cầu " + req.maYeuCau + "." : "Đã từ chối yêu cầu " + req.maYeuCau + ".",
-          "alert-success"
-        );
+        var successMsg = action === "approve" ? "Đã duyệt yêu cầu " + req.maYeuCau + "." : "Đã từ chối yêu cầu " + req.maYeuCau + ".";
+        if (action === "approve" && res.data && res.data.ghi_chu) {
+          successMsg = "Duyệt thành công! Vui lòng giao cuốn sách mã: " + res.data.ghi_chu;
+        }
+        showMessage(successMsg, "alert-success");
         loadPending();
       })
       .catch(function () {

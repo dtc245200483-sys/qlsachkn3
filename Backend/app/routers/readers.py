@@ -8,6 +8,7 @@ from ..deps import require_roles
 from ..models import Reader, User, BorrowSlip, FineHistory, YeuCau, DatTruoc
 from ..schemas import LockReaderRequest, ReaderCreate, ReaderOut, ReaderUpdate
 from ..validation import ensure_email_unique, validate_email, validate_ho_ten, validate_phone
+import re
 
 router = APIRouter(prefix="/api/readers", tags=["readers"])
 

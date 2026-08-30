@@ -252,7 +252,7 @@
     props.forEach(function(p) {
         var span = document.createElement("span");
         span.className = "book-detail-item";
-        span.innerHTML = "<strong>" + p.label + "</strong> " + (p.value || "—");
+        span.innerHTML = "<strong>" + p.label + "</strong> " + (p.value !== null && p.value !== undefined && p.value !== "" ? p.value : "—");
         details.appendChild(span);
     });
     
@@ -265,8 +265,17 @@
     
     var statusSpan = document.createElement("span");
     statusSpan.style.marginLeft = "auto";
-    statusSpan.style.fontWeight = "bold";
-    statusSpan.style.color = available ? "#10b981" : "#ef4444";
+    if (available) {
+      statusSpan.style.padding = "4px 10px";
+      statusSpan.style.backgroundColor = "#f3f4f6"; // light gray
+      statusSpan.style.color = "#4b5563";
+      statusSpan.style.borderRadius = "4px";
+      statusSpan.style.fontSize = "13px";
+      statusSpan.style.fontWeight = "600";
+    } else {
+      statusSpan.style.fontWeight = "bold";
+      statusSpan.style.color = "#ef4444";
+    }
     statusSpan.textContent = statusText;
     
     var actions = document.createElement("div");
@@ -274,26 +283,64 @@
     actions.appendChild(statusSpan);
 
     var user = Auth.currentUser();
-    if (user && user.role === "reader" && !available) {
-      var reserveBtn = document.createElement("button");
-      reserveBtn.className = "btn btn-primary btn-sm";
-      reserveBtn.style.marginLeft = "10px";
-      reserveBtn.textContent = "Đặt trước";
-      reserveBtn.onclick = function() {
-        reserveBtn.disabled = true;
-        reserveBtn.textContent = "Đã gửi...";
-        API.call("createReservation", { ma_sach: book.ma }, "POST").then(function (res) {
-          if (!res.ok) {
-            reserveBtn.disabled = false;
-            reserveBtn.textContent = "Đặt trước";
-            showMessage(res.message);
-            return;
-          }
-          reserveBtn.textContent = "Đã đặt trước";
-          showMessage("Đã gửi yêu cầu đặt trước sách " + book.ten + ".", "alert-success");
-        });
-      };
-      actions.appendChild(reserveBtn);
+    if (user && user.role === "reader") {
+      if (!available) {
+        var reserveBtn = document.createElement("button");
+        reserveBtn.className = "btn btn-primary btn-sm";
+        reserveBtn.style.marginLeft = "10px";
+        reserveBtn.textContent = "Đặt trước";
+        reserveBtn.onclick = function() {
+          reserveBtn.disabled = true;
+          reserveBtn.textContent = "Đã gửi...";
+          API.call("createReservation", { ma_sach: book.ma }, "POST").then(function (res) {
+            if (!res.ok) {
+              reserveBtn.disabled = false;
+              reserveBtn.textContent = "Đặt trước";
+              showMessage(res.message);
+              return;
+            }
+            reserveBtn.textContent = "Đã đặt trước";
+            var pos = res.data.queue_position ? " Bạn đang ở vị trí thứ " + res.data.queue_position + " trong hàng đợi." : "";
+            showMessage("Đã gửi yêu cầu đặt trước sách " + book.ten + "." + pos, "alert-success");
+          });
+        };
+        actions.appendChild(reserveBtn);
+      } else {
+        var borrowBtn = document.createElement("button");
+        borrowBtn.className = "btn btn-primary btn-sm";
+        borrowBtn.style.marginLeft = "10px";
+        borrowBtn.textContent = "Mượn sách";
+        borrowBtn.onclick = function() {
+          borrowBtn.disabled = true;
+          borrowBtn.textContent = "Đang gửi...";
+          
+          var d = new Date();
+          var y = d.getFullYear();
+          var m = String(d.getMonth() + 1).padStart(2, "0");
+          var a = String(d.getDate()).padStart(2, "0");
+          var r = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+          var reqMa = "YC" + y + m + a + r;
+          
+          var payload = {
+            ma_yeu_cau: reqMa,
+            loai: "MUON",
+            items: [{ ma_sach: book.ma, so_luong: 1 }],
+            so_ngay_muon: 14
+          };
+          
+          API.call("createRequest", payload, "POST").then(function (res) {
+            if (!res.ok) {
+              borrowBtn.disabled = false;
+              borrowBtn.textContent = "Mượn sách";
+              showMessage(res.message);
+              return;
+            }
+            borrowBtn.textContent = "Đã gửi Y/C";
+            showMessage("Đã gửi yêu cầu mượn sách " + book.ten + " thành công.", "alert-success");
+          });
+        };
+        actions.appendChild(borrowBtn);
+      }
     }
     item.appendChild(actions);
     
