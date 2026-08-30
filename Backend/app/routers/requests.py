@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..audit import write_audit_log
 from ..database import get_db
 from ..deps import require_roles
-from ..models import Book, BorrowSlip, DatTruoc, LibraryConfig, Reader, YeuCau
+from ..models import Book, BorrowSlip, DatTruoc, LibraryConfig, Reader, YeuCau, BorrowDetail, FineHistory
 from ..schemas import BorrowItemCreate, RequestApprove, RequestCreate, RequestOut
 from .borrows import _perform_create_borrow, _perform_renew_borrow, _perform_return_borrow
 from .reservations import _available_count, _generate_ma_dat
@@ -114,7 +114,6 @@ def create_request(
         total_books = sum(item.so_luong for item in effective_items)
         
         from sqlalchemy.sql import func
-        from ..models import BorrowSlip, BorrowDetail
         
         current_borrowed_count = db.query(func.sum(BorrowDetail.so_luong)).join(
             BorrowSlip, BorrowSlip.ma_phieu == BorrowDetail.ma_phieu
@@ -191,7 +190,6 @@ def list_requests(
         query = query.filter(YeuCau.trang_thai == trangThai)
     results = query.order_by(YeuCau.ngay_tao.desc()).all()
     if user.role in ("librarian", "admin"):
-        from ..models import FineHistory, BorrowSlip
         from datetime import datetime
         
         now = datetime.now()
@@ -258,7 +256,6 @@ def approve_request(
         )
         req.ma_phieu = slip.ma_phieu
         
-        from ..models import BorrowDetail
         details = db.query(BorrowDetail).filter(BorrowDetail.ma_phieu == slip.ma_phieu).all()
         ghi_chu = ", ".join([d.copy_id for d in details if getattr(d, 'copy_id', None)])
     elif req.loai == "DAT_TRUOC":

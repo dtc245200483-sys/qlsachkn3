@@ -67,7 +67,7 @@ def _cleanup_test_data() -> None:
         )
         db.execute(
             text(
-                "DELETE FROM BorrowDetails WHERE ma_phieu LIKE 'PMTEST%' OR ma_phieu LIKE 'PMYC%' OR ma_phieu LIKE 'PMHIST%' OR ma_phieu LIKE 'PMRSV%' OR ma_phieu LIKE 'PMNTF%' OR ma_phieu LIKE 'PMSTT%' OR ma_phieu LIKE 'PMEXP%' OR ma_phieu LIKE 'PMFINE%' OR ma_phieu LIKE 'TEST%'"
+                "DELETE FROM BorrowDetails WHERE copy_id LIKE 'TEST%' OR copy_id IN (SELECT copy_id FROM BookCopies WHERE book_id LIKE 'TEST%') OR ma_phieu LIKE 'PMTEST%' OR ma_phieu LIKE 'PMYC%' OR ma_phieu LIKE 'PMHIST%' OR ma_phieu LIKE 'PMRSV%' OR ma_phieu LIKE 'PMNTF%' OR ma_phieu LIKE 'PMSTT%' OR ma_phieu LIKE 'PMEXP%' OR ma_phieu LIKE 'PMFINE%' OR ma_phieu LIKE 'TEST%'"
             )
         )
         db.execute(

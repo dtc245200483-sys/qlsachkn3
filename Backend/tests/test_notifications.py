@@ -83,9 +83,14 @@ def _set_reservation_status(ma_dat: str, trang_thai: str) -> None:
 def _set_book_stock(book_ma: str, so_luong: int) -> None:
     db = SessionLocal()
     try:
+        from app.models import BookCopy
         book = db.get(Book, book_ma)
         assert book is not None
         book.soLuong = so_luong
+        
+        existing_copies = db.query(BookCopy).filter(BookCopy.book_id == book_ma).count()
+        for i in range(existing_copies, so_luong):
+            db.add(BookCopy(copy_id=f"{book_ma}-COPY-{i}", book_id=book_ma, status="Có sẵn"))
         db.commit()
     finally:
         db.close()
@@ -231,7 +236,7 @@ def test_borrowed_reservation_notification(client_and_tokens):
         headers=_headers(reader["token"]),
     ).json()
     _set_book_stock("TESTNTF9", 2)
-    _set_reservation_status(reservation["ma_dat"], "SAN_SANG")
+    client.put(f"/api/reservations/{reservation['ma_dat']}/fulfill", headers=_headers(staff))
     borrowed = client.put(
         f"/api/reservations/{reservation['ma_dat']}/borrow",
         headers=_headers(staff),

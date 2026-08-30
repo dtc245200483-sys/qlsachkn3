@@ -72,11 +72,9 @@ def _set_book_stock(book_ma: str, so_luong: int) -> None:
         book = db.get(Book, book_ma)
         assert book is not None
         book.soLuong = so_luong
-        
-        # Add book copies if necessary
         existing_copies = db.query(BookCopy).filter(BookCopy.book_id == book_ma).count()
         for i in range(existing_copies, so_luong):
-            db.add(BookCopy(copy_id=f"{book_ma}-{i}", book_id=book_ma, status="Có sẵn"))
+            db.add(BookCopy(copy_id=f"{book_ma}-COPY-{i}", book_id=book_ma, status="Có sẵn"))
         db.commit()
     finally:
         db.close()
@@ -407,7 +405,7 @@ def test_approve_dat_truoc_when_book_available_fails(client_and_tokens):
     )
     approved = client.put("/api/requests/YCRDT5/approve", headers=_headers(staff))
     assert approved.status_code == 400
-    assert "Sách còn" in approved.json()["detail"]
+    assert "Sách này hiện vẫn còn" in approved.json()["detail"]
 
     listed = client.get("/api/requests", headers=_headers(reader["token"])).json()
     assert any(r["ma_yeu_cau"] == "YCRDT5" and r["trang_thai"] == "CHO_XU_LY" for r in listed)

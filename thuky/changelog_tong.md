@@ -678,3 +678,12 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
   - Đã rà soát chức năng toàn diện cho cả 3 vai trò (Sinh viên, Thủ thư, Quản trị viên) trên tất cả nền tảng Frontend và Backend API. Đảm bảo luồng đi mượt mà, không lỗi hệ thống.
   - Đã dọn dẹp toàn bộ file rác, file nháp (.py giả lập, file CSDL giả) khỏi thư mục dự án để làm sạch môi trường.
   - Bản phát hành cuối cùng đã được lưu trữ (commit) và push hoàn thiện lên kho GitHub.
+
+## 28. CẬP NHẬT 2026-08-31 — Hoàn thiện Kiểm thử Unit Test (KTR2)
+
+- Backend: Sửa lỗi logic xóa sách (xóa BookCopies trước khi xóa Book) tránh lỗi IntegrityError.
+- Backend: Sửa test _set_book_stock đổi từ xóa sạch sang thêm mới BookCopies để không làm đứt gãy tham chiếu BorrowDetails trong các bài test khác.
+- Backend: Sửa lỗi UnboundLocalError trong 
+equests.py do import BorrowSlip trùng lặp trong nội bộ hàm.
+- Backend: Sửa logic trong endpoint kiểm tra thông báo đặt trước, đổi cách giả lập sang gọi API thật để tự động gắn copy_id.
+- Kết quả: Toàn bộ 111/111 unit tests PASS hoàn toàn. Hệ thống đáp ứng mọi yêu cầu vẹn toàn dữ liệu và luồng nghiệp vụ.

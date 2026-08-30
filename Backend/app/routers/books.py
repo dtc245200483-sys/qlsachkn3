@@ -232,6 +232,14 @@ def delete_book(
         entity_id=ma,
         details=f"ten={book.ten}",
     )
-    db.delete(book)
-    db.commit()
+    from app.models import BookCopy
+    from sqlalchemy.exc import IntegrityError
+    
+    try:
+        db.query(BookCopy).filter(BookCopy.book_id == book.ma).delete()
+        db.delete(book)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Không thể xóa sách vì đang có phiếu mượn, phạt hoặc đặt trước liên quan.")
     return {"message": "Đã xoá sách."}

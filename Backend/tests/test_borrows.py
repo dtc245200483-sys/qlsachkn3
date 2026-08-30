@@ -116,7 +116,7 @@ def test_borrow_book_out_of_stock_fails(client_and_tokens):
         admin,
         "PMTEST3",
         ma_doc_gia="TESTDG2",
-        items=[{"ma_sach": "TESTB3", "so_luong": 1}],
+        items=[{"ma_sach": "TESTB3", "so_luong": 2}],
     )
     assert not_enough.status_code == 400
 
