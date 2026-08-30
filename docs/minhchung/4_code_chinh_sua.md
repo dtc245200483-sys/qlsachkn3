@@ -180,3 +180,6 @@ Má»™t API má»›i Ä‘Ã£ Ä‘Æ°á»£c tÃ­ch há»£p: `POST /api/reservations/cleanup-expir
 - S?a l?i 500 khi quét tr?ng thái ph?t (d?ng b? múi gi? Python).
 - S?a l?i 500 khi xu?t mã copy_id cho th? thu do g?i sai relationship SQLAlchemy.
 - C?p nh?t logic max_books_at_once: Tru?c dây ch? check s? lu?ng trong 1 transaction. Nay dã c?ng d?n s? lu?ng sách ÐANG MU?N + CH? DUY?T d? ch?n t? vòng g?i don (frontend sinh viên) và vòng duy?t (backend th? thu).
+
+- Tinh ch?nh thông báo l?i gi?i h?n mu?n sách ng?n g?n hon.
+- Hoàn t?t luu tr? lên GitHub (commit: Fix UI/UX for librarian, add borrow limits, and resolve HTTP 500 bugs).

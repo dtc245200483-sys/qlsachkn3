@@ -758,3 +758,5 @@ Chi ti·∫øt: notifications.js b·ªè window.confirm; b·∫•m Xo√° ‚Üí window.Notif.re
   - –„ fix l?i HTTP 500 do xung d?t m˙i gi? khi quÈt phi?u qu· h?n.
   - –„ fix l?i HTTP 500 do g?i sai thu?c tÌnh (slip.chi_tiet) khi hi?n th? copy_id cho th? thu l˙c duy?t don.
   - **[B?o m?t Logic]:** S?a l? h?ng vu?t qu· gi?i h?n mu?n s·ch. B? sung h‡m c?ng d?n s? s·ch dang mu?n (dang_muon) v‡ s? s·ch ch? duy?t (CHO_XU_LY) ? c? 2 ch?t ch?n: Sinh viÍn t?o don v‡ Th? thu duy?t don.
+
+- **[C?p nh?t cu?i ng‡y 30/08/2026]**: –„ d?y (push) to‡n b? m„ ngu?n lÍn nh·nh master c?a repository dtc245200483-sys/quanlythuvien. Tinh ch?nh l?i text b·o l?i cho ng?n g?n theo yÍu c?u ('B?n d„ mu?n qu· gi?i h?n...').
