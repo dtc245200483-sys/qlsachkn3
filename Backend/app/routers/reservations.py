@@ -29,7 +29,7 @@ def _out(db: Session, res: DatTruoc) -> ReservationOut:
     book = db.get(Book, res.ma_sach)
     
     queue_pos = None
-    if res.trang_thai in ["CHO_XU_LY", "CHO_XEP_HANG"]:
+    if res.trang_thai in ["CHO_XU_LY", "CHO_XEP_HANG", "SAN_SANG"]:
         queue_pos = db.query(DatTruoc).filter(
             DatTruoc.ma_sach == res.ma_sach,
             DatTruoc.trang_thai.in_(["CHO_XU_LY", "CHO_XEP_HANG", "SAN_SANG"]),

@@ -257,7 +257,8 @@ window.API = (function () {
         ngayDat: "ngay_dat",
         trangThai: "trang_thai",
         hanNhan: "han_nhan",
-        copyId: "copy_id"
+        copyId: "copy_id",
+        queue_position: "queue_position"
       },
       statsBookOut: {
         maSach: "ma_sach",

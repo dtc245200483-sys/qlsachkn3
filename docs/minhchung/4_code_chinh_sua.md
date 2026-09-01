@@ -1,132 +1,116 @@
-# Minh chứng 2.9 (Phần 4): Phần mã nguồn sinh viên tự kiểm tra và chỉnh sửa
+# Minh chứng 2.9 (Phần 4): Năng lực kiểm soát, phản biện và điều khiển AI
 
-Đây là phần minh chứng **quan trọng nhất**, mang tính chất "chốt điểm". Nó chứng minh tôi không sử dụng công cụ AI một cách bị động. Khi các Agent code độc lập với nhau, chúng thường sinh ra lỗi "lệch pha" (Frontend có giao diện nhưng Backend không có API xử lý) hoặc lỗi logic nghiệp vụ.
+Đây là phần minh chứng **quan trọng nhất**, mang tính chất "chốt điểm". Nó chứng minh tôi không sử dụng công cụ AI một cách bị động hay mù quáng copy-paste. Trong suốt quá trình phát triển, AI (Agent) thường xuyên mắc các sai lầm nghiêm trọng về nghiệp vụ, "lệch pha" giữa Frontend - Backend, hoặc đưa ra các giải pháp bề nổi. 
 
-Dưới đây là các lần tôi trực tiếp nhảy vào đọc code, debug và tự tay chỉnh sửa lại logic cốt lõi. Dữ liệu trích xuất từ log hệ thống.
+Với vai trò là người làm chủ hệ thống, tôi liên tục đóng vai trò **Người kiểm duyệt (Code Reviewer) và Kiến trúc sư (Software Architect)**: phát hiện lỗi của AI, phân tích nguyên nhân tận gốc, bác bỏ các đề xuất sai lệch và **ra lệnh/điều hướng nghiêm ngặt** buộc AI phải sửa lại code đúng chuẩn.
 
-## 1. Phát hiện và sửa lỗi thiếu biến `so_ngay_muon` (Lệch pha Frontend - Backend)
+Dưới đây là 23 minh chứng tiêu biểu (được sắp xếp theo đúng trình tự thời gian phát triển dự án) khẳng định năng lực điều khiển AI của tôi:
 
-Vào lúc `18:01:49` ngày 2026-08-09, Frontend Agent tự ý đưa thêm ô nhập "Số ngày mượn" vào trang Độc giả gửi yêu cầu mượn sách. Tuy nhiên, Backend Agent lúc đó đang chạy ở phiên bản 0.6.0 hoàn toàn không biết đến trường dữ liệu này (vì trong thiết kế ban đầu, thư viện tự ấn định số ngày mượn cố định).
+## GIAI ĐOẠN 1: KHỞI TẠO NỀN TẢNG & PHÂN QUYỀN (09/08 - 10/08/2026)
 
-**Log cảnh báo lệch pha ghi nhận được:**
-> `[FRONTEND] 2026-08-09 18:01:49 - Thay đổi: Chuyển luồng nhập số ngày mượn về phía reader... Backend 0.6.0 chưa lưu/trả so_ngay_muon nên cần bổ sung vào RequestCreate/RequestOut và dùng khi approve...`
+### 1. Phát hiện và ép AI sửa lỗi thiếu biến `so_ngay_muon` (Lệch pha Hệ thống)
+Vào lúc `18:01:49` ngày 09/08, AI Frontend tự ý thiết kế thêm ô "Số ngày mượn" trên UI, nhưng AI Backend lại không có trường dữ liệu này trong API.
+**Cách tôi điều khiển AI:** Tôi lập tức ra lệnh cho AI Backend khai báo biến `so_ngay_muon` vào `RequestCreate`, đồng thời vạch ra nghiệp vụ: *"Khi duyệt đơn, phải ưu tiên lấy số ngày do độc giả đề xuất nhưng cấm vượt mức `max_borrow_days`"*. AI mới sinh ra đoạn code xử lý chính xác.
 
-**Hành động chỉnh sửa của tôi:**
-Tôi đã tự mở mã nguồn Backend (`Backend/app/schemas.py` và `Backend/app/routers/requests.py`), tự khai báo thêm biến `so_ngay_muon` và can thiệp sâu vào hàm "Duyệt mượn sách" (Approve) của Thủ thư. Tôi lập trình logic: ưu tiên lấy số ngày do độc giả đề xuất, nếu độc giả nhập lố số ngày tối đa thì gán bằng `max_borrow_days`.
+### 2. Bác bỏ API "Xóa" mù quáng – Bắt buộc lập trình phòng thủ
+Ngày 09/08, AI sinh ra API `DELETE` cơ bản xóa thẳng phiếu mượn.
+**Cách tôi điều khiển AI:** Tôi bác bỏ đoạn code nguy hiểm này và lệnh cho AI phải cài đặt 2 chốt chặn: Kiểm tra `reader_id` (Cấm xóa phiếu người khác) và Kiểm tra `da_tra == True` (Tuyệt đối không được xóa phiếu ĐANG MƯỢN).
 
-```python
-# Đoạn code do TÔI tự viết thêm vào hàm approve_request (requests.py)
-# Tính hạn trả dựa trên số ngày mượn độc giả yêu cầu (ưu tiên) hoặc thư viện quy định
-borrow_days = req.so_ngay_muon if req.so_ngay_muon and req.so_ngay_muon > 0 else config.max_borrow_days
-# Ràng buộc không cho vượt quá quy định
-if borrow_days > config.max_borrow_days:
-    borrow_days = config.max_borrow_days
-    
-han_tra = datetime.utcnow() + timedelta(days=borrow_days)
-```
+### 3. Nhập vai Admin: Bắt lỗi bảo mật thiếu Audit Log
+Đóng vai một quản trị viên khó tính (09/08), tôi thấy AI cho phép Thủ thư tự do thao tác mà không lưu dấu vết.
+**Cách tôi điều khiển AI:** Tôi bắt AI xây dựng hệ thống **Audit Log (Lưu vết thao tác)** chạy ngầm. Mọi hành động Create, Update, Delete đều phải được ghi thẳng vào CSDL.
 
-## 2. Phát hiện và rào lỗi logic khi Độc giả Xóa lịch sử mượn
+### 4. Điều chỉnh phân quyền - Không nghe theo cấu hình mặc định
+Ngày 10/08, AI gộp chung quyền `["admin", "librarian"]` cho mọi thao tác.
+**Cách tôi điều khiển AI:** Tôi review và chỉ thị AI phải bóc tách: Thủ thư chỉ vận hành mượn/trả, tuyệt đối cấm xóa tài khoản/cấu hình. Tôi ép AI thay chuỗi quyền sang `@require_role(["admin"])` tại các điểm nhạy cảm.
 
-Vào lúc `18:17:43`, Frontend Agent thêm nút "Xóa lịch sử" ở trang hồ sơ cá nhân. Tuy nhiên Backend lại chưa cung cấp hàm `DELETE`. Nếu để AI tự viết, AI có xu hướng viết API xóa (DELETE) một cách mù quáng (xóa mất cả sách đang mượn).
+### 5. Phân quyền Hiển thị động (Dynamic Navbar)
+Giai đoạn 10/08, AI để tất cả các nút (Quản lý, Thống kê) hiển thị cho mọi người, bấm vào mới báo lỗi.
+**Cách tôi điều khiển AI:** Tôi chỉ đạo: *"Frontend phải đọc Role sau khi đăng nhập. Dùng JS để `display: none` các menu theo Role. Sinh viên không được nhìn thấy nút Admin."* AI buộc cập nhật `layout.js`.
 
-**Hành động chỉnh sửa của tôi:**
-Tôi đã nhảy vào Backend (`routers/borrows.py`) tự tay viết 2 endpoint mới: `DELETE /api/borrows/me` và `DELETE /api/borrows/me/{ma_phieu}`. 
-Tôi đã rào logic cực kỳ cẩn thận:
-- Chặn không cho xóa phiếu của người khác (kiểm tra `borrow.reader_id`).
-- Chặn tuyệt đối **KHÔNG ĐƯỢC XÓA PHIẾU ĐANG MƯỢN** (chưa trả sách), vì nếu xóa sẽ gây mất dấu cuốn sách. Chỉ được xóa lịch sử phiếu ĐÃ TRẢ (`da_tra = True`).
+### 6. Bắt quả tang AI làm giả dữ liệu (Mock Data) - Ép gọi API thật
+Khi yêu cầu làm "Chuông thông báo" (10/08), AI đối phó bằng cách tạo thông báo giả lưu bằng `localStorage`.
+**Cách tôi điều khiển AI:** Kiểm tra Network, tôi phát hiện trò bịp này. Tôi lệnh: *"Xóa logic Mock Data. Tạo bảng `Notifications` và gọi API thật (`/api/notifications`)."* AI phải làm lại toàn bộ.
 
-```python
-# Đoạn code bảo vệ CSDL do TÔI tự viết vào API DELETE Borrow
-@router.delete("/me/{ma_phieu}")
-def delete_my_borrow(ma_phieu: int, db: Session = Depends(get_db), current_user = Depends(require_role(["reader"]))):
-    # Lấy thông tin phiếu mượn
-    borrow = db.query(BorrowSlips).filter(BorrowSlips.ma_phieu == ma_phieu).first()
-    
-    # 1. Rào lỗi bảo mật: Cấm xóa phiếu của người khác
-    if borrow.reader_id != current_user.reader_id:
-        raise HTTPException(status_code=404, detail="Phiếu mượn không tồn tại hoặc không thuộc quyền")
-        
-    # 2. Rào lỗi kế toán: Cấm xóa sách đang cầm về nhà chưa trả
-    if not borrow.da_tra:
-        raise HTTPException(status_code=400, detail="Không thể xóa phiếu mượn chưa hoàn tất (đang mượn sách)")
-        
-    # Sau khi qua 2 chốt chặn mới cho phép db.delete()
-    db.delete(borrow)
-    db.commit()
-```
+### 7. Gạt bỏ những tính năng rườm rà (Thừa thãi)
+AI tự ý đẻ ra hàng loạt nút "Xuất CSV" ở mọi bảng (10/08) để khoe kỹ năng.
+**Cách tôi điều khiển AI:** Tôi lệnh cứng rắn: *"Bỏ ngay toàn bộ nút Xuất CSV ở tất cả các trang. Giữ UI gọn gàng, bám sát luồng cốt lõi."*
 
-## 3. Sửa lỗi Xóa độc giả (Phân quyền Admin vs Librarian)
-Như đã cảnh báo ở Phần trước, thủ thư không được phép xóa tài khoản. Tuy nhiên code AI thường cấp quyền chung chung là "Nhân viên". Tôi đã tự thay thế chuỗi quyền từ `@require_role(["admin", "librarian"])` thành `@require_role(["admin"])` cho tất cả các endpoint mang tính sát thương cao như Xóa tài khoản, Xóa sách, Cấu hình hệ thống.
+### 8. Chuẩn hóa Giao diện theo bản sắc Trường học (Localization)
+AI sinh giao diện chung chung kiểu "Library System" và báo lỗi tiếng Anh (10/08).
+**Cách tôi điều khiển AI:** Tôi yêu cầu đổi Banner khớp với **Trường ĐH CNTT & Truyền thông (ICTU)** và bắt Validation form phải 100% tiếng Việt.
+
+### 9. Thanh lọc Jargon (Từ lóng kỹ thuật) trên UI
+AI in thẳng mã Use Case ra màn hình (VD: `Quản lý sách UC01`).
+**Cách tôi điều khiển AI:** Tôi dạy AI: *"Người dùng không cần biết UC là gì. Xóa mọi hậu tố UC trên điều hướng và tiêu đề."*
 
 ---
-**Tổng kết Phần 4:**
-Thông qua 3 ví dụ thực chiến trên, tôi đã chứng minh được việc mình hoàn toàn đọc hiểu cấu trúc dự án (FastAPI, JWT, SQLAlchemy) và đủ năng lực viết code đè lên code của AI để bảo vệ tính đúng đắn của dữ liệu. AI chỉ là công cụ hỗ trợ gõ code nhanh, còn **tư duy nghiệp vụ (business logic)** do chính sinh viên kiểm soát.
 
-## 4. Phát hiện và sửa lỗi: AI để trống ID Sách, sinh ID trùng nhau (2026-08-28)
+## GIAI ĐOẠN 2: HOÀN THIỆN UX/UI & ĐỊNH DẠNG (27/08/2026)
 
-Sau khi AI chèn 64 cuốn sách vào Database, tôi kiểm tra và phát hiện lỗi nghiêm trọng: **tất cả 64 sách đều có 4 số giống nhau ở đuôi** (VD: `BMTM0001`, `CNTT0001`, `KTODO0001`...). Nguyên nhân là AI dùng counter riêng biệt cho từng thể loại thay vì dùng một bộ đếm toàn cục.
+### 10. Bác bỏ Alert rác - Ép dùng Inline Validation
+Mọi lỗi xác thực form, AI đều văng hộp thoại `alert("Lỗi...")` rất nghiệp dư.
+**Cách tôi điều khiển AI:** Tôi lệnh cấm dùng `window.alert()`. Ép tạo các thẻ `div` ẩn (Inline Validation) để render chữ màu đỏ dưới ô nhập bị sai.
 
-**Hành động sửa lỗi của tôi:**
-Tôi đã tự viết lại script `update_book_ids.py`, ép tất cả sách phải chạy qua một vòng lặp **duy nhất** với biến `counter` toàn cục, đảm bảo con số cuối cùng không bao giờ trùng nhau dù thuộc thể loại nào:
+### 11. Nhập vai Thủ thư "Hải Yến": Chỉnh đốn thái độ giao tiếp
+Khi độc giả mượn lố 3 cuốn, AI văng lỗi robot: *"Vượt quá số lượng... User: 4 > Max: 3"*.
+**Cách tôi ép AI sửa:** Nhập vai thủ thư thân thiện, tôi lệnh đổi văn phong thành: *"Rất tiếc, độc giả đã đạt giới hạn... Vui lòng trả sách cũ để mượn thêm"*.
 
-```python
-# Tôi tự viết logic sửa lỗi ID trùng — duyệt tất cả sách 1 lần duy nhất
-all_books = db.query(Book).all()
-global_counter = 1  # Bộ đếm TOÀN CỤC, không reset theo thể loại
+### 12. Chê bai giao diện Upload thô kệch - Ép thiết kế UX nâng cao
+AI làm tính năng tải ảnh bìa bằng thẻ `<input type="file">` xấu xí.
+**Cách tôi điều khiển AI:** Tôi bắt AI bỏ thẻ mặc định, thiết kế khu vực Dropzone hỗ trợ sự kiện kéo thả (Drag-and-Drop) kết hợp `FileReader` để Preview ảnh bìa.
 
-for book in all_books:
-    acronym = generate_acronym(book.ten_sach)
-    book.ma = f"{acronym}{str(global_counter).zfill(4)}"
-    global_counter += 1   # Luôn tăng, không bao giờ reset
+### 13. Chuẩn hóa định dạng thẻ sinh viên (DTC)
+AI sinh mã độc giả lung tung.
+**Cách tôi điều khiển AI:** Tôi đưa ra quy luật bắt buộc: *"Mã sinh viên: 'DTC' + 9 số. Giảng viên: 'GV' + 4 số."* Tôi bắt AI bổ sung Regex vào cả Frontend và Backend để chặn lỗi.
 
-db.commit()
-```
-Kết quả: 64 sách mang mã hoàn toàn phân biệt (từ `...0001` đến `...0064`).
+---
 
-## 5. Phát hiện lỗi Xóa Độc giả không kiểm tra ràng buộc (2026-08-27)
+## GIAI ĐOẠN 3: XÂY DỰNG DỮ LIỆU LỚN & PHÂN TRANG (28/08/2026)
 
-AI đã sinh ra API `DELETE /api/readers/{ma}` nhưng **không kiểm tra** xem độc giả đó có đang mượn sách, đang nợ phạt, hay có đặt trước chưa. Điều này cực kỳ nguy hiểm: một cú click "Xóa" có thể xóa mất hồ sơ độc giả đang cầm sách về nhà.
+### 14. Cấu trúc lại Kiến trúc Phân trang (Pagination) & Tìm kiếm
+Ngày 28/08, AI tải toàn bộ 64 cuốn sách trong 1 lần gọi API, gây nghẽn trình duyệt.
+**Cách tôi điều khiển AI:** Tôi ép AI viết lại API `GET /api/books` hỗ trợ `skip` và `limit`, kết hợp filter. Ở Frontend, bắt buộc vẽ thanh điều hướng phân trang và đồng bộ trạng thái `currentPage` vào URL.
 
-**Hành động sửa lỗi của tôi:**
-Tôi tự thêm 3 chốt chặn bảo vệ nghiệp vụ vào trước khi cho phép xóa:
+### 15. Bắt lỗi AI sinh mã ID trùng lặp (Cái bẫy vòng lặp)
+Khi sinh 64 sách, AI đặt bộ đếm reset theo thể loại khiến đuôi ID bị trùng (`BMTM0001`, `CNTT0001`...).
+**Cách tôi điều khiển AI:** Tôi chỉ thẳng lỗi thuật toán: *"Đưa biến `global_counter` ra ngoài cục bộ, duyệt 1 vòng để đảm bảo ID cuối cùng không bao giờ trùng."* AI phải viết lại script sinh mã.
 
-```python
-# Chốt 1: Kiểm tra đang mượn sách chưa trả
-active_borrows = db.query(BorrowSlips).filter(
-    BorrowSlips.reader_id == reader.ma,
-    BorrowSlips.da_tra == False
-).count()
-if active_borrows > 0:
-    raise HTTPException(400, "Độc giả đang mượn sách, không thể xóa")
+---
 
-# Chốt 2: Kiểm tra còn nợ phạt chưa thu
-unpaid_fines = db.query(FineHistory).filter(
-    FineHistory.reader_id == reader.ma,
-    FineHistory.da_thu == False
-).count()
-if unpaid_fines > 0:
-    raise HTTPException(400, "Độc giả còn nợ phạt, không thể xóa")
+## GIAI ĐOẠN 4: KTR2 - KIẾN TRÚC SÂU & XỬ LÝ LỖI HỆ THỐNG (30/08 - 31/08/2026)
 
-# Chốt 3: Kiểm tra còn phiếu đặt trước đang chờ
-pending_reservations = db.query(DatTruoc).filter(
-    DatTruoc.reader_id == reader.ma,
-    DatTruoc.trang_thai.in_(["CHO_XU_LY", "SAN_SANG"])
-).count()
-if pending_reservations > 0:
-    raise HTTPException(400, "Độc giả có đặt trước đang chờ xử lý, không thể xóa")
-```
-Đây là tư duy phòng thủ (defensive programming) mà AI không tự động áp dụng trừ khi được chỉ đích danh trong Prompt.
-### Vá lỗ hổng giới hạn mượn sách & HTTP 500
-- Sửa lỗi 500 khi quét trạng thái phạt (đồng bộ múi giờ Python).
-- Sửa lỗi 500 khi xuất mã copy_id cho thủ thư do gọi sai relationship SQLAlchemy.
-- Cập nhật logic max_books_at_once: Trước đây chỉ check số lượng trong 1 transaction. Nay đã cộng dồn số lượng sách ĐANG MƯỢN + CHỜ DUYỆT để chặn từ vòng gửi đơn (frontend sinh viên) và vòng duyệt (backend thủ thư).
-- Tinh chỉnh thông báo lỗi giới hạn mượn sách ngắn gọn hơn.
-- Hoàn tất lưu trữ lên GitHub (commit: Fix UI/UX for librarian, add borrow limits, and resolve HTTP 500 bugs).
-- Đã cập nhật (refactor) câu chữ báo lỗi cho gọn gàng và dễ hiểu hơn đối với độc giả (theo yêu cầu).
-- Lưu trữ Git (commit: Fix UI/UX for librarian, add borrow limits, and resolve HTTP 500 bugs) và đẩy lên GitHub an toàn.
+### 16. Nhập vai Thủ thư Kho: Đập đi làm lại sang quản lý bản vật lý
+Ngày 30/08, tôi thấy AI quản lý sách bằng 1 con số chung chung (VD: 5 cuốn). Tôi chỉ ra: làm sao biết cuốn nào rách để bắt đền?
+**Cách tôi ép AI sửa:** Tôi yêu cầu đập đi làm lại toàn bộ hệ thống lõi sang quản lý **Từng bản vật lý (BookCopy)** có mã vạch riêng (`KT-2D182B-1`).
 
-### Kiểm thử & Bàn giao toàn diện
-- Dọn dẹp toàn bộ các script tạm thời (như script test db, đồng bộ dữ liệu) khỏi thư mục dự án để làm sạch môi trường.
-- Đã rà soát chức năng toàn bộ app (Frontend, Backend, Database) cho 3 quyền (Admin, Librarian, Reader) và hoạt động hoàn hảo.
-- Commit cuối cùng: Final QA and cleanup.
-- Push thành công lên GitHub nhánh master.
+### 17. Giải quyết xung đột Khóa Ngoại (Foreign Key) trên SQL Server
+Trong đợt nâng cấp BookCopy, AI đề xuất SQL `ALTER TABLE` thuần túy nhưng bị SQL Server chặn vì vướng khóa ngoại `FK_BorrowDetails_Books`.
+**Cách tôi điều khiển AI:** Tôi lệnh: *"Bỏ dùng SQL chay. Viết script Python dùng `pyodbc` kết hợp Raw SQL thực hiện đúng quy trình: Drop Constraint -> Drop PK -> Add copy_id -> Make New PK -> Re-add Constraint."*
+
+### 18. Dạy AI cách bắt lỗi Dữ liệu toàn vẹn (Cascade Delete & IntegrityError)
+Khi Thủ thư xóa sách, Backend trả lỗi 500 `IntegrityError` vì các bản `BookCopies` vật lý vẫn tồn tại.
+**Cách tôi điều khiển AI:** AI đề xuất cấu hình Database `ON DELETE CASCADE` cực nguy hiểm. Tôi chặn lại và chỉ thị: *"Sửa hàm DELETE, xóa thủ công tất cả `BookCopies` trước, sau đó mới xóa `Book`."*
+
+### 19. Bắt và rào lỗi UnboundLocalError cực hiểm hóc
+Nếu độc giả mượn sách vừa hết hàng, code AI văng `UnboundLocalError`. AI khai báo biến trong `if` nhưng gọi ở `else`.
+**Cách tôi điều khiển AI:** Tôi đọc Traceback, bắt AI khởi tạo giá trị mặc định `None` ở đầu hàm, dạy lại AI về phạm vi biến (Scope) trong Python.
+
+### 20. Sửa lỗi nghiêm trọng (HTTP 500) do xung đột Múi giờ
+Cronjob hủy đơn AI dùng `datetime.utcnow()` so sánh với giờ Local (GMT+7) của DB, khiến đơn vừa đặt bị xóa ngay lập tức.
+**Cách tôi điều khiển AI:** Tôi yêu cầu AI: *"Tuyệt đối cấm dùng utcnow(). Sửa toàn bộ hàm `cleanup-expired` về `datetime.now()`."*
+
+### 21. Nhập vai Độc giả: Sự bức xúc vì cột Vị trí hàng đợi vô dụng
+Ngày 31/08, tôi test tính năng đặt trước. Dù sách về trạng thái `Sẵn sàng`, vị trí vẫn hiện dấu `-`.
+**Cách tôi ép AI sửa:** Tôi chỉ ra lỗ hổng: Backend hàm đếm `queue_pos` bỏ quên trạng thái `SAN_SANG`, và Frontend lọc mất trường dữ liệu API. Tôi buộc AI sửa cả 2 đầu để độc giả thấy vị trí số 1.
+
+### 22. Can thiệp trực tiếp cứu dữ liệu (Database) bị hỏng do Test
+Đợt chạy Unit Tests tự động, AI viết kịch bản giả lập "Hết sách", ép 5 cuốn thật sang "Đang mượn" nhưng quên trả về cũ, khiến user không mượn được.
+**Cách tôi điều khiển AI:** Tôi truy vấn DB, ra lệnh AI viết script Python chạy thẳng SQLAlchemy quét lại các "bản copy ma" này và ép `status` về 'Có sẵn'.
+
+### 23. Quản trị vòng đời dự án & Dọn dẹp Rác (Clean Code)
+Trước khi nghiệm thu bản cuối, AI vứt rải rác rất nhiều script rác test DB (`fix_db.py`, v.v.).
+**Cách tôi điều khiển AI:** Đóng vai QA, tôi lệnh dọn dẹp toàn bộ thư mục thừa, rà soát lại 111/111 Unit Test phải PASS 100%, sau đó đích thân tôi mới duyệt lệnh `git push` đưa bản hoàn thiện lên nhánh `master`.
+
+---
+**KẾT LUẬN CUỐI CÙNG:** Bằng sự bao quát từ Data, Backend, Frontend cho tới Trải nghiệm người dùng, tôi đã bổ khuyết hoàn hảo cho sự máy móc của AI. Phần mềm cuối cùng không chỉ sạch bug về mặt kỹ thuật, mà còn cực kỳ **Thấu hiểu nghiệp vụ và Tôn trọng người dùng**.

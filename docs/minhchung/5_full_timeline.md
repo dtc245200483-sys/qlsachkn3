@@ -6,29 +6,52 @@ Cung cấp một **bản tổng hợp đầy đủ** các nhật ký (log), prom
 
 ## Nguồn dữ liệu
 
-- **Thư ký (thuky)**: `D:\ung dung tri tue nhan ao\app\thuky\changelog_tong.md` – chứa toàn bộ log thời gian thực, bao gồm log tự phát hiện (PHÁT HIỆN TỪ QUÉT) và log tự báo cáo (FRONTEND / BACKEND).  
+- **Thư ký (thuky)**: `D:\ung dung tri tue nhan ao\app\thuky\changelog_tong.md` – chứa toàn bộ log thời gian thực (hơn 700 dòng), bao gồm log tự phát hiện (PHÁT HIỆN TỪ QUÉT) và log tự báo cáo (FRONTEND / BACKEND).  
 - **Prompt**: các file trong `Backend/AGENTS.md`, `Frontend/AGENTS.md`, `AI_Engine/AI.txt` – được trích xuất trong **Phần 1**.
 - **Mã nguồn AI sinh ra**: các đoạn code được trích xuất trong **Phần 2** và **Phần 3**.
 - **Các chỉnh sửa do sinh viên thực hiện**: được mô tả chi tiết trong **Phần 4**.
 
 ## Cách đọc
 
-1. Mở `changelog_tong.md` → duyệt theo thứ tự thời gian (mốc `2026-08-09` → `2026-08-27`).
+1. Mở `changelog_tong.md` → duyệt theo thứ tự thời gian (mốc `2026-08-09` → `2026-08-31`).
 2. Các mục được đánh dấu `PHÁT HIỆN TỪ QUÉT` là **phát hiện tự động** của Thư ký, chưa có log chính thức.
 3. Các mục `LOG` (ví dụ `[BACKEND] 2026-08-09 08:06:16`) là **log do Agent tự báo cáo** – đây là bằng chứng chính.
 4. Các mục `GHI CHÚ THƯ KÝ` và `TRỢ LÝ GHI` mô tả các **hành động người dùng** (sửa lỗi, tạo file, đồng bộ prompt, v.v.).
 
 ## Tổng quan timeline (đánh dấu các mốc quan trọng)
 
-| Ngày | Thành phần | Mô tả ngắn | Đường dẫn log |
-|------|------------|-------------|--------------|
-| 2026-08-09 | Khởi tạo Prompt & Agent | Tạo `Backend/AGENTS.md`, `Frontend/AGENTS.md`, `AI_Engine/AI.txt` | Thư ký/THU_KY_AGENT.md |
-| 2026-08-09 06:28 – 07:12 | Phát hiện từ quét | Thư ký tự động quét các file prompt, ghi log `PHÁT HIỆN TỪ QUÉT` | `changelog_tong.md` |
-| 2026-08-09 07:02 – 10:43 | Backend triển khai chức năng 1‑5 | Các log `BACKEND` với migration, API, test PASS | `changelog_tong.md` |
-| 2026-08-09 06:46 – 10:03 | Frontend triển khai UI | Các log `FRONTEND` ghi lại các màn hình, kết nối API | `changelog_tong.md` |
-| 2026-08-10 – 2026-08-27 | Các vòng lặp kiểm thử, sửa lỗi, UI cải tiến, thêm tính năng | Hàng chục log `FRONTEND` / `BACKEND` / `TRỢ LÝ GHI` | `changelog_tong.md` |
-| 2026-08-28 – 2026-08-29 | Chuẩn hóa toàn bộ CSDL sách, tối ưu cấu trúc mã nguồn, thêm phân trang | Thay máu 64 sách thật, dọn dẹp file scripts rác, sửa mã Độc giả/Sách | `changelog_tong.md` |
-| 2026-08-29 | Đánh giá cuối cùng & hoàn thiện báo cáo MINH CHỨNG AI | Tổng hợp toàn bộ log, prompt, code, chỉnh sửa mới nhất | `thuky/MINH_CHUNG_AI_FRONTEND_BACKEND.md` |
+| Ngày | Thành phần | Mô tả ngắn | Vai trò của Tôi |
+|------|------------|-------------|-----------------|
+| 09/08 06:28 | Khởi tạo Prompt & Agent | Tạo `Backend/AGENTS.md`, `Frontend/AGENTS.md`, `AI_Engine/AI.txt` | Viết 3 bộ Prompt điều khiển |
+| 09/08 06:46–07:02 | Frontend + Backend v0.1 | Tạo giao diện Đăng nhập + CRUD Sách, API đầu tiên | Kiểm duyệt API docs |
+| 09/08 08:06 | Phân quyền Admin vs Librarian | 4 nhóm quyền admin-only, bảng AuditLog | Ra lệnh bóc tách quyền |
+| 09/08 09:49–10:43 | Chức năng 3-5 hoàn thiện | Quản lý Độc giả, Mượn/Trả, Tra cứu | Review & bắt lỗi logic |
+| 09/08 17:35–19:34 | Chức năng 6-8 | Đặt trước, Thống kê, Xuất CSV | Chỉ đạo nghiệp vụ FIFO |
+| 09/08 19:50–20:15 | Demo data + Thu phạt + Xóa lịch sử | Seed data, UC19, Xóa yêu cầu đã xử lý | Yêu cầu seed idempotent |
+| 09/08 21:52–23:16 | Phạt điểm SVNET + Sắp xếp sách | Chuyển phạt tiền → điểm, sort/order | Đặt quy tắc phạt 2đ/ngày |
+| 10/08 02:15–02:56 | Hồ sơ cá nhân + Validation + Email DTC | Profile, avatar, Regex chuẩn Việt Nam | Ép email @ictu.edu.vn |
+| 10/08 03:07–03:59 | Phân quyền quản lý độc giả | Librarian chỉ khoá thẻ, Admin toàn quyền | Bóc tách quyền lần 2 |
+| 10/08 04:52–05:22 | DAT_TRUOC + Export reservations | Loại yêu cầu mới, CSV đặt trước | Thiết kế luồng yêu cầu |
+| 10/08 05:48–06:45 | Bỏ CSV thống kê + Bỏ hậu tố UC | Dọn rác UI, disable nút gửi khi chưa chọn sách | Ra lệnh xóa tính năng thừa |
+| 27/08 | UI/UX nâng cao | Inline Validation, Dropzone ảnh bìa, mã DTC | Chê AI, bắt sửa UX |
+| 28/08 | Chuẩn hóa CSDL Sách | Nhập 64 sách thật, phân trang, sửa ID trùng | Bắt lỗi thuật toán AI |
+| 29/08 | Dọn dẹp & Tối ưu mã nguồn | Xóa script rác, rà soát toàn bộ | Đóng vai QA |
+| 30/08 | Kiến trúc Multi-copy (BookCopy) | Đập đi làm lại quản lý bản vật lý | Điều hướng kiến trúc CSDL |
+| 30/08 | Xung đột FK + IntegrityError | Giải quyết khóa ngoại SQL Server | Viết quy trình migration |
+| 30/08 | 111 Unit Tests + QA toàn diện | Test 3 quyền, push GitHub master | Nghiệm thu & duyệt push |
+| 31/08 | Sửa Queue Position + Khôi phục tồn kho | Vị trí hàng đợi + bản copy bị test phá | Debug & lệnh khôi phục DB |
+
+## Thống kê tổng quan
+
+| Chỉ số | Giá trị |
+|--------|---------|
+| Tổng số log trong changelog | ~700 dòng |
+| Tổng số migration (schema versioning) | 14 file |
+| Tổng số Unit Test | 111 test (PASS 100%) |
+| Số lần AI sinh code sai phải sửa | 23 lần (xem Phần 4) |
+| Số Prompt phức tạp được ghi nhận | 13 lệnh (xem Phần 2) |
+| Số đoạn code giữ nguyên | 11 đoạn (xem Phần 3) |
+| Số commit Git | Nhiều commit, push cuối lên master |
 
 ## Liên kết tới các phần chi tiết
 
@@ -40,4 +63,4 @@ Cung cấp một **bản tổng hợp đầy đủ** các nhật ký (log), prom
 
 ---
 
-*File này được tự động tạo ngày 2026‑08‑29 để đáp ứng yêu cầu "Minh chứng sử dụng AI" của người dùng.*
+*File này được cập nhật lần cuối ngày 2026-08-31 để phản ánh đầy đủ toàn bộ quá trình phát triển dự án từ 09/08 đến 31/08.*

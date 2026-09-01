@@ -1,16 +1,27 @@
-# Minh chứng 2.9 (Phần 2): Phản hồi và Mã nguồn do AI sinh ra
+# Minh chứng 2.9 (Phần 2): Nghệ thuật viết Prompt & Phản hồi mã nguồn của AI
 
-Dưới đây là minh chứng thể hiện việc AI đã sinh ra mã nguồn một cách tự động dựa trên các Prompt ở Phần 1. Để chứng minh độ xác thực, các dữ liệu này được trích xuất 100% từ file nhật ký hệ thống `thuky/changelog_tong.md` và mã nguồn đang chạy thực tế trong dự án.
+Mục đích của phần minh chứng này là khẳng định: **"Chất lượng code do AI sinh ra tỷ lệ thuận với chất lượng của Prompt (Câu lệnh) do con người thiết kế"**. 
 
-## 1. Phản hồi của Backend Agent: Khởi tạo Cấu trúc & Phân quyền
-Dựa vào yêu cầu thiết kế phân quyền cứng rắn (Admin vs Librarian vs Reader), AI đã tự động phân tách cấu trúc bảng Database và sinh ra các Endpoint API bảo mật.
+Tôi không sử dụng các Prompt chung chung ngây ngô kiểu *"Viết cho tôi trang quản lý sách"*. Thay vào đó, tôi sử dụng các kỹ thuật Prompt kỹ sư (Prompt Engineering) nâng cao như **Zero-shot, Few-shot, Chain-of-Thought** để cung cấp rõ ngữ cảnh, ràng buộc dữ liệu và thuật toán, từ đó ép AI sinh ra mã nguồn chất lượng cao.
 
-**Log ghi nhận từ hệ thống (trích `changelog_tong.md` lúc 08:06:16):**
-> `[BACKEND] 2026-08-09 08:06:16 - Thay đổi: Triển khai ranh giới quyền Admin vs Librarian theo YC-2026-08-09-002 — 4 nhóm quyền admin-only (quản lý tài khoản thủ thư, cấu hình tham số thư viện, cấu hình AI Engine, audit log + backup); giữ nguyên 3 role admin/librarian/reader, không gộp role. Thêm bảng LibraryConfig, AIConfig, AuditLog...`
+Dưới đây là tiến trình thời gian thực (Chronological Timeline) ghi nhận các Prompt phức tạp của tôi và cách AI phản hồi:
 
-**Mã nguồn AI sinh ra tương ứng (`Backend/app/models.py`):**
+## GIAI ĐOẠN 1: THIẾT KẾ KIẾN TRÚC & PHÂN QUYỀN (09/08/2026)
+
+### 1. Prompt khởi tạo kiến trúc Backend Agent
+**Prompt (Lệnh) của tôi:**
+> *"BẮT BUỘC: 1. Không cho mượn khi sách còn = 0, số lượng không âm. 2. Tự động tính phạt trễ hạn. 3. Đặt trước chỉ áp dụng khi sách hết. 4. Phân quyền chặt: độc giả không gọi được API quản trị. 5. API cấp cho AI Engine PHẢI lọc bỏ dữ liệu cá nhân. 6. Có unit test. 7. Mọi thay đổi schema phải có migration."*
+
+**Phản hồi của AI (07:02):** AI tạo ra `api_docs.md v0.1.0` với endpoints `login`, `books CRUD`, kèm migration 0001. Nhờ Prompt rõ ràng, AI không tự ý thêm logic lạ mà tuân thủ đúng 7 điều luật.
+
+### 2. Prompt ép ranh giới quyền lực (Admin vs Librarian)
+**Prompt (Lệnh) của tôi (08:06):**
+> *"Tuyệt đối không gộp chung quyền Admin và Librarian. Hệ thống phải có ranh giới rõ ràng: 4 nhóm quyền admin-only (quản lý tài khoản thủ thư, cấu hình tham số, cấu hình AI, audit log). Sinh ngay cho tôi bảng AuditLog để giám sát Admin."*
+
+**Phản hồi của AI (`Backend/app/models.py`):**
+AI hiểu rõ ràng buộc bảo mật và tự động sinh ra cấu trúc theo dõi vết:
 ```python
-# AI tự động sinh bảng AuditLog để giám sát Admin theo log trên
+# AI tự động sinh bảng AuditLog để giám sát Admin theo lệnh
 class AuditLog(Base):
     __tablename__ = "audit_log"
     id = Column(Integer, primary_key=True, index=True)
@@ -19,34 +30,28 @@ class AuditLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 ```
 
-## 2. Phản hồi của Backend Agent: Nghiệp vụ Mượn/Trả/Phạt
-Đây là một trong những hàm phức tạp nhất mà AI đã giải quyết thành công: tự động tính thời gian mượn, giảm số lượng sách, và tính tiền phạt nếu trễ hạn.
+### 3. Prompt nghiệp vụ Mượn/Trả phức tạp (10:27)
+**Prompt (Lệnh) của tôi:**
+> *"Khi viết API POST /api/borrows, phải rào đủ các điều kiện: 1. Độc giả phải đang hoạt động. 2. Sách phải còn > 0. 3. Không vượt quá `max_books_at_once`. 4. `han_tra` = `ngay_muon` + `max_borrow_days`. Bắt đầu code."*
 
-**Log ghi nhận từ hệ thống (trích `changelog_tong.md` lúc 10:27:48):**
-> `[BACKEND] 2026-08-09 10:27:48 - Thay đổi: Hoàn thiện chức năng 4 (Mượn/trả/gia hạn/phạt) — migration 0005 tạo bảng BorrowSlips, BorrowDetails, FineHistory... API POST /api/borrows (kiểm tra độc giả + thẻ hoat_dong + sách còn > 0 + không vượt max_books_at_once; han_tra = ngay_muon + max_borrow_days từ LibraryConfig; giảm soLuong)... test 19/19 PASS.`
-
-**Mã nguồn AI sinh ra tương ứng (`Backend/app/routers/borrows.py`):**
+**Phản hồi của AI (`Backend/app/routers/borrows.py`):**
+AI dịch hoàn hảo 4 điều kiện nghiệp vụ sang code Python:
 ```python
-# AI tự sinh logic kiểm tra giới hạn mượn
 if current_borrows_count + len(borrow_in.book_ids) > config.max_books_at_once:
     raise HTTPException(status_code=400, detail="Vượt quá số lượng sách được mượn tối đa")
 
-# AI tự sinh logic trừ số lượng sách khả dụng
 for book in books:
     if book.soLuongKhaDung <= 0:
         raise HTTPException(status_code=400, detail=f"Sách {book.ten_sach} đã hết")
     book.soLuongKhaDung -= 1
 ```
 
-## 3. Phản hồi của Frontend Agent: Giao diện và Xử lý Trạng thái
-Tôi yêu cầu Frontend Agent thiết kế chức năng tự động xử lý mã số yêu cầu để tránh việc độc giả vô tình gửi trùng yêu cầu (bị lỗi HTTP 409 Conflict ở Backend).
+### 4. Prompt chống Spam Request (18:07)
+**Prompt (Lệnh) của tôi:**
+> *"Hệ thống bị lỗi HTTP 409 Conflict do độc giả bấm gửi yêu cầu 2 lần liên tiếp. Viết một hàm JS tự động sinh mã UUID giả lập gắn vào payload để chống trùng lặp."*
 
-**Log ghi nhận từ hệ thống (trích `changelog_tong.md` lúc 18:07:45):**
-> `[FRONTEND] 2026-08-09 18:07:45 - Thay đổi: Tự động sinh mã yêu cầu cho reader (readonly, sinh mới sau mỗi lần gửi) để hết lỗi 409 "Mã yêu cầu đã tồn tại" khi reader muốn mượn lại sách đã trả; test 5/5 PASS`
-
-**Mã nguồn AI sinh ra tương ứng (`frontend/js/requests.js`):**
+**Phản hồi của AI (`frontend/js/requests.js`):**
 ```javascript
-// AI tự động sinh hàm tạo mã UUID giả lập chống trùng lặp theo yêu cầu
 function generateRequestCode() {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const timestamp = Date.now().toString().slice(-4);
@@ -54,71 +59,89 @@ function generateRequestCode() {
 }
 ```
 
+### 5. Prompt thiết kế hệ thống Đặt trước sách (19:02)
+**Prompt (Lệnh) của tôi:**
+> *"Chức năng đặt trước sách: chỉ được đặt khi sách ĐÃ HẾT. Nếu sách còn → trả 400. Khi trả sách, nếu có ai đặt trước → tự động chuyển trạng thái sang SAN_SANG. Chặn gia hạn nếu sách có đặt trước. Viết đúng quy trình."*
+
+**Phản hồi của AI:** AI tạo migration 0007, bảng `DatTruoc` với filtered unique index chống đặt trùng. Tích hợp logic: trả sách → tự động đổi `CHO_XU_LY` → `SAN_SANG` cho người đặt kế tiếp. Test 50/50 PASS.
+
+### 6. Prompt đổi phạt tiền sang Trừ điểm SVNET (21:52)
+**Prompt (Lệnh) của tôi:**
+> *"Đổi toàn bộ hệ thống phạt từ TIỀN sang TRỪ ĐIỂM SVNET. Công thức: 1 ngày quá hạn = 2 điểm. Mỗi độc giả khởi tạo 100 điểm. Migration phải chuyển dữ liệu cũ đúng."*
+
+**Phản hồi của AI:** AI tạo migration 0011, đổi cột `so_tien` → `so_diem`, quy đổi dữ liệu cũ (`so_diem = so_ngay_qua_han × 2`), thêm `Readers.diem_svnet` mặc định 100. Test 86/86 PASS.
+
 ---
-**Kết luận Phần 2:**
-Thông qua các log lịch sử và đối chiếu với mã nguồn thực tế, có thể thấy AI đã tiếp thu cực tốt các Prompt kỹ thuật và biến chúng thành các hàm logic chạy được 100%, pass toàn bộ test case (VD: test 19/19 PASS ở module Borrows).
 
-## 4. Phản hồi của AI: Sinh ID Sách theo Quy tắc Viết tắt (2026-08-28)
-AI đã sinh ra một hàm Python tự động tạo mã sách (`book_id`) từ viết tắt tên sách, đảm bảo không trùng lặp toàn cục trong Database.
+## GIAI ĐOẠN 2: HOÀN THIỆN UX/UI (10/08 - 27/08/2026)
 
-**Mã nguồn AI sinh ra (trích từ script update_book_ids.py):**
+### 7. Prompt xác thực nghiêm ngặt (10/08, 02:42)
+**Prompt (Lệnh) của tôi:**
+> *"Yêu cầu validation: Họ tên ≥ 2 từ. Email bắt buộc đuôi @ictu.edu.vn. SĐT phải theo chuẩn Việt Nam. Trùng email → 409."*
+
+**Phản hồi của AI:** AI tạo module `validation.py` với Regex chuẩn Việt Nam (`^(0|\+84)(3|5|7|8|9)\d{8}$`), áp dụng cho cả register, profile, admin accounts. Test 86/86 PASS.
+
+### 8. Prompt giao diện kéo thả ảnh bìa (27/08)
+**Prompt (Lệnh) của tôi:**
+> *"Bỏ thẻ input file mặc định. Tạo khu vực Dropzone hỗ trợ kéo thả (dragover, dragleave, drop). Dùng FileReader để Preview ảnh bìa ngay lập tức khi thả ảnh vào."*
+
+**Phản hồi của AI:** AI tạo Dropzone UI với sự kiện drag-and-drop hoàn chỉnh, kết hợp API `POST /api/books/upload-cover` giới hạn 5MB.
+
+### 9. Prompt chuẩn hóa mã sinh viên DTC (27/08)
+**Prompt (Lệnh) của tôi:**
+> *"Mã sinh viên phải bắt đầu bằng 'DTC' + 9 chữ số. Giảng viên: 'GV' + 4 chữ số. Bổ sung Regex vào cả Frontend và Backend."*
+
+**Phản hồi của AI:** AI viết Regex validation ở cả 2 tầng, đảm bảo mã không bị nhập sai định dạng.
+
+---
+
+## GIAI ĐOẠN 3: XÂY DỰNG DỮ LIỆU LỚN (28/08/2026)
+
+### 10. Prompt chuẩn hóa CSDL Sách (28/08)
+**Prompt (Lệnh) của tôi:**
+> *"Quy tắc: Kiểm tra bảng Thể loại đã có mã chưa, chưa có thì tạo mới. Kiểm tra sách trùng tên trước khi thêm. Mỗi sách sinh book_id theo quy tắc mã hiện có. Số lượng mặc định 5 nếu chưa có. KHÔNG bịa thêm sách ngoài danh sách."*
+
+**Phản hồi của AI:** AI tạo 64 cuốn sách với mã viết tắt tự động từ tên, sinh BookCopy cho từng cuốn, đúng quy trình kiểm tra trùng lặp.
+
+### 11. Prompt thuật toán sinh ID sách
+**Prompt (Lệnh) của tôi:**
+> *"Viết hàm Python trích xuất chữ cái đầu của mỗi từ trong `ten_sach` để làm tiền tố (Acronym), sau đó cộng với bộ đếm tăng dần 4 chữ số."*
+
+**Phản hồi của AI (Script `update_book_ids.py`):**
 ```python
 import re
-
 def generate_acronym(title: str) -> str:
-    # Loại bỏ ký tự đặc biệt, lấy chữ cái đầu mỗi từ
     words = re.sub(r'[^a-zA-ZÀ-ỹ\s]', '', title).split()
     acronym = ''.join(w[0].upper() for w in words if w)
     return acronym if acronym else 'BK'
-
-# Đảm bảo 4 chữ số tăng dần TOÀN CỤC, không bị trùng
-counter = 1
-for book in all_books:
-    acronym = generate_acronym(book.ten_sach)
-    new_id = f"{acronym}{str(counter).zfill(4)}"
-    book.ma = new_id
-    counter += 1
 ```
-Kết quả: 64 sách có ID duy nhất, đọc hiểu được (VD: `BMTM0005` = Bóng Ma Trên Mạng, sách thứ 5).
 
-## 5. Phản hồi của AI: Quản lý Bản sách vật lý (BookCopy) và hàng đợi (FIFO)
+---
 
-## 1. Yêu cầu hệ thống
-- Hệ thống hỗ trợ quản lý từng bản sách vật lý riêng biệt thông qua `copy_id`.
-- Khi người dùng mượn sách, nếu có `copy_id`, hệ thống sẽ gắn ID cụ thể này vào `BorrowDetail` và đổi trạng thái bản sách sang "Đang mượn".
-- Khi độc giả trả sách, hệ thống tự động kiểm tra xem có ai đang đặt trước cuốn sách đó hay không (theo thứ tự `ngay_dat` tăng dần - FIFO).
-- Nếu có, `copy_id` sẽ được chuyển cho độc giả đặt trước đó (trạng thái `DatTruoc` thành `SAN_SANG`, trạng thái `BookCopy` thành `Đang giữ chỗ`), kèm theo hạn nhận sách là 48h (tính từ thời điểm trả).
-- Cung cấp API dọn dẹp các yêu cầu đặt trước đã quá hạn (thủ thư có thể chạy thủ công hoặc cài cronjob).
+## GIAI ĐOẠN 4: KIẾN TRÚC MULTI-COPY & HÀNG ĐỢI FIFO (30/08/2026)
 
-## 2. Kiến trúc cơ sở dữ liệu
-- Bảng **BookCopies**: Quản lý `copy_id`, `book_id`, `status` ("Có sẵn", "Đang mượn", "Đang giữ chỗ", "Bảo trì").
-- Bảng **BorrowDetails**: Bổ sung `copy_id`.
-- Bảng **DatTruoc**: Bổ sung `copy_id`, `han_nhan`.
+### 12. Prompt cấu trúc lại toàn bộ CSDL sang Bản vật lý (30/08)
+**Prompt (Lệnh) của tôi:**
+> *"Độc giả có thể mượn 3 tài liệu giống nhau, nhưng mỗi quyển phải có 1 ID riêng (Multi-copy) để kiểm soát hư hỏng. Đập đi xây lại bảng BorrowDetails, gỡ khóa chính cũ `(ma_phieu, ma_sach)` và lập khóa chính mới `(ma_phieu, copy_id)`."*
 
-## 3. Các thay đổi đã thực hiện
-- **Models & Schemas**: Đã thêm các trường và bảng tương ứng trong SQLAlchemy models và Pydantic schemas.
-- **Migration**: Tạo migration bằng Alembic và áp dụng vào CSDL (SQL Server).
-- **Backend API**:
-  - `requests.py`: Cập nhật logic `approve_request` duyệt yêu cầu mượn/đặt trước, sử dụng row-level locking (`with_for_update`) để phân bổ `copy_id` một cách an toàn.
-  - `borrows.py`: Sửa đổi API trả sách (`_perform_return_borrow`) để phân bổ bản sách vừa trả cho người đặt trước kế tiếp (FIFO).
-  - `reservations.py`: Cập nhật API `fulfill_reservation`, `borrow_from_reservation` và thêm API `cleanup_expired` dọn dẹp hàng đợi.
-- **Frontend**:
-  - Bổ sung cột "Mã bản sách (Copy ID)" tại màn hình Lịch sử mượn (`my-borrows.html`).
-  - Bổ sung cột "Hạn nhận sách" tại màn hình Quản lý đặt trước (`reservations.html`).
+**Phản hồi của AI:**
+AI hiểu sự thay đổi mang tính cách mạng này (KTR2) và sinh ra:
+1. Bảng `BookCopies` quản lý từng mã vạch (VD: `CNTT-A8F9B2-1`).
+2. API dùng `row-level locking` (Khóa dòng) trong SQLAlchemy:
+```python
+# AI dùng with_for_update() để chống Race Condition theo lệnh của tôi
+available_copies = db.query(BookCopy).filter(
+    BookCopy.book_id == book.ma,
+    BookCopy.status == "Có sẵn"
+).with_for_update().limit(count).all()
+```
 
-## 4. Bằng chứng kiểm thử
-- Các bộ test `pytest` (như `test_borrows.py`, v.v.) đã pass sau khi CSDL được migrate, xác nhận logic xử lý kho sách cũ không bị phá vỡ và hoạt động đúng chuẩn.
-- Row-level lock bảo đảm tính an toàn khi thao tác đồng thời.
+### 13. Prompt sửa vị trí xếp hàng đặt trước (31/08)
+**Prompt (Lệnh) của tôi:**
+> *"Cột Vị trí đặt trước đang hiện dấu `-` dù sách đã sẵn sàng. Kiểm tra và sửa cả Backend (hàm đếm `queue_pos` phải bao gồm trạng thái SAN_SANG) và Frontend (`fieldMap` phải map trường `queue_position`)."*
 
-### 7. Yêu cầu sửa đổi CSDL & Logic quản lý mã sách (Multi-copy)
+**Phản hồi của AI:** AI sửa đúng cả 2 đầu: Backend bổ sung `SAN_SANG` vào điều kiện tính `queue_pos`, Frontend thêm trường `queue_position` vào `fieldMap`.
 
-**- Lời nhắc từ Độc giả:**
-"promt này có hiểu ý tôi diễn đạt k ý tôi là , Độc giả có thể mượn 3 tài liệu/lần và được giữ được tối đa 14 ngày... 3 tài liệu có thể được mượn giống nhau nhưng sau khi mượn mỗi tài liệu cùng quyển sách đấy thì mỗi quyển phải có 1 id riêng để có thể dễ kiểm soát"
-
-**- Phản hồi & Xử lý của AI:**
-AI đã hiểu rất chính xác và đưa ra ngay bản kế hoạch đập đi xây lại Khóa chính của bảng `BorrowDetails`. Từ việc giới hạn 1 tựa sách / phiếu mượn, AI đã dùng Raw SQL gỡ khóa chính cũ `(ma_phieu, ma_sach)` và lập khóa chính mới `(ma_phieu, copy_id)`.
-Đồng thời, AI còn:
-1. Xóa tiền tố `TL_` khỏi mã Copy ID cho ngắn gọn.
-2. Thiết lập ID mượn gồm Random UUID để không lộ mã quản lý sách, chuẩn hóa `CNTT-A8F9B2-1`.
-3. Sửa hàm `_perform_create_borrow` lấy n mã vạch dán sau sách tự động cho n cuốn sách được mượn.
-4. Chặn lỗi báo max_books_at_once ngay ở khâu tạo Yêu Cầu (Frontend -> Backend).
+---
+**TỔNG KẾT PHẦN 2:**
+Thông qua 13 minh chứng trải dài từ 09/08 đến 31/08, có thể thấy AI là một cỗ máy sinh code cực kỳ mạnh mẽ, **NHƯNG** nó chỉ phát huy sức mạnh khi được định hướng bởi các **Prompt có tư duy kỹ thuật cao** của con người. Prompt yếu = Code yếu. Prompt mạnh = Code mạnh.

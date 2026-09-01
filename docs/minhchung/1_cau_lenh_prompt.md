@@ -1,41 +1,73 @@
-# 1. Các câu lệnh (Prompt) gửi cho AI
+# Minh chứng 2.9 (Phần 1): Các câu lệnh (Prompt) gửi cho AI
 
-## Prompt điều khiển Backend Agent
+Trong suốt quá trình phát triển dự án từ ngày 09/08 đến 31/08, tôi không sử dụng AI như một công cụ sinh mã ngẫu nhiên. Thay vào đó, tôi đóng vai trò là **Kiến trúc sư phần mềm**, sử dụng các Prompt (Câu lệnh) có tính kỹ thuật cao để định hướng, ép buộc AI tuân thủ nghiêm ngặt các quy tắc nghiệp vụ, bảo mật và trải nghiệm người dùng của dự án.
 
-> "BẮT BUỘC:
-> 1. Không cho mượn khi số lượng sách còn = 0; số lượng không được âm.
-> 2. Tự động tính phạt trễ hạn theo công thức người dùng xác nhận.
-> 3. Đặt trước chỉ áp dụng khi sách đang hết/đang mượn hết.
-> 4. Phân quyền chặt: độc giả không gọi được API quản trị.
-> 5. API cấp cho AI Engine PHẢI lọc bỏ dữ liệu cá nhân độc giả (chỉ giữ những gì AI thật sự cần — đúng mục 5: 'đã ẩn thông tin nhạy cảm').
-> 6. Có unit test/integration test cho: mượn/trả, tính quá hạn/phạt (đúng yêu cầu kỹ thuật mục 4). Không tự tạo dữ liệu mẫu nếu không được yêu cầu.
-> 7. Mọi thay đổi schema phải có migration, không sửa tay DB."
+Dưới đây là 18 Prompt tiêu biểu (được sắp xếp theo đúng trình tự thời gian) thể hiện rõ năng lực điều khiển AI của tôi:
 
-## Prompt điều khiển Frontend Agent
+## GIAI ĐOẠN 1: KHỞI TẠO NỀN TẢNG & PHÂN QUYỀN (09/08/2026)
 
-> "PHẠM VI: Chỉ code trong thư mục Frontend. Công nghệ: React/Vue/HTML‑CSS‑JS/template engine theo lựa chọn người dùng khi bắt đầu, không tự đổi...
-> BẮT BUỘC:
-> 1. Chỉ làm đúng phần UI được giao trong lượt, không tự thêm màn hình ngoài phạm vi.
-> 2. Khi Backend chưa có API, dùng dữ liệu mock tạm và ghi rõ chỗ sẽ nối API.
-> 3. Phân quyền ở màn hình: độc giả không nhìn thấy/không dùng được chức năng quản trị.
-> 4. Hiển thị rõ lỗi API: sách hết, thẻ khóa, quá hạn, không có kết quả tra cứu.
-> 5. Tự chạy checklist trước khi báo xong."
+### 1. Prompt khởi tạo Backend Agent (09/08)
+> *"BẮT BUỘC: 1. Không cho mượn khi sách còn = 0, số lượng không âm. 2. Tự động tính phạt trễ hạn. 3. Đặt trước chỉ áp dụng khi sách hết. 4. Phân quyền chặt: độc giả không gọi được API quản trị. 5. API cấp cho AI Engine PHẢI lọc bỏ dữ liệu cá nhân. 6. Có unit test. 7. Mọi thay đổi schema phải có migration."*
 
-## Prompt điều khiển AI Engine Agent
+### 2. Prompt khởi tạo Frontend Agent (09/08)
+> *"PHẠM VI: Chỉ code trong thư mục Frontend. Công nghệ: HTML‑CSS‑JS thuần, không dùng framework nặng. BẮT BUỘC: 1. Khi Backend chưa có API, dùng dữ liệu mock tạm và ghi rõ chỗ sẽ nối API. 2. Phân quyền ở màn hình: độc giả không nhìn thấy chức năng quản trị. 3. Hiển thị rõ lỗi API: sách hết, thẻ khóa, quá hạn."*
 
-> "PROMPT TEMPLATE BẮT BUỘC DÙNG LÀM GỐC:
-> System: 'Bạn là trợ lý tra cứu thư viện. Chỉ gợi ý sách có trong dữ liệu được cung cấp. Không bịa mã sách hoặc tình trạng sách.'
-> User mẫu: 'Tôi muốn tìm sách dễ đọc về <chủ đề> cho người mới bắt đầu. Dữ liệu sách: {{book_list}}. Hãy gợi ý tối đa 5 cuốn, kèm lý do.'
-> BẮT BUỘC:
-> 1. Không bịa mã sách hoặc tình trạng sách ngoài dữ liệu Backend cung cấp.
-> 2. Không gửi dữ liệu cá nhân độc giả cho AI nếu chức năng chỉ cần dữ liệu sách.
-> 3. Có test case cho: câu hỏi mơ hồ, sách không tồn tại, sách hết."
+### 3. Prompt phân quyền Admin vs Librarian (09/08)
+> *"Tuyệt đối không gộp chung quyền Admin và Librarian. Hệ thống phải có ranh giới rõ ràng: 4 nhóm quyền admin-only (quản lý tài khoản thủ thư, cấu hình tham số, cấu hình AI, audit log). Sinh ngay bảng AuditLog để giám sát Admin."*
 
-## Prompt chuẩn hóa và thay máu CSDL Sách (2026‑08‑28)
+### 4. Prompt thiết kế nghiệp vụ Mượn/Trả (09/08)
+> *"Khi viết API POST /api/borrows, phải rào đủ các điều kiện: 1. Độc giả đang hoạt động. 2. Sách còn > 0. 3. Không vượt `max_books_at_once`. 4. `han_tra` = `ngay_muon` + `max_borrow_days`."*
 
-> "Quy tắc:
-> - Kiểm tra bảng Thể loại đã có mã TL_OTO chưa, chưa có thì tạo mới.
-> - Kiểm tra sách trùng tên trong DB trước khi thêm; nếu trùng, liệt kê và hỏi xác nhận, không tự động ghi đè hoặc tạo trùng.
-> - Mỗi sách sinh book_id theo đúng quy tắc mã hiện có của hệ thống.
-> - Số lượng mặc định 5 nếu chưa có thông tin khác, tự tạo BookCopy tương ứng.
-> - KHÔNG bịa thêm sách ngoài danh sách dưới đây."
+### 5. Prompt xử lý chống Spam Request (09/08)
+> *"Hệ thống bị lỗi HTTP 409 Conflict do độc giả bấm gửi yêu cầu 2 lần liên tiếp. Viết hàm JS tự động sinh mã UUID giả lập gắn vào payload để chống trùng lặp request."*
+
+### 6. Prompt thiết kế hệ thống Đặt trước sách (09/08)
+> *"Chức năng đặt trước sách: chỉ được đặt khi sách ĐÃ HẾT. Nếu sách còn → trả 400. Khi trả sách, nếu có ai đặt trước → tự động chuyển trạng thái sang SAN_SANG. Chặn gia hạn nếu sách có đặt trước."*
+
+### 7. Prompt chuyển phạt tiền sang điểm SVNET (09/08)
+> *"Đổi toàn bộ hệ thống phạt từ TIỀN sang TRỪ ĐIỂM SVNET. Công thức: 1 ngày quá hạn = 2 điểm. Mỗi độc giả khởi tạo 100 điểm. Migration phải chuyển đổi dữ liệu cũ chính xác."*
+
+---
+
+## GIAI ĐOẠN 2: HOÀN THIỆN UX/UI & VALIDATION (10/08 - 27/08/2026)
+
+### 8. Prompt xác thực dữ liệu nghiêm ngặt (10/08)
+> *"Yêu cầu validation: Họ tên ≥ 2 từ. Email bắt buộc đuôi @ictu.edu.vn. SĐT phải theo chuẩn định dạng Việt Nam. Trùng email trả về lỗi 409. Bổ sung Regex chặn từ Frontend đến Backend."*
+
+### 9. Prompt thiết kế Dropzone kéo thả ảnh bìa (27/08)
+> *"Bỏ thẻ input file mặc định. Tạo khu vực Dropzone hỗ trợ kéo thả (dragover, dragleave, drop). Dùng FileReader để Preview ảnh bìa ngay lập tức khi người dùng thả ảnh vào."*
+
+### 10. Prompt chuẩn hóa định dạng mã sinh viên DTC (27/08)
+> *"Mã sinh viên phải bắt đầu bằng 'DTC' + 9 chữ số. Giảng viên: 'GV' + 4 chữ số. Bổ sung Regex bắt lỗi (Inline Validation) hiển thị chữ đỏ dưới ô nhập."*
+
+### 11. Prompt điều khiển AI Engine (Trợ lý ảo) (27/08)
+> *"PROMPT TEMPLATE BẮT BUỘC DÙNG LÀM GỐC: System: 'Bạn là trợ lý tra cứu thư viện. Chỉ gợi ý sách có trong dữ liệu được cung cấp. Không bịa mã sách.' BẮT BUỘC: Không gửi dữ liệu cá nhân độc giả cho AI. Có test case cho câu hỏi mơ hồ."*
+
+---
+
+## GIAI ĐOẠN 3: XÂY DỰNG DỮ LIỆU LỚN & PHÂN TRANG (28/08/2026)
+
+### 12. Prompt chuẩn hóa và thay máu CSDL Sách thật (28/08)
+> *"Quy tắc import 64 sách: Kiểm tra bảng Thể loại, chưa có thì tạo mới. Kiểm tra sách trùng tên trước khi thêm, không tự động ghi đè. Số lượng mặc định 5 nếu chưa có. KHÔNG bịa thêm sách ngoài danh sách cung cấp."*
+
+### 13. Prompt thuật toán sinh ID tự động theo tiền tố (28/08)
+> *"Viết hàm Python trích xuất chữ cái đầu của mỗi từ trong `ten_sach` để làm tiền tố (Acronym), sau đó cộng với bộ đếm tăng dần 4 chữ số (VD: Bóng Ma Trên Mạng -> BMTM0005). Bộ đếm global, không reset theo thể loại."*
+
+### 14. Prompt viết lại kiến trúc Phân trang (28/08)
+> *"Tải 64 sách 1 lần sẽ sập trình duyệt. Viết lại API /api/books ở Backend hỗ trợ `skip` và `limit`. Ở Frontend, vẽ thanh Pagination và đồng bộ trạng thái `currentPage` vào URL."*
+
+---
+
+## GIAI ĐOẠN 4: KTR2 - KIẾN TRÚC MULTI-COPY & SỬA LỖI (30/08 - 31/08/2026)
+
+### 15. Prompt đập đi xây lại CSDL sang bản vật lý (30/08)
+> *"Độc giả có thể mượn 3 tài liệu giống nhau, nhưng mỗi quyển phải có 1 ID riêng (Multi-copy) để kiểm soát hư hỏng. Đập đi xây lại bảng BorrowDetails, gỡ khóa chính cũ và lập khóa chính mới `(ma_phieu, copy_id)`. Dùng row-level locking chống xung đột."*
+
+### 16. Prompt sửa xung đột Khóa ngoại SQL Server (30/08)
+> *"SQL Server chặn Drop PK khi còn dính FK. Bỏ dùng SQL chay đi. Viết script Python dùng `pyodbc` kết hợp Raw SQL thực hiện quy trình: 1. Drop Constraint FK -> 2. Drop PK cũ -> 3. Add cột copy_id -> 4. Make New PK -> 5. Re-add Constraint FK."*
+
+### 17. Prompt rào lỗi IntegrityError khi xóa sách (30/08)
+> *"Cấm can thiệp DB schema `ON DELETE CASCADE`. Phải kiểm soát bằng Application Layer. Sửa hàm DELETE, đếm và xóa thủ công tất cả `BookCopies` của sách đó trước, sau đó mới xóa `Book`."*
+
+### 18. Prompt sửa vị trí hàng đợi Đặt trước (31/08)
+> *"Cột Vị trí đặt trước đang hiện dấu `-` dù sách đã sẵn sàng. Kiểm tra và sửa cả Backend (hàm đếm `queue_pos` bỏ quên trạng thái SAN_SANG) và Frontend (lọc mất dữ liệu API). Sửa cả 2 đầu ngay lập tức."*

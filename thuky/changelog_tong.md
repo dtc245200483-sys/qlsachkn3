@@ -407,6 +407,9 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
 [FRONTEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi tham số API do sai field id thành ma trên hàng loạt file (reservations.js, borrow.js, my-borrows.js, books.js, readers.js, notifications-core.js). Sửa lỗi không cập nhật tên người dùng trên thanh điều hướng sau khi lưu hồ sơ (gọi syncSessionName trong profile.js).
 
 [BACKEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi business logic quan trọng ở API DELETE /api/readers/{ma}. Bổ sung kiểm tra chặt chẽ: ngăn chặn việc xoá độc giả nếu độc giả đó đang có phiếu mượn chưa trả (đang mượn, quá hạn), còn nợ tiền phạt chưa thu, hoặc đang có yêu cầu/đặt trước chờ xử lý. Trả về HTTP 400 kèm thông báo rõ ràng cho Admin. - Chức năng đề bài liên quan: 3, 4, 6
+
+## 2026-08-27 — Log Trợ Lý (Thêm tính năng tải ảnh bìa sách)
+
 [FRONTEND] 2026-08-27 21:05:00 - Thay đổi: 
 - books.html: Thêm khu vực kéo thả (drag & drop) và input tải file ảnh bìa. Đổi trường nhập Thể loại và Nhà xuất bản từ text sang thẻ select (dropdown).
 - books.js: Bổ sung hàm handleCoverUpload để tải file ảnh lên qua API và gán link tự động. Bổ sung hàm loadCategoriesAndPublishers nạp danh sách vào 2 thẻ select, gỡ bỏ tuỳ chọn cho phép tự do nhập ngoài danh mục, ép buộc thủ thư phải chọn từ danh mục của admin.
@@ -602,6 +605,9 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
 [FRONTEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi tham số API do sai field id thành ma trên hàng loạt file (reservations.js, borrow.js, my-borrows.js, books.js, readers.js, notifications-core.js). Sửa lỗi không cập nhật tên người dùng trên thanh điều hướng sau khi lưu hồ sơ (gọi syncSessionName trong profile.js).
 
 [BACKEND] 2026-08-27 07:10:00 - Thay đổi: Sửa lỗi business logic quan trọng ở API DELETE /api/readers/{ma}. Bổ sung kiểm tra chặt chẽ: ngăn chặn việc xoá độc giả nếu độc giả đó đang có phiếu mượn chưa trả (đang mượn, quá hạn), còn nợ tiền phạt chưa thu, hoặc đang có yêu cầu/đặt trước chờ xử lý. Trả về HTTP 400 kèm thông báo rõ ràng cho Admin. - Chức năng đề bài liên quan: 3, 4, 6
+
+## 2026-08-27 — Log Trợ Lý (Thêm tính năng tải ảnh bìa sách)
+
 [FRONTEND] 2026-08-27 21:05:00 - Thay đổi: 
 - books.html: Thêm khu vực kéo thả (drag & drop) và input tải file ảnh bìa. Đổi trường nhập Thể loại và Nhà xuất bản từ text sang thẻ select (dropdown).
 - books.js: Bổ sung hàm handleCoverUpload để tải file ảnh lên qua API và gán link tự động. Bổ sung hàm loadCategoriesAndPublishers nạp danh sách vào 2 thẻ select, gỡ bỏ tuỳ chọn cho phép tự do nhập ngoài danh mục, ép buộc thủ thư phải chọn từ danh mục của admin.
@@ -687,3 +693,14 @@ Chi tiết: notifications.js bỏ window.confirm; bấm Xoá → window.Notif.re
 equests.py do import BorrowSlip trùng lặp trong nội bộ hàm.
 - Backend: Sửa logic trong endpoint kiểm tra thông báo đặt trước, đổi cách giả lập sang gọi API thật để tự động gắn copy_id.
 - Kết quả: Toàn bộ 111/111 unit tests PASS hoàn toàn. Hệ thống đáp ứng mọi yêu cầu vẹn toàn dữ liệu và luồng nghiệp vụ.
+
+## 2026-08-31 — Log Trợ Lý (Sửa lỗi hiển thị vị trí chờ & khôi phục tồn kho)
+
+[FRONTEND] 2026-08-31 02:40:00 - Thay đổi: Sửa lỗi Frontend không hiển thị được queue_position (Vị trí xếp hàng) trong trang Đặt trước. Bổ sung trường queue_position vào cấu hình 
+eservationOut trong pi.js (hàm mapResponse) để hệ thống không lọc mất dữ liệu từ API. Nâng version cache cho pi.js trong 
+eservations.html.
+- Chức năng đề bài liên quan: 6 (Quản lý đặt trước).
+
+[BACKEND] 2026-08-31 02:40:00 - Thay đổi: Sửa logic trong hàm _out của 
+eservations.py, tính toán queue_pos cho cả các đơn ở trạng thái SAN_SANG (Sẵn sàng). Khôi phục thủ công (qua Script Python) số lượng cuốn sách '50 Cuốn Sách Kinh Điển Về Kinh Doanh' (Mã: 5CSKDVKD0002) từ 0 về 5 do bị bộ unit test tự động ghi đè.
+- Chức năng đề bài liên quan: 2, 6.
