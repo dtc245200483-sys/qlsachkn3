@@ -9,6 +9,7 @@ Cách chạy (Backend phải đang chạy để tạo tài khoản qua API regis
 Idempotent: chạy lại không đè/không trùng dữ liệu.
 """
 
+import json
 import os
 import sys
 import unicodedata
@@ -58,6 +59,7 @@ DEMO_BOOKS = [
         "nxb": "NXB Giáo dục",
         "namXb": 2023,
         "soLuong": 5,
+        "anhBia": "/static/covers/s001.svg",
     },
     {
         "ma": "S002",
@@ -67,6 +69,7 @@ DEMO_BOOKS = [
         "nxb": "NXB Đại học Quốc gia",
         "namXb": 2022,
         "soLuong": 5,
+        "anhBia": "/static/covers/s002.svg",
     },
     {
         "ma": "S003",
@@ -76,6 +79,7 @@ DEMO_BOOKS = [
         "nxb": "NXB Bách khoa",
         "namXb": 2021,
         "soLuong": 4,
+        "anhBia": "/static/covers/s003.svg",
     },
     {
         "ma": "S004",
@@ -85,6 +89,7 @@ DEMO_BOOKS = [
         "nxb": "NXB Văn học",
         "namXb": 1942,
         "soLuong": 3,
+        "anhBia": "/static/covers/s004.svg",
     },
     {
         "ma": "S005",
@@ -94,8 +99,12 @@ DEMO_BOOKS = [
         "nxb": "NXB Chính trị quốc gia",
         "namXb": 2019,
         "soLuong": 2,
+        "anhBia": "/static/covers/s005.svg",
     },
 ]
+
+with open(os.path.join(os.path.dirname(__file__), "books_catalog.json"), encoding="utf-8") as catalog_file:
+    DEMO_BOOKS = json.load(catalog_file)
 
 DEMO_READERS = [
     {
@@ -206,7 +215,10 @@ def _delete_orphan_reader(db, reader_ma: str | None) -> None:
 def seed_books(db) -> list[str]:
     created = []
     for data in DEMO_BOOKS:
-        if db.get(Book, data["ma"]) is not None:
+        existing = db.get(Book, data["ma"])
+        if existing is not None:
+            if not existing.anhBia or existing.anhBia.startswith("https://example.com/"):
+                existing.anhBia = data["anhBia"]
             continue
         the_loai = db.query(TheLoai).filter(TheLoai.ten == data["theLoai"]).first()
         nxb = db.query(Nxb).filter(Nxb.ten == data["nxb"]).first()
@@ -219,6 +231,7 @@ def seed_books(db) -> list[str]:
                 nxb=data["nxb"],
                 namXb=data["namXb"],
                 soLuong=data["soLuong"],
+                anhBia=data["anhBia"],
                 theLoaiId=the_loai.ma if the_loai else None,
                 nxbId=nxb.ma if nxb else None,
             )

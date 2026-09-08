@@ -20,6 +20,16 @@ python -m alembic upgrade head
 
 Kết nối mặc định lấy từ file `.env` (`DATABASE_URL`), tài khoản dùng Windows Authentication.
 
+## Dữ liệu demo đầy đủ sách và ảnh
+
+Sau khi chạy migration, chạy seed để tạo dữ liệu sách mẫu, tài khoản và các dữ liệu liên quan:
+
+```powershell
+python scripts/seed_demo.py
+```
+
+Catalog sách hiện tại được lưu trong `scripts/books_catalog.json` và được seed vào cột `Books.anhBia` (63 sách, theo dữ liệu CSDL hiện tại). Các URL ảnh bìa đang trỏ tới Fahasa/Tiki, vì vậy máy người dùng cần có Internet để hiển thị ảnh giống dữ liệu gốc. Avatar mẫu nằm trong `static/avatars/`. Vì `.env` không được đưa lên Git, người tải project cần tạo `.env` từ `.env.example` và trỏ `DATABASE_URL` tới SQL Server của máy mình.
+
 ## Chạy server
 
 ```powershell
