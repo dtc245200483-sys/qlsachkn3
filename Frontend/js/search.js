@@ -257,7 +257,42 @@
     });
     
     infoDiv.appendChild(details);
+
+    // === TÓM TẮT SÁCH ===
+    if (book.tomTat) {
+      var summaryWrap = document.createElement("div");
+      summaryWrap.className = "book-summary-wrap";
+
+      var summaryToggle = document.createElement("button");
+      summaryToggle.type = "button";
+      summaryToggle.className = "book-summary-toggle";
+      summaryToggle.innerHTML = "<span class=\"summary-icon\">📖</span> <span class=\"summary-label\">Tóm tắt nội dung</span> <span class=\"summary-arrow\">▼</span>";
+
+      var summaryBody = document.createElement("div");
+      summaryBody.className = "book-summary-body";
+      summaryBody.hidden = true;
+
+      var summaryText = document.createElement("p");
+      summaryText.className = "book-summary-text";
+      summaryText.textContent = book.tomTat;
+
+      summaryBody.appendChild(summaryText);
+      summaryWrap.appendChild(summaryToggle);
+      summaryWrap.appendChild(summaryBody);
+      infoDiv.appendChild(summaryWrap);
+
+      (function(toggle, body, wrap) {
+        toggle.addEventListener("click", function () {
+          var isOpen = !body.hidden;
+          body.hidden = isOpen;
+          wrap.classList.toggle("open", !isOpen);
+          toggle.querySelector(".summary-arrow").textContent = isOpen ? "▼" : "▲";
+        });
+      })(summaryToggle, summaryBody, summaryWrap);
+    }
+
     item.appendChild(infoDiv);
+
 
     var available = Number(book.soLuong) > 0;
     var statusText = available ? "Còn sách" : "Hết sách";
