@@ -1,0 +1,567 @@
+﻿---
+MA: 5CSKDVKD0002
+TEN: 50 Cuß╗æn S├ích Kinh ─Éiß╗ân Vß╗ü Kinh Doanh
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 1
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8935251422290.jpg
+---
+MA: 7TQHQ0003
+TEN: 7 Th├│i Quen Hiß╗çu Quß║ú - The 7 Habits Of Highly Effective People (B├¼a Cß╗⌐ng)
+TAC_GIA: Stephen R. Covey
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/7/h/7h_700x650_bia1.jpg
+---
+MA: BCA0004
+TEN: B├í Chß╗º AI - Tr├¡ Tuß╗ç Nh├ón Tß║ío, ChatGPT, V├á Cuß╗Öc Chß║íy ─Éua Thay ─Éß╗òi Thß║┐ Giß╗¢i
+TAC_GIA: Parmy Olson
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Trß║╗
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/b/a/ba-chu-ai-02.jpg
+---
+MA: BMTM0005
+TEN: B├│ng Ma Tr├¬n Mß║íng
+TAC_GIA: Kevin Mitnick
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_180164_1_43_1_57_1_4_1_2_1_210_1_29_1_98_1_25_1_21_1_5_1_3_1_18_1_18_1_45_1_26_1_32_1_14_1_2695.jpg
+---
+MA: BTD0006
+TEN: Bß╗ï Theo D├╡i - B├¡ Mß║¡t An Ninh Mß║íng (Permanent Record)
+TAC_GIA: Edward Snowden
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/m/e/meho_c.jpg
+---
+MA: CCMSVCDTTLTVG0007
+TEN: Clean Code ΓÇô M├ú Sß║ích V├á Con ─É╞░ß╗¥ng Trß╗ƒ Th├ánh Lß║¡p Tr├¼nh Vi├¬n Giß╗Åi
+TAC_GIA: Robert C. Martin
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Trß║╗
+NAM_XB: 2023
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8936107813361.jpg
+---
+MA: CDCNTH0008
+TEN: CorelDraw D├ánh Cho Ng╞░ß╗¥i Tß╗▒ Hß╗ìc
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_133980.jpg
+---
+MA: CNKT0009
+TEN: Chuy├¬n Ng├ánh Kß╗╣ Thuß║¡t - ─Éiß╗çn Tß╗¡
+TAC_GIA: (gi├ío tr├¼nh quß╗æc tß║┐)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043773781.jpg
+---
+MA: CSDLMXS0010
+TEN: C╞í Sß╗ƒ Dß╗» Liß╗çu Mß╗¥ & X├íc Suß║Ñt
+TAC_GIA: (gi├ío tr├¼nh chuy├¬n ng├ánh)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB X├óy dß╗▒ng
+NAM_XB: 2020
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_13363.jpg
+---
+MA: CSSCOTTCBDNC0011
+TEN: Combo S├ích Sß╗¡a Chß╗»a ├ö T├┤ Tß╗½ C╞í Bß║ún ─Éß║┐n N├óng Cao (Bß╗Ö 2 Cuß╗æn)
+TAC_GIA: (bß╗Ö s├ích chuy├¬n ─æß╗ü)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 4
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/c/o/combo-8935095626977-8935095630172.jpg
+---
+MA: DDTD0012
+TEN: Dß║╖m ─É╞░ß╗¥ng T├┤i ─Éi - H├ánh Tr├¼nh Tß╗½ BMW, Bosch ─Éß║┐n VinFast
+TAC_GIA: Nhiß╗üu T├íc Giß║ú
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/d/a/dam-duong-toi-di-bia-mem.jpg
+---
+MA: DTTC0013
+TEN: ─Éß║ºu T╞░ T├ái Ch├¡nh (T├íi Bß║ún)
+TAC_GIA: (s├ích kß╗╣ thuß║¡t)
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_183257_1.jpg
+---
+MA: GDM0014
+TEN: Gi├ín ─Éiß╗çp Mß║íng
+TAC_GIA: Clifford Stoll
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_180164_1_43_1_57_1_4_1_2_1_210_1_29_1_98_1_25_1_21_1_5_1_3_1_18_1_18_1_45_1_26_1_32_1_14_1_2446.jpg
+---
+MA: GTCH0015
+TEN: Gi├ío Tr├¼nh Chuß║⌐n HSK (S╞í cß║Ñp)
+TAC_GIA: Hanban
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/g/i/giaotrinhchuanhsk1.jpg
+---
+MA: GTCSATTT0016
+TEN: Gi├ío Tr├¼nh C╞í Sß╗ƒ An To├án Th├┤ng Tin
+TAC_GIA: (gi├ío tr├¼nh ─æß║íi hß╗ìc)
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://salt.tikicdn.com/cache/280x280/ts/product/cb/ef/d5/49f065ce23fae8506492f9261eb7544c.jpg
+---
+MA: GTCXXXV20017
+TEN: Gi├ío Tr├¼nh CorelDraw X7, X8, X9 V├á 2020
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_220122.jpg
+---
+MA: GTDCDT0018
+TEN: Gi├ío Tr├¼nh ─Éß╗Öng C╞í ─Éß╗æt Trong
+TAC_GIA: (gi├ío tr├¼nh ─æß║íi hß╗ìc)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_191543.jpg
+---
+MA: GTHN0019
+TEN: Gi├ío Tr├¼nh H├ín Ngß╗» - Tß║¡p 1: Quyß╗ân Th╞░ß╗úng
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8936049884849.jpg
+---
+MA: GTPTHN0020
+TEN: Gi├ío Tr├¼nh Ph├ít Triß╗ân H├ín Ngß╗» - N├│i-Giao Tiß║┐p Trung Cß║Ñp 1
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/b/i/bia-truoc-phat-trien-han-ngu-noi-giao-tiep-trung-cap-1-scaled.jpg
+---
+MA: GTVDKA0021
+TEN: Gi├ío Tr├¼nh Vi ─Éiß╗üu Khiß╗ân ARM - H╞░ß╗¢ng Dß║½n Sß╗¡ Dß╗Ñng STM32
+TAC_GIA: (gi├ío tr├¼nh ─æß║íi hß╗ìc)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_40164.jpg
+---
+MA: HDCBMVQTMCNTH0022
+TEN: H╞░ß╗¢ng Dß║½n C├ích Bß║úo Mß║¡t V├á Quß║ún Trß╗ï Mß║íng Cho Ng╞░ß╗¥i Tß╗▒ Hß╗ìc
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_66738.jpg
+---
+MA: HLS0023
+TEN: Hacker L╞░ß╗úc Sß╗¡
+TAC_GIA: Steven Levy
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/1/f/1f45270a-7a0b-497a-ad29-6de119b3f708_1.jpg
+---
+MA: HTAGTCT3N0024
+TEN: Hß╗ìc Tiß║┐ng Anh Giao Tiß║┐p Chß╗ë Trong 30 Ng├áy (K├¿m CD)
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/h/o/hoctagtchitrong30ngay.jpg
+---
+MA: HTTTTCNH0025
+TEN: Hß╗ç Thß╗æng Th├┤ng Tin T├ái Ch├¡nh Ng├ón H├áng
+TAC_GIA: (gi├ío tr├¼nh chuy├¬n ng├ánh)
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_73537.jpg
+---
+MA: KTA0026
+TEN: Kß╗╣ Thuß║¡t AI - X├óy Dß╗▒ng ß╗¿ng Dß╗Ñng Vß╗¢i M├┤ H├¼nh Nß╗ün Tß║úng
+TAC_GIA: (s├ích kß╗╣ thuß║¡t AI)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Trß║╗
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/z/7/z7331841143034_82f15b2774b7471db7b3f6bd9c75e521.jpg
+---
+MA: KTBDVSCOTHD0027
+TEN: Kß╗╣ Thuß║¡t Bß║úo D╞░ß╗íng V├á Sß╗¡a Chß╗»a ├ö T├┤ Hiß╗çn ─Éß║íi - Bß║úo D╞░ß╗íng ├ö T├┤
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_142389.jpg
+---
+MA: KTBDVSCOTHD0028
+TEN: Kß╗╣ Thuß║¡t Bß║úo D╞░ß╗íng V├á Sß╗¡a Chß╗»a ├ö T├┤ Hiß╗çn ─Éß║íi - Sß╗¡a Chß╗»a ─Éiß╗çn ├ö T├┤
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_142387.jpg
+---
+MA: KTLTPNC0029
+TEN: Kß╗╣ Thuß║¡t Lß║¡p Tr├¼nh Python N├óng Cao
+TAC_GIA: (s├ích trong n╞░ß╗¢c)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Th├┤ng tin v├á Truyß╗ün th├┤ng
+NAM_XB: 2021
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043268935.jpg
+---
+MA: KTSCOTCB0030
+TEN: Kß╗╣ Thuß║¡t Sß╗¡a Chß╗»a ├ö T├┤ C╞í Bß║ún (T├íi Bß║ún 2019)
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_180859.jpg
+---
+MA: KTSCOTNC0031
+TEN: Kß╗╣ Thuß║¡t Sß╗¡a Chß╗»a ├ö T├┤ N├óng Cao
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: http://product.hstatic.net/200000017360/product/ky_thuat_sua_chua_o_to_nang_cao_bia_1_d59e434b1664483889666a1814bbcd74_grande.png
+---
+MA: LTCB0032
+TEN: Lß║¡p Tr├¼nh C╞í Bß║ún - Tß╗▒ Hß╗ìc Python Bß║▒ng H├¼nh ß║ónh
+TAC_GIA: (s├ích trong n╞░ß╗¢c)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Thanh Ni├¬n
+NAM_XB: 2023
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043345216.jpg
+---
+MA: LTDKTACHVVKN0033
+TEN: Lß║¡p Tr├¼nh ─Éiß╗üu Khiß╗ân Tr├¬n Arduino Cho Hß╗ç Vß║ín Vß║¡t Kß║┐t Nß╗æi (IoT)
+TAC_GIA: (s├ích kß╗╣ thuß║¡t IoT)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_27693.jpg
+---
+MA: LTDKVA0034
+TEN: Lß║¡p Tr├¼nh ─Éiß╗üu Khiß╗ân Vß╗¢i Arduino
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_106968.jpg
+---
+MA: LTVP0035
+TEN: Lß║¡p Tr├¼nh Vß╗¢i Python (H├ánh Trang Cho T╞░╞íng Lai)
+TAC_GIA: (s├ích trong n╞░ß╗¢c)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB Th├┤ng tin v├á Truyß╗ün th├┤ng
+NAM_XB: 2022
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043527810.jpg
+---
+MA: LTVVDKP0036
+TEN: Lß║¡p Tr├¼nh Vß╗¢i Vi ─Éiß╗üu Khiß╗ân PIC - L├╜ Thuyß║┐t - Thß╗▒c H├ánh
+TAC_GIA: (gi├ío tr├¼nh ─æß║íi hß╗ìc)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043719956.jpg
+---
+MA: LVQTCCU0037
+TEN: Logistics V├á Quß║ún Trß╗ï Chuß╗ùi Cung ß╗¿ng
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/l/o/logistic-v_-qu_n-tr_-chu_i-cung-_ng---b_a-1.jpg
+---
+MA: MBLDK0038
+TEN: Marketing B├ín Lß║╗ ─Éa K├¬nh
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/m/a/marketing-ban-le-da-kenh-anh-1-laz-shope.jpg
+---
+MA: MCB0039
+TEN: Marketing C─ân Bß║ún - Marketing 101
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/3/9/394306.jpg
+---
+MA: MHPPVBL0040
+TEN: M├┤ H├¼nh Ph├ón Phß╗æi V├á B├ín Lß║╗
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_100445.jpg
+---
+MA: NDTTM0041
+TEN: Nh├á ─Éß║ºu T╞░ Th├┤ng Minh (T├íi Bß║ún 2020)
+TAC_GIA: Benjamin Graham
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_44030.jpg
+---
+MA: NGCNTB0042
+TEN: Ng╞░ß╗¥i Gi├áu C├│ Nhß║Ñt Th├ánh Babylon (T├íi Bß║ún)
+TAC_GIA: George S. Clason
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8935246937525_1.jpg
+---
+MA: NLDTG0043
+TEN: Nguy├¬n L├╜ Design Thß╗ï Gi├íc (B├¼a Cß╗⌐ng)
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8936144202692.jpg
+---
+MA: NLM0044
+TEN: Nguy├¬n L├╜ Marketing
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/z/3/z3191421803753_d34be7758308b8ee74572ebf885cbf9a.jpg
+---
+MA: NMCSDL0045
+TEN: Nhß║¡p M├┤n C╞í Sß╗ƒ Dß╗» Liß╗çu
+TAC_GIA: (gi├ío tr├¼nh trong n╞░ß╗¢c)
+THE_LOAI: C├┤ng nghß╗ç th├┤ng tin
+NXB: NXB B├ích Khoa H├á Nß╗Öi
+NAM_XB: 2022
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/0/_/0_12_106.jpg
+---
+MA: NTAM0046
+TEN: Nghß╗ç Thuß║¡t ß║¿n M├¼nh (The Art of Invisibility)
+TAC_GIA: Kevin Mitnick, Robert Vamosi
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/n/g/nghe-thuat-an-minh-new-01.jpg
+---
+MA: TAGTTPN0047
+TEN: Tiß║┐ng Anh Giao Tiß║┐p Trong Ph├▓ng Nha
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043927368.jpg
+---
+MA: TCCB0048
+TEN: T├ái Ch├¡nh C─ân Bß║ún
+TAC_GIA: Frank Fabozzi, Pamela Drake
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_79247.jpg
+---
+MA: TGTHN0049
+TEN: T├ón Gi├ío Tr├¼nh H├ín Ngß╗» - Tß║¡p 1
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_37051.jpg
+---
+MA: TH2CDGTTATDN0050
+TEN: Tß╗▒ Hß╗ìc 29 Chß╗º ─Éß╗ü Giao Tiß║┐p Tiß║┐ng Anh Th├┤ng Dß╗Ñng Nhß║Ñt
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/b/i/bia_truoc_1.png
+---
+MA: THAICBHMH0051
+TEN: Tß╗▒ Hß╗ìc Adobe InDesign CS5 Bß║▒ng H├¼nh Minh Hß╗ìa
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_66510.jpg
+---
+MA: THGTTATCD0052
+TEN: Tß╗▒ Hß╗ìc Giao Tiß║┐p Tiß║┐ng Anh Theo Chß╗º ─Éß╗ü
+TAC_GIA: (gi├ío tr├¼nh)
+THE_LOAI: Ng├┤n ngß╗»
+NXB: NXB Tß╗òng Hß╗úp
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/b/i/bia-truoc---t_-h_c-giao-ti_p-ti_ng-anh-theo-ch_-_.jpg
+---
+MA: THICTTKDH0053
+TEN: Tß╗▒ Hß╗ìc Illustrator CS6 Trong Thiß║┐t Kß║┐ ─Éß╗ô Hß╗ìa
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_57400.jpg
+---
+MA: THPBHA0054
+TEN: Tß╗▒ Hß╗ìc Proteus Bß║▒ng H├¼nh ß║ónh
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_193794.jpg
+---
+MA: THPCTT0055
+TEN: Tß╗▒ Hß╗ìc Photoshop CC To├án Tß║¡p (T├íi Bß║ún 2023)
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/9/7/9786043879063.jpg
+---
+MA: THQTCCU0056
+TEN: Tinh Hoa Quß║ún Trß╗ï Chuß╗ùi Cung ß╗¿ng
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: Kinh tß║┐ - Quß║ún trß╗ï kinh doanh
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/8/9/8935205600514.jpg
+---
+MA: TIITDBOVI0057
+TEN: The Intelligent Investor: The Definitive Book on Value Investing
+TAC_GIA: Benjamin Graham
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_128683.jpg
+---
+MA: TKDHVIC0058
+TEN: Thiß║┐t Kß║┐ ─Éß╗ô Hß╗ìa Vß╗¢i Illustrator CS4
+TAC_GIA: (s├ích ─æß╗ô hß╗ìa)
+THE_LOAI: Thiß║┐t kß║┐ ─æß╗ô hß╗ìa - Mß╗╣ thuß║¡t sß╗æ
+NXB: NXB Mß╗╣ Thuß║¡t
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/0/_/0_12_111.jpg
+---
+MA: TSNNT0059
+TEN: Tß╗º S├ích Nhß║Ñt Nghß╗ç Tinh - Chuy├¬n Ng├ánh Kß╗╣ Thuß║¡t, ├ö T├┤ V├á Xe M├íy Hiß╗çn ─Éß║íi
+TAC_GIA: (gi├ío tr├¼nh tß╗òng hß╗úp)
+THE_LOAI: Kß╗╣ thuß║¡t ├ö t├┤
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_180164_1_43_1_57_1_4_1_2_1_210_1_29_1_98_1_25_1_21_1_5_1_3_1_18_1_18_1_45_1_26_1_32_1_14_1_1913.jpg
+---
+MA: TTNHVTTTC0060
+TEN: Tiß╗ün Tß╗ç Ng├ón H├áng V├á Thß╗ï Tr╞░ß╗¥ng T├ái Ch├¡nh
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_237836.jpg
+---
+MA: TTTC0061
+TEN: Tr├¡ Tuß╗ç T├ái Ch├¡nh (Financial Intelligence)
+TAC_GIA: (nhiß╗üu t├íc giß║ú)
+THE_LOAI: T├ái ch├¡nh - Ng├ón h├áng
+NXB: NXB Kinh Tß║┐
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/0/_/0_94.jpg
+---
+MA: UDVXLVVDK0062
+TEN: ß╗¿ng Dß╗Ñng Vi Xß╗¡ L├╜ V├á Vi ─Éiß╗üu Khiß╗ân
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_195509_1_27744.jpg
+---
+MA: VDKVUD0063
+TEN: Vi ─Éiß╗üu Khiß╗ân V├á ß╗¿ng Dß╗Ñng - Arduino D├ánh Cho Ng╞░ß╗¥i Tß╗▒ Hß╗ìc
+TAC_GIA: (s├ích kß╗╣ thuß║¡t trong n╞░ß╗¢c)
+THE_LOAI: ─Éiß╗çn tß╗¡ - Viß╗àn th├┤ng
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/i/m/image_191552.jpg
+---
+MA: VKHH0064
+TEN: V┼⌐ Kh├¡ Ho├án Hß║úo - Chiß║┐n Tranh, Sß╗▒ Ph├í Hoß║íi V├á Nß╗ùi Sß╗ú Trong Kß╗╖ Nguy├¬n Mß║íng
+TAC_GIA: David E. Sanger
+THE_LOAI: An to├án - Bß║úo mß║¡t th├┤ng tin
+NXB: NXB B├ích Khoa
+NAM_XB: 2024
+SO_LUONG: 5
+ANH_BIA: https://cdn1.fahasa.com/media/catalog/product/v/u/vu-khi-hoan-hao-out-01.jpg
