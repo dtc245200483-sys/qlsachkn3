@@ -1,0 +1,12 @@
+[2026-09-15 05:38:51] ERROR: [FAILURE] Model: deepseek/deepseek-chat | Prompt Length: 98 chars | Duration: 0.0s | Error: Chưa cấu hình OPENROUTER_API_KEY
+[2026-09-15 05:39:01] ERROR: [FAILURE] Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Invalid JSON: <html>Not JSON</html>
+[2026-09-15 05:39:01] ERROR: [FAILURE] Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Empty content
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 1/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | HTTP 429 Rate Limit
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 2/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | HTTP 429 Rate Limit
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 3/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | HTTP 429 Rate Limit
+[2026-09-15 05:39:01] ERROR: [FAILURE] Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Exceeded max retries | Last error: [Lỗi Rate Limit] API bị giới hạn tần suất gọi (HTTP 429) ở lần thử 3/3.
+[2026-09-15 05:39:01] INFO: [SUCCESS] Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Response Length: 17 chars
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 1/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Timeout (15s)
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 2/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Timeout (15s)
+[2026-09-15 05:39:01] WARNING: [RETRY] Attempt 3/3 | Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Timeout (15s)
+[2026-09-15 05:39:01] ERROR: [FAILURE] Model: deepseek/deepseek-chat | Prompt Length: 7 chars | Duration: 0.0s | Exceeded max retries | Last error: [Lỗi Timeout] Yêu cầu tới LLM quá thời gian chờ (15s) ở lần thử 3/3.
