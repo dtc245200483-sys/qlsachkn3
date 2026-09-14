@@ -100,6 +100,7 @@ window.API = (function () {
         namXb: "namXb",
         soLuong: "soLuong",
         anhBia: "anhBia",
+        tomTat: "tomTat",
         trangThai: "trangThai"
       },
       readerCreate: {

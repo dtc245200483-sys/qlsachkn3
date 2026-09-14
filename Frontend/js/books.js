@@ -233,7 +233,40 @@
     });
     
     infoDiv.appendChild(details);
+
+    // === TÓM TẮT SÁCH ===
+    if (book.tomTat) {
+      var summaryWrap = document.createElement("div");
+      summaryWrap.className = "book-summary-wrap";
+
+      var summaryToggle = document.createElement("button");
+      summaryToggle.type = "button";
+      summaryToggle.className = "book-summary-toggle";
+      summaryToggle.innerHTML = "<span class=\"summary-icon\">📖</span> <span class=\"summary-label\">Tóm tắt nội dung</span> <span class=\"summary-arrow\">▼</span>";
+
+      var summaryBody = document.createElement("div");
+      summaryBody.className = "book-summary-body";
+      summaryBody.hidden = true;
+
+      var summaryText = document.createElement("p");
+      summaryText.className = "book-summary-text";
+      summaryText.textContent = book.tomTat;
+
+      summaryBody.appendChild(summaryText);
+      summaryWrap.appendChild(summaryToggle);
+      summaryWrap.appendChild(summaryBody);
+      infoDiv.appendChild(summaryWrap);
+
+      summaryToggle.addEventListener("click", function () {
+        var isOpen = !summaryBody.hidden;
+        summaryBody.hidden = isOpen;
+        summaryWrap.classList.toggle("open", !isOpen);
+        summaryToggle.querySelector(".summary-arrow").textContent = isOpen ? "▼" : "▲";
+      });
+    }
+
     item.appendChild(infoDiv);
+
 
     if (canManage()) {
       var actions = document.createElement("div");

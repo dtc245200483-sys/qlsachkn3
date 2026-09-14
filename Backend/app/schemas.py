@@ -26,6 +26,7 @@ class BookBase(BaseModel):
     namXb: int = Field(..., ge=1000, le=2100)
     soLuong: int = Field(..., ge=0)
     anhBia: str = Field(..., min_length=1, max_length=2048)
+    tomTat: str | None = Field(None)
     theLoaiId: str | None = Field(None, max_length=20)
     nxbId: str | None = Field(None, max_length=20)
 

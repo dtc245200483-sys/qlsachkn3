@@ -58,6 +58,7 @@ class Book(Base):
     namXb: Mapped[int] = mapped_column(Integer, nullable=False)
     soLuong: Mapped[int] = mapped_column(Integer, nullable=False)
     anhBia: Mapped[str] = mapped_column(Unicode(2048), nullable=False)
+    tomTat: Mapped[str | None] = mapped_column(UnicodeText, nullable=True)
     theLoaiId: Mapped[str | None] = mapped_column(
         Unicode(20),
         ForeignKey("TheLoai.ma"),
