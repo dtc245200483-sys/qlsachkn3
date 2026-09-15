@@ -5,3 +5,18 @@
 [2026-09-15 10:29:16] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [WARNING] Bỏ qua phần tử index 2: text rỗng hoặc None.
 [2026-09-15 10:29:16] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [WARNING] Bỏ qua phần tử index 4: text rỗng hoặc None.
 [2026-09-15 10:29:16] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [57ms] [batch=3 texts] → 384-dim vectors
+[2026-09-15 10:34:38] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 10:34:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [11809ms] Model sẵn sàng.
+[2026-09-15 10:34:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [258ms] [batch=10 texts] → 384-dim vectors
+[2026-09-15 10:34:51] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 0 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:34:52] [VECTORSTORE] [COUNT] Tổng số sách đã index: 10
+[2026-09-15 10:34:52] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:34:52] [VECTORSTORE] [COUNT] Tổng số sách đã index: 10
+[2026-09-15 10:34:52] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [32ms] [46 chars] → 384-dim vector
+[2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'muốn học cách viết code cho người chưa biết gì' → 3 kết quả [37ms] | Top-1: Lập trình Python từ cơ bản đến (0.779)
+[2026-09-15 10:34:52] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [32ms] [51 chars] → 384-dim vector
+[2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'sách giúp tôi kiếm tiền và quản lý túi tiền tốt hơ' → 3 kết quả [34ms] | Top-1: Nghĩ giàu làm giàu (0.7761)
+[2026-09-15 10:34:52] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [33ms] [58 chars] → 384-dim vector
+[2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'làm sao để chinh phục lòng người và được mọi người' → 3 kết quả [35ms] | Top-1: Đắc nhân tâm (0.7446)
+[2026-09-15 10:34:52] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [29ms] [42 chars] → 384-dim vector
+[2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'khám phá vũ trụ và bí ẩn không gian bao la' → 3 kết quả [32ms] | Top-1: Lược sử thời gian (0.7946)
