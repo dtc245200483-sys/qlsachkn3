@@ -33,16 +33,17 @@ def xay_dung_user_prompt(cau_hoi: str, context: list[dict]) -> str:
     """
     cau_hoi = (cau_hoi or "").strip() or "(Không có câu hỏi)"
 
-    # Rút gọn context để tiết kiệm token, chỉ giữ trường LLM cần
+    # Rút gọn context để tiết kiệm token, chỉ giữ top 4 cuốn sách phù hợp nhất
+    context_toi_uu = (context or [])[:4]
     context_rut_gon = []
-    for sach in (context or []):
+    for sach in context_toi_uu:
         if not isinstance(sach, dict):
             continue
 
         tom_tat_goc = (sach.get("tom_tat") or "").strip()
-        # Giữ trọn vẹn tóm tắt (tối đa 1000 ký tự) để AI đọc hiểu đầy đủ cốt truyện / chủ đề
+        # Rút gọn tóm tắt xuống tối đa 300 ký tự (đủ thông tin cốt lõi, giảm mạnh token)
         tom_tat_rut = (
-            (tom_tat_goc[:1000] + "...") if len(tom_tat_goc) > 1000
+            (tom_tat_goc[:300] + "...") if len(tom_tat_goc) > 300
             else tom_tat_goc
         )
 
@@ -66,7 +67,7 @@ def xay_dung_user_prompt(cau_hoi: str, context: list[dict]) -> str:
             "diem_lien_quan": sach.get("diem_lien_quan", 0),
         })
 
-    context_json = json.dumps(context_rut_gon, ensure_ascii=False, indent=2)
+    context_json = json.dumps(context_rut_gon, ensure_ascii=False)
 
     user_prompt = (
         f"Câu hỏi của độc giả: {cau_hoi}\n\n"

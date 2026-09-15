@@ -219,6 +219,8 @@ def seed_books(db) -> list[str]:
         if existing is not None:
             if not existing.anhBia or existing.anhBia.startswith("https://example.com/"):
                 existing.anhBia = data["anhBia"]
+            if data.get("tomTat") and not existing.tomTat:
+                existing.tomTat = data["tomTat"]
             continue
         the_loai = db.query(TheLoai).filter(TheLoai.ten == data["theLoai"]).first()
         nxb = db.query(Nxb).filter(Nxb.ten == data["nxb"]).first()
@@ -232,6 +234,7 @@ def seed_books(db) -> list[str]:
                 namXb=data["namXb"],
                 soLuong=data["soLuong"],
                 anhBia=data["anhBia"],
+                tomTat=data.get("tomTat"),
                 theLoaiId=the_loai.ma if the_loai else None,
                 nxbId=nxb.ma if nxb else None,
             )
