@@ -164,7 +164,31 @@ window.Layout = (function () {
     });
   }
 
+  function loadChatbotWidget() {
+    // Không hiển thị widget nếu đang ở trang chuyên biệt chatbot.html
+    if (window.location.pathname.indexOf("chatbot.html") !== -1) {
+      return;
+    }
+    // Tự động tải Stylesheet và Script của Widget Trợ lý AI đồng bộ cho mọi trang
+    if (!document.getElementById("chatbot-widget-css")) {
+      var css = document.createElement("link");
+      css.id = "chatbot-widget-css";
+      css.rel = "stylesheet";
+      css.href = "components/chatbot-widget.css?v=20260916-01";
+      document.head.appendChild(css);
+    }
+    if (!document.getElementById("chatbot-widget-script")) {
+      var sc = document.createElement("script");
+      sc.id = "chatbot-widget-script";
+      sc.src = "components/chatbot-widget.js?v=20260916-01";
+      document.body.appendChild(sc);
+    }
+  }
+
   function init(pageKey) {
+    // Luôn bảo đảm Widget Trợ lý AI được nạp trên mọi trang
+    loadChatbotWidget();
+
     var root = document.getElementById("app-header-root");
     var user = Auth ? Auth.currentUser() : null;
     if (!root || !user) {
@@ -176,17 +200,17 @@ window.Layout = (function () {
     if (Auth.applyRoleUI) {
       Auth.applyRoleUI();
     }
+  }
 
-    // Tự động tải Floating Chatbot Widget cho mọi trang
-    if (!document.getElementById("chatbot-widget-script")) {
-      var sc = document.createElement("script");
-      sc.id = "chatbot-widget-script";
-      sc.src = "js/chatbot-widget.js?v=20260915-01";
-      document.body.appendChild(sc);
-    }
+  // Tự động đảm bảo nạp widget ngay khi script layout được tải
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadChatbotWidget);
+  } else {
+    loadChatbotWidget();
   }
 
   return {
-    init: init
+    init: init,
+    loadChatbotWidget: loadChatbotWidget
   };
 })();

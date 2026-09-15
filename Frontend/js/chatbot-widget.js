@@ -4,12 +4,15 @@
    ============================================================ */
 
 (function () {
-  // Không hiển thị widget nổi nếu đang ở chính trang chatbot.html
-  if (window.location.pathname.indexOf("chatbot.html") !== -1) {
+  // Không hiển thị widget nếu đang ở trang chatbot.html hoặc đã có widget chính thức
+  if (window.location.pathname.indexOf("chatbot.html") !== -1 || window.__ICTU_CHATBOT_WIDGET_LOADED__ || document.getElementById("cb-widget-bubble-btn")) {
     return;
   }
 
   function initWidget() {
+    if (window.__ICTU_CHATBOT_WIDGET_LOADED__ || document.getElementById("cb-widget-bubble-btn") || document.getElementById("ictu-ai-widget-btn")) {
+      return;
+    }
     var style = document.createElement("style");
     style.textContent = [
       '#ictu-ai-widget-btn {',

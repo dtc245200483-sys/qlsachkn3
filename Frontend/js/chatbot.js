@@ -10,6 +10,34 @@
   var btnClear = document.getElementById("btn-clear-chat");
   var lblLatency = document.getElementById("chat-latency");
 
+  var SESSION_STORAGE_KEY = "ictu_ai_chat_history";
+
+  function loadSession() {
+    try {
+      var raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveSession(history) {
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(history));
+    } catch (e) {
+      console.warn("Không thể lưu sessionStorage:", e);
+    }
+  }
+
+  var getHistory = loadSession;
+  var saveHistory = saveSession;
+
+  function appendToHistory(item) {
+    var list = loadSession();
+    list.push(item);
+    saveSession(list);
+  }
+
   function scrollBottom() {
     if (chatMessages) {
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -23,7 +51,7 @@
     return h + ":" + m;
   }
 
-  function appendUserMessage(text) {
+  function appendUserMessage(text, customTime, isRestoring) {
     var wrap = document.createElement("div");
     wrap.className = "chat-msg chat-msg--user";
 
@@ -40,7 +68,8 @@
 
     var time = document.createElement("div");
     time.className = "chat-msg__time";
-    time.textContent = formatTime();
+    var msgTime = customTime || formatTime();
+    time.textContent = msgTime;
 
     bubble.appendChild(p);
     bubble.appendChild(time);
@@ -49,6 +78,10 @@
 
     chatMessages.appendChild(wrap);
     scrollBottom();
+
+    if (!isRestoring) {
+      appendToHistory({ role: "user", text: text, time: msgTime });
+    }
   }
 
   function showTypingIndicator() {
@@ -77,7 +110,7 @@
     }
   }
 
-  function appendAssistantResponse(data) {
+  function appendAssistantResponse(data, customTime, isRestoring) {
     removeTypingIndicator();
 
     var wrap = document.createElement("div");
@@ -195,13 +228,18 @@
     // Thời gian
     var time = document.createElement("div");
     time.className = "chat-msg__time";
-    time.textContent = formatTime() + (data.thoi_gian_ms ? " (" + data.thoi_gian_ms + "ms)" : "");
+    var msgTime = customTime || (formatTime() + (data.thoi_gian_ms ? " (" + data.thoi_gian_ms + "ms)" : ""));
+    time.textContent = msgTime;
     bubble.appendChild(time);
 
     wrap.appendChild(avatar);
     wrap.appendChild(bubble);
     chatMessages.appendChild(wrap);
     scrollBottom();
+
+    if (!isRestoring) {
+      appendToHistory({ role: "assistant", data: data, time: msgTime });
+    }
 
     if (lblLatency && data.thoi_gian_ms) {
       lblLatency.textContent = "Thời gian phản hồi: " + data.thoi_gian_ms + "ms";
@@ -287,7 +325,7 @@
     if (e.key === "Escape") closeBookModal();
   });
 
-  function appendErrorMessage(err) {
+  function appendErrorMessage(err, customTime, isRestoring) {
     removeTypingIndicator();
 
     var wrap = document.createElement("div");
@@ -304,10 +342,20 @@
     bubble.style.color = "#991B1B";
     bubble.innerHTML = "<strong>Đã xảy ra lỗi khi trao đổi với AI:</strong> " + escapeHtml(String(err));
 
+    var time = document.createElement("div");
+    time.className = "chat-msg__time";
+    var msgTime = customTime || formatTime();
+    time.textContent = msgTime;
+    bubble.appendChild(time);
+
     wrap.appendChild(avatar);
     wrap.appendChild(bubble);
     chatMessages.appendChild(wrap);
     scrollBottom();
+
+    if (!isRestoring) {
+      appendToHistory({ role: "error", message: String(err), time: msgTime });
+    }
   }
 
   function escapeHtml(str) {
@@ -320,13 +368,25 @@
       .replace(/'/g, "&#039;");
   }
 
+  var isSending = false;
+
   async function guiCauHoi() {
+    if (isSending) return;
     var q = chatInput.value.trim();
     if (!q) return;
 
+    isSending = true;
     chatInput.value = "";
     chatInput.style.height = "44px";
     btnSend.disabled = true;
+    chatInput.disabled = true;
+
+    var quickBtns = document.querySelectorAll(".btn-pill-prompt");
+    quickBtns.forEach(function (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "not-allowed";
+    });
 
     appendUserMessage(q);
     showTypingIndicator();
@@ -342,12 +402,84 @@
     } catch (err) {
       appendErrorMessage(err && err.message ? err.message : err);
     } finally {
+      isSending = false;
       btnSend.disabled = false;
+      chatInput.disabled = false;
+      quickBtns.forEach(function (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "";
+        btn.style.cursor = "";
+      });
       chatInput.focus();
     }
   }
 
+  // Hộp thoại xác nhận chuyển trang bằng Tiếng Việt chuẩn giao diện ICTU
+  function showLeaveConfirmModal(targetUrl) {
+    var modalId = "ictu-leave-confirm-modal";
+    var existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    var modal = document.createElement("div");
+    modal.id = modalId;
+    modal.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Be Vietnam Pro',system-ui,sans-serif;";
+
+    modal.innerHTML = [
+      '<div style="background:#ffffff; border-radius:14px; max-width:440px; width:100%; box-shadow:0 20px 30px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #e2e8f0;">',
+      '  <div style="background:linear-gradient(135deg, #0a2e5c 0%, #1e4b8c 100%); color:#ffffff; padding:14px 18px; display:flex; align-items:center; gap:10px;">',
+      '    <span style="font-size:22px;">⚠️</span>',
+      '    <h4 style="margin:0; font-size:16px; font-weight:700; color:#ffffff;">Cảnh báo gián đoạn tra cứu sách</h4>',
+      '  </div>',
+      '  <div style="padding:18px; color:#334155; font-size:14.5px; line-height:1.55;">',
+      '    <p style="margin:0 0 8px 0; font-weight:600; color:#0f172a;">🤖 Trợ lý AI đang tìm sách cho bạn...</p>',
+      '    <p style="margin:0; color:#475569;">Nếu bạn chuyển trang lúc này, quá trình tìm kiếm sẽ bị gián đoạn và câu trả lời chưa kịp lưu lại.</p>',
+      '    <p style="margin:10px 0 0 0; font-size:13.5px; color:#64748b;">Bạn có muốn ở lại chờ AI trả lời xong không?</p>',
+      '  </div>',
+      '  <div style="padding:12px 18px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">',
+      '    <button type="button" id="btn-leave-modal-stay" style="padding:9px 18px; background:linear-gradient(135deg, #0a2e5c 0%, #1e4b8c 100%); color:#ffffff; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px;">Ở lại chờ kết quả</button>',
+      '    <button type="button" id="btn-leave-modal-go" style="padding:9px 16px; background:#ffffff; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; font-weight:600; cursor:pointer; font-size:13.5px;">Vẫn rời đi</button>',
+      '  </div>',
+      '</div>'
+    ].join("");
+
+    document.body.appendChild(modal);
+
+    document.getElementById("btn-leave-modal-stay").addEventListener("click", function () {
+      modal.remove();
+    });
+
+    document.getElementById("btn-leave-modal-go").addEventListener("click", function () {
+      modal.remove();
+      isSending = false; // Tắt cờ để không kích hoạt beforeunload trình duyệt
+      window.location.href = targetUrl;
+    });
+  }
+
+  // Bắt sự kiện click vào các liên kết chuyển trang khi đang gửi
+  document.addEventListener("click", function (e) {
+    if (!isSending) return;
+    var link = e.target.closest("a");
+    if (!link) return;
+    var href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+    if (link.target === "_blank") return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    showLeaveConfirmModal(link.href);
+  }, true);
+
+  // Cảnh báo người dùng khi đóng tab hoặc reload trang (F5) trong lúc đang chờ AI phản hồi
+  window.addEventListener("beforeunload", function (e) {
+    if (isSending) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
+
   window.chonCauHoiMau = function (q) {
+    if (isSending) return;
     if (chatInput) {
       chatInput.value = q;
       chatInput.focus();
@@ -374,9 +506,27 @@
     });
   }
 
+  function restoreHistory() {
+    var history = getHistory();
+    if (!history || history.length === 0) return;
+
+    history.forEach(function (item) {
+      if (item.role === "user") {
+        appendUserMessage(item.text, item.time, true);
+      } else if (item.role === "assistant" && item.data) {
+        appendAssistantResponse(item.data, item.time, true);
+      } else if (item.role === "error") {
+        appendErrorMessage(item.message, item.time, true);
+      }
+    });
+  }
+
   if (btnClear) {
     btnClear.addEventListener("click", function () {
       if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện hiện tại?")) {
+        try {
+          sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch (e) {}
         chatMessages.innerHTML = [
           '<div class="chat-msg chat-msg--assistant">',
           '  <div class="chat-msg__avatar">🤖</div>',
@@ -389,4 +539,7 @@
       }
     });
   }
+
+  // Tự động khôi phục lịch sử chat từ sessionStorage khi nạp trang
+  restoreHistory();
 })();

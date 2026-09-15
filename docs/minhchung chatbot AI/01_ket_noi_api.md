@@ -66,14 +66,19 @@ class LLMTimeoutError(LLMError): ...       # Request timeout sau tất cả retr
 class LLMRateLimitError(LLMError): ...     # HTTP 429 sau tất cả retry
 class LLMResponseError(LLMError): ...      # HTTP lỗi, JSON sai, content rỗng
 
-def call_llm(system_prompt, user_prompt, model="deepseek/deepseek-chat") -> str:
+def call_llm(system_prompt, user_prompt, model="deepseek/deepseek-chat", max_tokens=800) -> str:
     """
     Gọi OpenRouter API và trả về nội dung văn bản.
     - Timeout: 15s
     - Retry: tối đa 2 lần với exponential backoff (2s → 4s)
+    - Routing OpenRouter: "route": "fallback" (được bổ sung ở đợt tối ưu hiệu năng)
+    - Giới hạn độ dài output: max_tokens = 800 (tối ưu từ 1500)
     - Log định dạng: [LLM] [model] [SUCCESS/FAILURE] [Xms] [N chars]
     """
 ```
+
+> [!NOTE]
+> *Hàm `call_llm` trong mã nguồn thực tế đã được bổ sung tham số `max_tokens: int = 800` và routing `"route": "fallback"` ở đợt tối ưu hóa hiệu năng sau đó để tăng tốc độ sinh phản hồi.*
 
 #### `embedding_client.py`
 

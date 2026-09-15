@@ -56,6 +56,9 @@ class VectorStore:
 
 #### 3. Kết quả kiểm thử RAG Semantic Search thực tế
 
+> [!NOTE]
+> *Dữ liệu 10 cuốn sách giả lập dưới đây được ghi lại ở giai đoạn kiểm thử sơ khai của module. Ở phiên bản chính thức, toàn bộ dữ liệu đã được quét dọn sạch sẽ và thay thế hoàn toàn bằng 63 cuốn sách thực tế từ SQL Server (xem chi tiết ở file 06 và file 07).*
+
 **Môi trường:** 10 sách giả lập đã index | ChromaDB 1.5.9 | paraphrase-multilingual-MiniLM-L12-v2
 
 > **Lưu ý:** Tất cả câu hỏi test dùng từ KHÔNG TRÙNG chữ với tên sách hay tóm tắt, chứng minh hệ thống tìm theo nghĩa chứ không phải khớp ký tự.

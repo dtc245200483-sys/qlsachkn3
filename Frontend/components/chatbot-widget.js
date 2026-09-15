@@ -9,9 +9,34 @@
   if (window.__ICTU_CHATBOT_WIDGET_LOADED__) return;
   window.__ICTU_CHATBOT_WIDGET_LOADED__ = true;
 
-  // Lịch sử chat trong phiên làm việc hiện tại (Lưu trong RAM, KHÔNG dùng localStorage)
-  var chatHistory = [];
+  var SESSION_STORAGE_KEY = "ictu_ai_chat_history";
   var isChatOpen = false;
+
+  function loadSession() {
+    try {
+      var raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveSession(list) {
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn("Không thể lưu sessionStorage:", e);
+    }
+  }
+
+  var getHistory = loadSession;
+  var saveHistory = saveSession;
+
+  function appendToHistory(item) {
+    var list = loadSession();
+    list.push(item);
+    saveSession(list);
+  }
 
   // 4 Câu hỏi gợi ý nhanh ban đầu
   var QUICK_PROMPTS = [
@@ -46,9 +71,9 @@
     bubbleBtn.className = "cb-widget-bubble";
     bubbleBtn.id = "cb-widget-bubble-btn";
     bubbleBtn.setAttribute("aria-label", "Mở Trợ lý AI Thư viện");
-    bubbleBtn.title = "Trợ lý AI Tra cứu sách";
+    bubbleBtn.title = "Hỏi Trợ lý AI (Tra cứu sách thông minh)";
     bubbleBtn.innerHTML = [
-      '<span class="cb-widget-bubble__icon" id="cb-bubble-icon">💬</span>',
+      '<span class="cb-widget-bubble__icon" id="cb-bubble-icon">🤖</span>',
       '<span class="cb-widget-badge">AI</span>'
     ].join("");
 
@@ -65,7 +90,7 @@
       '  <div class="cb-widget-header__info">',
       '    <div class="cb-widget-header__avatar">🤖</div>',
       '    <div>',
-      '      <h4 class="cb-widget-header__title">Trợ lý Thư viện</h4>',
+      '      <h4 class="cb-widget-header__title">🤖 Trợ lý AI Thư viện</h4>',
       '      <div class="cb-widget-header__status">',
       '        <span class="cb-widget-status-dot"></span>',
       '        <span>Trực tuyến • Hỗ trợ tra cứu sách thư viện</span>',
@@ -73,6 +98,7 @@
       '    </div>',
       '  </div>',
       '  <div class="cb-widget-header__actions">',
+      '    <button type="button" class="cb-widget-btn-close" id="cb-btn-clear-chat" title="Xóa lịch sử trò chuyện" aria-label="Xóa lịch sử" style="font-size: 13px;">🧹</button>',
       '    <button type="button" class="cb-widget-btn-close" id="cb-btn-close-window" title="Thu nhỏ khung chat" aria-label="Đóng">&times;</button>',
       '  </div>',
       '</div>',
@@ -97,11 +123,27 @@
 
     // Gắn sự kiện
     var btnClose = document.getElementById("cb-btn-close-window");
+    var btnClear = document.getElementById("cb-btn-clear-chat");
     var inputEl = document.getElementById("cb-widget-input");
     var sendBtn = document.getElementById("cb-widget-btn-send");
 
     bubbleBtn.addEventListener("click", toggleChat);
     if (btnClose) btnClose.addEventListener("click", toggleChat);
+
+    if (btnClear) {
+      btnClear.addEventListener("click", function () {
+        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện hiện tại?")) {
+          try {
+            sessionStorage.removeItem(SESSION_STORAGE_KEY);
+          } catch (e) {}
+          var list = document.getElementById("cb-widget-msg-list");
+          if (list) {
+            list.innerHTML = "";
+            renderWelcomeMessage();
+          }
+        }
+      });
+    }
 
     if (sendBtn) {
       sendBtn.addEventListener("click", handleSend);
@@ -118,6 +160,9 @@
 
     // Render tin nhắn chào mừng ban đầu
     renderWelcomeMessage();
+
+    // Khôi phục lịch sử từ sessionStorage nếu có
+    restoreHistory();
   }
 
   function toggleChat() {
@@ -136,7 +181,7 @@
       scrollToBottom();
     } else {
       chatWindow.classList.add("cb-widget--hidden");
-      if (bubbleIcon) bubbleIcon.textContent = "💬";
+      if (bubbleIcon) bubbleIcon.textContent = "🤖";
     }
   }
 
@@ -220,7 +265,7 @@
     if (el) el.remove();
   }
 
-  function appendUserMessage(text) {
+  function appendUserMessage(text, customTime, isRestoring) {
     var list = document.getElementById("cb-widget-msg-list");
     if (!list) return;
 
@@ -241,7 +286,8 @@
 
     var time = document.createElement("div");
     time.className = "cb-msg__time";
-    time.textContent = formatTime();
+    var msgTime = customTime || formatTime();
+    time.textContent = msgTime;
     bubble.appendChild(time);
 
     wrap.appendChild(avatar);
@@ -249,11 +295,12 @@
     list.appendChild(wrap);
     scrollToBottom();
 
-    // Lưu vào biến RAM
-    chatHistory.push({ role: "user", text: text, time: formatTime() });
+    if (!isRestoring) {
+      appendToHistory({ role: "user", text: text, time: msgTime });
+    }
   }
 
-  function appendAssistantResponse(data) {
+  function appendAssistantResponse(data, customTime, isRestoring) {
     removeTypingIndicator();
     var list = document.getElementById("cb-widget-msg-list");
     if (!list) return;
@@ -360,7 +407,8 @@
     // Thời gian
     var time = document.createElement("div");
     time.className = "cb-msg__time";
-    time.textContent = formatTime();
+    var msgTime = customTime || formatTime();
+    time.textContent = msgTime;
     bubble.appendChild(time);
 
     wrap.appendChild(avatar);
@@ -368,11 +416,12 @@
     list.appendChild(wrap);
     scrollToBottom();
 
-    // Lưu vào biến RAM
-    chatHistory.push({ role: "assistant", data: data, time: formatTime() });
+    if (!isRestoring) {
+      appendToHistory({ role: "assistant", data: data, time: msgTime });
+    }
   }
 
-  function appendErrorMessage(errorText) {
+  function appendErrorMessage(errorText, customTime, isRestoring) {
     removeTypingIndicator();
     var list = document.getElementById("cb-widget-msg-list");
     if (!list) return;
@@ -397,21 +446,54 @@
 
     var time = document.createElement("div");
     time.className = "cb-msg__time";
-    time.textContent = formatTime();
+    var msgTime = customTime || formatTime();
+    time.textContent = msgTime;
     bubble.appendChild(time);
 
     wrap.appendChild(avatar);
     wrap.appendChild(bubble);
     list.appendChild(wrap);
     scrollToBottom();
+
+    if (!isRestoring) {
+      appendToHistory({ role: "error", message: errorText || "Xin lỗi, hệ thống đang gặp sự cố, bạn thử lại sau nhé!", time: msgTime });
+    }
   }
 
+  function restoreHistory() {
+    var history = getHistory();
+    if (!history || history.length === 0) return;
+
+    history.forEach(function (item) {
+      if (item.role === "user") {
+        appendUserMessage(item.text, item.time, true);
+      } else if (item.role === "assistant" && item.data) {
+        appendAssistantResponse(item.data, item.time, true);
+      } else if (item.role === "error") {
+        appendErrorMessage(item.message, item.time, true);
+      }
+    });
+  }
+
+  var isSending = false;
+
   async function submitQuestion(questionText) {
+    if (isSending) return;
     var text = (questionText || "").trim();
     if (!text) return;
 
+    isSending = true;
     var sendBtn = document.getElementById("cb-widget-btn-send");
+    var inputEl = document.getElementById("cb-widget-input");
     if (sendBtn) sendBtn.disabled = true;
+    if (inputEl) inputEl.disabled = true;
+
+    var quickBtns = document.querySelectorAll(".cb-quick-btn");
+    quickBtns.forEach(function (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "not-allowed";
+    });
 
     appendUserMessage(text);
     showTypingIndicator();
@@ -434,11 +516,83 @@
     } catch (err) {
       appendErrorMessage("Xin lỗi, hệ thống đang gặp sự cố, bạn thử lại sau nhé!");
     } finally {
+      isSending = false;
       if (sendBtn) sendBtn.disabled = false;
-      var inputEl = document.getElementById("cb-widget-input");
-      if (inputEl) inputEl.focus();
+      if (inputEl) {
+        inputEl.disabled = false;
+        inputEl.focus();
+      }
+      quickBtns.forEach(function (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "";
+        btn.style.cursor = "";
+      });
     }
   }
+
+  // Hộp thoại xác nhận chuyển trang bằng Tiếng Việt chuẩn giao diện ICTU
+  function showLeaveConfirmModal(targetUrl) {
+    var modalId = "ictu-widget-leave-confirm-modal";
+    var existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    var modal = document.createElement("div");
+    modal.id = modalId;
+    modal.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Be Vietnam Pro',system-ui,sans-serif;";
+
+    modal.innerHTML = [
+      '<div style="background:#ffffff; border-radius:14px; max-width:440px; width:100%; box-shadow:0 20px 30px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #e2e8f0;">',
+      '  <div style="background:linear-gradient(135deg, #0a2e5c 0%, #1e4b8c 100%); color:#ffffff; padding:14px 18px; display:flex; align-items:center; gap:10px;">',
+      '    <span style="font-size:22px;">⚠️</span>',
+      '    <h4 style="margin:0; font-size:16px; font-weight:700; color:#ffffff;">Cảnh báo gián đoạn tra cứu sách</h4>',
+      '  </div>',
+      '  <div style="padding:18px; color:#334155; font-size:14.5px; line-height:1.55;">',
+      '    <p style="margin:0 0 8px 0; font-weight:600; color:#0f172a;">🤖 Trợ lý AI đang tìm sách cho bạn...</p>',
+      '    <p style="margin:0; color:#475569;">Nếu bạn chuyển trang lúc này, quá trình tìm kiếm sẽ bị gián đoạn và câu trả lời chưa kịp lưu lại.</p>',
+      '    <p style="margin:10px 0 0 0; font-size:13.5px; color:#64748b;">Bạn có muốn ở lại chờ AI trả lời xong không?</p>',
+      '  </div>',
+      '  <div style="padding:12px 18px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">',
+      '    <button type="button" id="btn-widget-modal-stay" style="padding:9px 18px; background:linear-gradient(135deg, #0a2e5c 0%, #1e4b8c 100%); color:#ffffff; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px;">Ở lại chờ kết quả</button>',
+      '    <button type="button" id="btn-widget-modal-leave" style="padding:9px 16px; background:#ffffff; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; font-weight:600; cursor:pointer; font-size:13.5px;">Vẫn rời đi</button>',
+      '  </div>',
+      '</div>'
+    ].join("");
+
+    document.body.appendChild(modal);
+
+    document.getElementById("btn-widget-modal-stay").addEventListener("click", function () {
+      modal.remove();
+    });
+
+    document.getElementById("btn-widget-modal-leave").addEventListener("click", function () {
+      modal.remove();
+      isSending = false; // Tắt cờ để không kích hoạt beforeunload trình duyệt
+      window.location.href = targetUrl;
+    });
+  }
+
+  // Bắt sự kiện click vào các liên kết chuyển trang khi đang gửi
+  document.addEventListener("click", function (e) {
+    if (!isSending) return;
+    var link = e.target.closest("a");
+    if (!link) return;
+    var href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+    if (link.target === "_blank") return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    showLeaveConfirmModal(link.href);
+  }, true);
+
+  // Cảnh báo người dùng khi đóng tab hoặc reload trang (F5) trong lúc đang chờ AI phản hồi
+  window.addEventListener("beforeunload", function (e) {
+    if (isSending) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
 
   function handleSend() {
     var inputEl = document.getElementById("cb-widget-input");

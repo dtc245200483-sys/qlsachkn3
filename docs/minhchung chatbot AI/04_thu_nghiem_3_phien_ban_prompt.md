@@ -1,13 +1,20 @@
-# BÁO CÁO MINH CHỨNG: THỬ NGHIỆM ĐỐI SÁNH 3 PHIÊN BẢN SYSTEM PROMPT
+# BÁO CÁO MINH CHỨNG: THỬ NGHIỆM ĐỐI SÁNH 3 PHIÊN BẢN PROMPT VÀ TÍCH HỢP BẢN V3 VÀO WEB APP
 
 ## Prompt đã dùng
 
-### 1. Câu lệnh yêu cầu của đồ án / bài toán:
+### 1. Câu lệnh yêu cầu thử nghiệm độc lập 3 phiên bản System Prompt:
 ```text
 Nhiệm vụ: 
 (1) Tạo 3 PHIÊN BẢN ĐỘC LẬP của system prompt (v1_co_ban.txt, v2_co_rang_buoc.txt, v3_json_hoan_chinh.txt).
 (2) Viết script tự động so sánh cả 3 bản trên bộ câu hỏi cố định (6 câu hỏi kiểm thử đặc thù).
 (3) Xây 3 TRANG WEB TÁCH BIỆT HOÀN TOÀN, mỗi trang chạy ở 1 PORT RIÊNG (8001, 8002, 8003), mỗi trang CHỈ dùng CỐ ĐỊNH 1 phiên bản prompt duy nhất để thử nghiệm độc lập.
+```
+
+### 2. Câu lệnh tích hợp phiên bản tối ưu V3 vào Web App chính thức:
+```text
+Dọn dẹp môi trường thử nghiệm độc lập v1/v2/v3, tích hợp phiên bản System Prompt V3 
+(JSON Schema chuẩn + Chặn câu hỏi lạc đề 2 tầng) trực tiếp vào hệ thống Web App 
+quản lý thư viện chính thức của đề tài (Backend FastAPI + Frontend giao diện ICTU).
 ```
 
 ---
@@ -82,6 +89,99 @@ Trả lời DUY NHẤT một đối tượng JSON hợp lệ, không kèm văn b
 | **Câu 4** (Hết hàng (con_hang=False)):<br>`Kiến trúc hệ thống phân tán` | 8 sách | 📦 **Báo rõ hết hàng** (1 sách, 795 ký tự) <br>*```json {   "cau_hoi": "Kiến trúc hệ thống phân tán",   "sach_phu_hop": [     {       "ten_sach": "Kiến trúc hệ thống phân tán",       "tac_gia": "Martin Kleppmann",       "tom_tat...* | 📦 **Báo rõ hết hàng** (1 sách, 409 ký tự) <br>*```json [   {     "ten_sach": "Kiến trúc hệ thống phân tán",     "tac_gia": "Martin Kleppmann",     "tom_tat": "Giải thích cách xây dựng hệ thống phần mềm quy mô lớn: cơ sở dữ liệu...* | ✅ **JSON chuẩn** 📦 **Báo rõ hết hàng** (1 sách, 274 ký tự) <br>*{   "ket_qua": [     {       "ten_sach": "Kiến trúc hệ thống phân tán",       "tac_gia": "Martin Kleppmann",       "ly_do_goi_y": "Giải thích chi tiết cách xây dựng hệ thống phần m...* | V2 & V3 đều ghi rõ tình trạng hết hàng / đặt trước theo quy tắc. V3 thể hiện qua trường con_hang=false và thông báo minh bạch. |
 | **Câu 5** (Tên tác giả):<br>`Carnegie` | 8 sách | (1 sách, 381 ký tự) <br>*```json [   {     "ten_sach": "Đắc nhân tâm",     "tac_gia": "Dale Carnegie",     "tom_tat": "Bí quyết giao tiếp và ứng xử hiệu quả trong cuộc sống và công việc: cách kết bạn, tạo ...* | (1 sách, 466 ký tự) <br>*```json [   {     "ten_sach": "Đắc nhân tâm",     "tac_gia": "Dale Carnegie",     "tom_tat": "Bí quyết giao tiếp và ứng xử hiệu quả trong cuộc sống và công việc: cách kết bạn, tạo ...* | ✅ **JSON chuẩn** (1 sách, 252 ký tự) <br>*{   "ket_qua": [     {       "ten_sach": "Đắc nhân tâm",       "tac_gia": "Dale Carnegie",       "ly_do_goi_y": "Tác phẩm kinh điển về giao tiếp và ứng xử của Dale Carnegie",      ...* | Cả 3 nhận diện được tác giả Dale Carnegie (Đắc nhân tâm). V3 xuất đúng schema quản lý. |
 | **Câu 6** (Hoàn toàn lạc đề (Chính trị / Thời sự)):<br>`Ai là chủ tịch nước hiện tại?` | 8 sách | ⚠️ *Bị dụ trả lời / Lạc đề* (0 sách, 366 ký tự) <br>*```json {   "danh_sach_goi_y": [],   "giai_thich": "Câu hỏi của độc giả về Chủ tịch nước hiện tại không liên quan đến nội dung của bất kỳ cuốn sách nào trong danh sách đã cung cấp....* | 🛡️ **Từ chối đúng quy tắc** (0 sách, 68 ký tự) <br>*Xin lỗi, hiện tại thư viện chưa có sách phù hợp với yêu cầu của bạn.* | ✅ **JSON chuẩn** 🛡️ **Từ chối đúng quy tắc** (0 sách, 154 ký tự) <br>*{   "ket_qua": [],   "tong_so_ket_qua": 0,   "thong_bao": "Tôi chỉ hỗ trợ tra cứu sách trong thư viện. Bạn vui lòng đặt câu hỏi liên quan đến sách nhé!" }* | 🔥 **ĐIỂM KHÁC BIỆT LỚN NHẤT**: V1/V2 bị câu hỏi chính trị dẫn dắt hoặc trả lời kiến thức chung. V3 tuân thủ Quy tắc 8, từ chối lịch sự, ket_qua rỗng. |
+
+---
+
+### C. Tích hợp Chatbot AI V3 chính thức vào Web App Thư viện
+
+Sau khi hoàn tất thử nghiệm và đối sánh, **Phiên bản System Prompt V3** được lựa chọn là phiên bản tối ưu nhất để tích hợp trực tiếp vào hệ thống Web App thư viện hoàn chỉnh tại cổng **`http://localhost:8000`**:
+
+#### 1. Sơ đồ kiến trúc tích hợp hệ thống:
+```
+                       ┌────────────────────────────────────────────────────────┐
+                       │          TRÌNH DUYỆT NGƯỜI DÙNG (PORT 8000)            │
+                       │   - Trang chuyên biệt: chatbot.html                    │
+                       │   - Thanh điều hướng: Menu "🤖 Trợ lý AI"              │
+                       │   - Bong bóng nổi: Floating Chatbot Widget (mọi trang) │
+                       │   - Trang tra cứu: Nút "🤖 Hỏi Trợ lý AI"              │
+                       └───────────────────────────┬────────────────────────────┘
+                                                   │ Gọi qua API.call("chatbot")
+                                                   ▼
+                       ┌────────────────────────────────────────────────────────┐
+                       │             BACKEND FASTAPI (PORT 8000)                │
+                       │      Router: Backend/app/routers/chatbot.py            │
+                       │   - POST /api/chatbot/hoi                              │
+                       │   - GET  /api/chatbot/health                           │
+                       └───────────────────────────┬────────────────────────────┘
+                                                   │
+                         ┌─────────────────────────┴─────────────────────────┐
+                         ▼                                                   ▼
+         ┌───────────────────────────────┐                   ┌───────────────────────────────┐
+         │     TẦNG RETRIEVAL 2 LỚP      │                   │     SYSTEM PROMPT V3 (JSON)   │
+         │  1. Embedding (ChromaDB)      │                   │  1. 8 Quy tắc ràng buộc       │
+         │  2. Fuzzy match tên riêng     │                   │  2. JSON Schema bắt buộc      │
+         │  3. Lọc ngưỡng score (0.35)   │                   │  3. Chặn câu hỏi lạc đề       │
+         │  4. Ngưỡng lạc đề (< 0.15)    │                   │     (Chính trị, thời sự)      │
+         └───────────────────────────────┘                   └───────────────────────────────┘
+```
+
+#### 2. Chi tiết các thành phần đã triển khai
+
+##### A. Tầng Backend API:
+- **Router `Backend/app/routers/chatbot.py`**:
+  - `POST /api/chatbot/hoi`: Nhận `{ "cau_hoi": str }`, gọi hàm `tra_cuu_sach(cau_hoi, prompt_version="v3")`, trả về đối tượng JSON chuẩn hóa với danh sách sách, tình trạng còn hàng và lý do gợi ý.
+  - `GET /api/chatbot/health`: Trả về trạng thái sẵn sàng của dịch vụ AI và số lượng sách trong Vector Store.
+- **Đăng ký vào ứng dụng**: Đã include router vào `Backend/app/main.py`.
+- **Kết nối API Frontend**: Đã bổ sung endpoint `chatbot: "/api/chatbot/hoi"` vào `frontend/js/api.js`.
+
+##### B. Tầng Giao diện Frontend:
+1. **Trang Chatbot chuyên biệt (`frontend/chatbot.html`)**:
+   - Tuân thủ bộ nhận diện thương hiệu ICTU: Phông chữ Be Vietnam Pro, màu chủ đạo Navy `#0a2e5c`.
+   - Có sẵn các nút chủ đề chọn nhanh: Tư duy làm giàu, Lập trình Python, Nghệ thuật giao tiếp, Kiểm tra hết hàng...
+   - Render sách dạng **Book Card** trực quan: Tên sách, tác giả, lý do AI đề xuất, huy hiệu tình trạng (Còn sách / Hết sách), nút bấm *"Xem trong kho"* chuyển hướng sang trang tìm kiếm.
+   - Xử lý thông báo từ chối lịch sự khi gặp câu hỏi ngoài phạm vi thư viện theo đúng Quy tắc 8.
+2. **Bộ điều khiển & Giao diện (`frontend/js/chatbot.js`, `frontend/css/chatbot.css`)**:
+   - Tương tác mượt mà, hiệu ứng đang gõ (typing animation), tự động cuộn xuống tin nhắn mới nhất, đo thời gian xử lý (ms).
+3. **Menu thanh điều hướng (`frontend/js/layout.js`)**:
+   - Thêm mục **`🤖 Trợ lý AI`** vào navbar cho tất cả vai trò: Độc giả (`reader`), Thủ thư (`librarian`), Quản trị viên (`admin`).
+4. **Bong bóng chat nổi (`frontend/components/chatbot-widget.js`)**:
+   - Xuất hiện nút tròn 🤖 ở góc dưới bên phải trên tất cả các trang (`search.html`, `books.html`, `profile.html`...). Bấm vào là mở ngay khung chat mini để hỏi AI mà không cần rời trang hiện tại.
+5. **Trang tra cứu (`frontend/search.html`)**:
+   - Bổ sung nút bấm nổi bật *"🤖 Hỏi Trợ lý AI"* đặt cạnh nút Tìm kiếm.
+
+#### 3. Kết quả kiểm thử thực tế trên Web App chính (Port 8000)
+
+##### Test Case 1: Kiểm tra trạng thái Health Check
+- **Endpoint**: `GET http://localhost:8000/api/chatbot/health`
+- **Kết quả trả về**:
+```json
+{
+  "trang_thai": "san_sang",
+  "phien_ban_prompt": "v3",
+  "do_dai_prompt": 1812,
+  "so_sach_vector_store": 63
+}
+```
+
+##### Test Case 2: Tra cứu sách tài chính hợp lệ
+- **Câu hỏi**: `"sách về tư duy làm giàu"`
+- **Kết quả trả về**: Status `200 OK`, tìm thấy sách kinh tế tài chính trong kho:
+  1. *50 Cuốn Sách Kinh Điển Về Kinh Doanh* (`con_hang: True`)
+  2. *Người Giàu Có Nhất Thành Babylon* (`con_hang: True`)
+
+##### Test Case 3: Chặn đứng câu hỏi ngoài phạm vi thư viện (Lạc đề)
+- **Câu hỏi**: `"Ai là chủ tịch nước hiện tại?"`
+- **Kết quả xử lý**: Hệ thống kích hoạt phòng vệ 2 tầng, phát hiện điểm tương đồng tối đa `0.0541 < 0.15` nên **chặn ngay tại tầng retrieval**, không tiêu tốn API token của LLM:
+```json
+{
+  "ket_qua": [],
+  "tong_so_ket_qua": 0,
+  "thong_bao": "Tôi chỉ hỗ trợ tra cứu sách trong thư viện. Bạn vui lòng đặt câu hỏi liên quan đến sách nhé!",
+  "prompt_version": "v3",
+  "context_so_bo": 0,
+  "canh_bao_bia": false
+}
+```
 
 ---
 

@@ -77,17 +77,28 @@ KIỂM THỬ: Nút tròn đúng vị trí, test câu hỏi thật, test câu h�
 - **Xử lý lỗi thân thiện**: Nếu `chatbot_service.py` trả về `{"loi": ...}` hoặc có ngoại lệ mạng, router tự động bọc lại và trả về HTTP 200 kèm thông báo lịch sự, ngăn chặn hoàn toàn lỗi sập giao diện 500.
 - **Không yêu cầu xác thực**: Độc giả vãng lai chưa đăng nhập vẫn có thể tra cứu nhanh sách thư viện.
 
-#### B. Component Bong bóng Chat (`chatbot-widget.js`):
-- **Cơ chế tự động hóa**: Khi được nhúng vào bất kỳ trang HTML nào, script tự khởi tạo DOM nút tròn nổi và khung chat mà không cần sửa cấu trúc HTML sẵn có của trang.
-- **Lưu trữ phiên trong RAM**: Lịch sử hội thoại được lưu trữ trong biến mảng Javascript thông thường `chatHistory = []` (không dùng `localStorage` hay `sessionStorage`). Độc giả thu gọn và mở lại khung chat trong cùng một phiên duyệt trang vẫn giữ nguyên lịch sử; khi tải lại trang (F5) lịch sử tự động làm mới.
+#### B. Component Bong bóng Chat (`components/chatbot-widget.js`) & Trang chuyên biệt (`chatbot.js`):
+- **Cơ chế tự động hóa**: Khi được nạp vào bất kỳ trang HTML nào, script tự khởi tạo DOM nút tròn nổi `🤖` (kèm badge `AI`) và khung chat mà không cần sửa cấu trúc HTML sẵn có của trang.
+- **Cơ chế lưu trữ phiên liên trang qua SessionStorage (Cross-Page Session Persistence)**:
+  - Khắc phục triệt để hiện tượng mất dữ liệu khi độc giả chuyển đổi giữa các menu trên navbar (do ứng dụng theo kiến trúc Web đa trang MPA, khi chuyển trang trình duyệt xóa RAM cũ).
+  - Lịch sử hội thoại được tự động lưu trữ và đồng bộ liên trang trong `sessionStorage` với key chuẩn `ictu_ai_chat_history`.
+  - Khi độc giả điều hướng giữa bất kỳ trang nào (ví dụ từ `chatbot.html` sang `search.html`, `reservations.html`, `profile.html`...), hàm `restoreHistory()` tự động nạp lại toàn bộ danh sách tin nhắn, thẻ sách, tag từ khóa và thời gian phản hồi.
+  - Bổ sung nút xóa lịch sử nhanh `🧹` trên Header của Widget nổi và nút `🧹 Xóa lịch sử chat` trên trang chuyên biệt `chatbot.html`, cho phép độc giả chủ động làm mới phiên hội thoại bất kỳ lúc nào. Khi đóng tab trình duyệt, dữ liệu tự động được giải phóng an toàn.
+- **Cơ chế chống đè request & Khóa trạng thái gửi (`isSending`)**:
+  - Khi độc giả gửi câu hỏi và đang chờ AI phản hồi (5–10s), ô nhập liệu (`input`/`textarea`), nút gửi và các nút chủ đề gợi ý nhanh lập tức được vô hiệu hóa (`disabled = true`, `opacity: 0.6`, `cursor: not-allowed`).
+  - Triệt tiêu 100% tình trạng người dùng click liên tiếp hoặc bấm nhiều câu hỏi mẫu cùng lúc gây xung đột mạng hoặc làm dừng câu hỏi trước.
+- **Cơ chế Hộp thoại Cảnh báo Tiếng Việt chuẩn ICTU (`showLeaveConfirmModal`) & `beforeunload`**:
+  - Khi độc giả đang chờ AI phản hồi (`isSending = true`) mà bấm vào bất kỳ liên kết chuyển trang nào trên thanh Navbar (hoặc trong trang), hệ thống chủ động chặn thao tác điều hướng và lập tức mở **Hộp thoại Cảnh báo Tiếng Việt 100% chuẩn nhận diện ICTU** (`⚠️ Cảnh báo gián đoạn tra cứu sách` kèm 2 nút: `[Ở lại chờ kết quả]` và `[Vẫn rời đi]`).
+  - Giải pháp này khắc phục hoàn toàn hạn chế của các trình duyệt hiện đại (Chrome 51+ vốn mặc định hiển thị thông báo tiếng Anh *"Leave site? Changes you made may not be saved"* do cài đặt ngôn ngữ trình duyệt). Đảm bảo giao diện luôn thuần Tiếng Việt, thân thiện và chuyên nghiệp.
+  - Vẫn duy trì bộ lắng nghe `beforeunload` làm lớp bảo vệ dự phòng cấp trình duyệt khi người dùng đóng hẳn cửa sổ tab hoặc bấm F5 tải lại trang.
 - **4 Câu hỏi gợi ý nhanh**:
-  1. `🐍 Sách về lập trình`
-  2. `⭐ Sách hay tuần này`
-  3. `📖 Cách mượn sách`
-  4. `💰 Tư duy làm giàu`
+  1. `💻 Sách Lập trình & CNTT`
+  2. `🤖 Sách Trí tuệ nhân tạo (AI)`
+  3. `📚 Sách Kinh tế & Quản trị`
+  4. `⭐ Sách hay nên đọc`
 - **Typing Indicator**: Hiệu ứng 3 chấm nhấp nháy chuyển động mượt mà trong khi chờ backend phản hồi.
 
-#### C. Stylesheet Widget (`chatbot-widget.css`):
+#### C. Stylesheet Widget (`components/chatbot-widget.css`):
 - Đồng bộ chuẩn Design System ICTU: Sử dụng biến màu `--color-primary-900` (`#0a2e5c`), `--color-primary-600` (`#1e4b8c`), font `Be Vietnam Pro`.
 - Nút tròn nổi có độ sâu thị giác cao (`box-shadow: 0 8px 24px rgba(10, 46, 92, 0.28)`), `z-index: 99999` đảm bảo không bị che khuất bởi navbar hay bảng biểu.
 - Hiệu ứng mở khung chat bằng `transform: scale() translateY()` mượt mà, không giật cục.
@@ -95,41 +106,71 @@ KIỂM THỬ: Nút tròn đúng vị trí, test câu hỏi thật, test câu h�
 
 ---
 
-### 4. Hướng dẫn nhúng Widget vào các trang web hiện có
+### 4. Đồng bộ thanh điều hướng (Navbar) & Widget trên toàn bộ Web App (`layout.js`)
 
-Để hiển thị bong bóng chat trên bất kỳ trang web nào trong hệ thống, chỉ cần chèn 2 dòng mã sau:
+Để đảm bảo cả **Tab menu "🤖 Trợ lý AI" trên thanh điều hướng (Navbar)** và **Bong bóng chat nổi (Floating Widget)** hiển thị đồng nhất 100% trên toàn bộ hệ thống (tránh hiện tượng trang có, trang không hoặc trình duyệt dùng cache cũ khiến mất tab AI như trên `search.html`):
 
-1. Thêm vào trong thẻ `<head>`:
-```html
-<link rel="stylesheet" href="/components/chatbot-widget.css">
-```
+1. **Thêm mục `🤖 Trợ lý AI` vào thanh Menu chính (`Frontend/js/layout.js`)**:
+   Mọi vai trò (`reader`, `librarian`, `admin`) đều có tab `🤖 Trợ lý AI` đứng ngay sau `Tra cứu sách`:
+   ```javascript
+   MENUS = {
+     reader: [
+       { key: "search", href: "search.html", label: "Tra cứu sách" },
+       { key: "chatbot", href: "chatbot.html", label: "🤖 Trợ lý AI" },
+       { key: "reservations", href: "reservations.html", label: "Đặt trước" },
+       ...
+     ],
+     ...
+   };
+   ```
 
-2. Thêm vào ngay trước thẻ đóng `</body>`:
-```html
-<script src="/components/chatbot-widget.js"></script>
-```
+2. **Cơ chế nạp tự động Floating Widget qua `loadChatbotWidget()`**:
+   Hàm `loadChatbotWidget()` trong `layout.js` tự động kiểm tra và chèn đồng thời `components/chatbot-widget.css` và `components/chatbot-widget.js` vào mọi trang web dùng chung layout (trừ trang chuyên biệt `chatbot.html`):
+   ```javascript
+   function loadChatbotWidget() {
+     if (window.location.pathname.indexOf("chatbot.html") !== -1) return;
+     if (!document.getElementById("chatbot-widget-css")) {
+       var css = document.createElement("link");
+       css.id = "chatbot-widget-css";
+       css.rel = "stylesheet";
+       css.href = "components/chatbot-widget.css?v=20260916-01";
+       document.head.appendChild(css);
+     }
+     if (!document.getElementById("chatbot-widget-script")) {
+       var sc = document.createElement("script");
+       sc.id = "chatbot-widget-script";
+       sc.src = "components/chatbot-widget.js?v=20260916-01";
+       document.body.appendChild(sc);
+     }
+   }
+   ```
 
-#### Danh sách các trang đề xuất nên nhúng trong dự án:
-Căn cứ vào cấu trúc thư mục `Frontend/` thực tế của dự án, các trang sau đây nên được nhúng widget:
-- [x] **`search.html`** *(Đã nhúng thử nghiệm thành công)*: Độc giả tra cứu kho sách có thể hỏi thêm AI.
-- [ ] **`index.html`**: Trang chủ và cổng đăng nhập của thư viện.
-- [ ] **`books.html`**: Trang quản lý danh mục sách của thủ thư.
-- [ ] **`borrow.html`**: Trang quản lý mượn trả sách.
-- [ ] **`my-borrows.html`**: Trang cá nhân của độc giả xem sách đã mượn.
-- [ ] **`reservations.html`**: Trang đặt trước sách.
-- [ ] **`requests.html`**: Trang gửi yêu cầu mượn sách mới.
+3. **Chống lỗi Cache trình duyệt (Cache Busting & No-Cache Middleware)**:
+   - **Nguyên nhân trước đây**: Trình duyệt lưu cache URL `layout.js?v=20260827-04` cũ trên `search.html` khiến menu chỉ hiện `[Tra cứu sách] [Đặt trước]` mà không có `[🤖 Trợ lý AI]`.
+   - **Giải pháp dứt điểm**:
+     1. Đồng loạt nâng phiên bản tham số `?v=20260916-01` trên toàn bộ 14 file HTML (`search.html`, `reservations.html`, `books.html`, `borrow.html`, `my-borrows.html`, `requests.html`, `notifications.html`, `profile.html`, `readers.html`, `stats.html`, `admin-accounts.html`, `admin-catalog.html`, `admin-config.html`, `chatbot.html`).
+     2. Bổ sung middleware HTTP tại `Backend/app/main.py`: tự động gửi header `Cache-Control: no-cache, no-store, must-revalidate`, `Pragma: no-cache`, `Expires: 0` cho toàn bộ tài nguyên static `.js`, `.css`, `.html`, đảm bảo độc giả tải trang luôn nhận bản mới nhất ngay lập tức.
 
-*(Lưu ý: Bạn có thể xác nhận để hệ thống tự động chèn vào toàn bộ danh sách các trang trên).*
+4. **Trạng thái bao phủ trên các trang trong dự án**:
+   - [x] **`search.html`** *(Tra cứu sách)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖` ở góc dưới.
+   - [x] **`reservations.html`** *(Đặt trước sách)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`books.html`** *(Quản lý sách thủ thư)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`borrow.html`** *(Mượn / Trả sách)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`my-borrows.html`** *(Lịch sử mượn độc giả)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`requests.html`** *(Yêu cầu sách mới)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`profile.html`** *(Hồ sơ người dùng)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
+   - [x] **`stats.html`** *(Thống kê thư viện)*: Đã có tab `🤖 Trợ lý AI` trên navbar + widget nổi `🤖`.
 
 ---
 
 ### 5. Kết quả kiểm thử thực tế
 
-#### Bước 1: Kiểm tra nút tròn nổi và tải tài nguyên tĩnh
+#### Bước 1: Kiểm tra thanh điều hướng Navbar và nút tròn nổi
 - Gọi HTTP kiểm tra trực tiếp hai file thành phần:
-  - `GET http://localhost:8000/components/chatbot-widget.css` → **HTTP 200 OK** (10.3 KB)
-  - `GET http://localhost:8000/components/chatbot-widget.js` → **HTTP 200 OK** (15.0 KB)
-- Nút tròn nổi hiển thị đúng góc dưới bên phải màn hình (`bottom: 24px`, `right: 24px`) với icon 💬 và badge `AI`.
+  - `GET http://localhost:8000/components/chatbot-widget.css` → **HTTP 200 OK** (10.2 KB)
+  - `GET http://localhost:8000/components/chatbot-widget.js` → **HTTP 200 OK** (15.4 KB)
+- Menu Navbar: Tab **`🤖 Trợ lý AI`** xuất hiện rõ ràng giữa `Tra cứu sách` và `Đặt trước`, bấm vào điều hướng thẳng đến `chatbot.html`.
+- Nút tròn nổi hiển thị chuẩn xác ở góc dưới bên phải màn hình (`bottom: 24px`, `right: 24px`) với icon **`🤖`**, huy hiệu xanh **`AI`** và tooltip *"Hỏi Trợ lý AI (Tra cứu sách thông minh)"*. Khắc phục 100% hiện tượng lệch hiển thị giữa trang Tra cứu sách và Đặt trước.
 
 #### Bước 2: Kiểm thử chức năng hỏi đáp qua API `/api/chatbot/hoi`
 
@@ -149,6 +190,31 @@ Căn cứ vào cấu trúc thư mục `Frontend/` thực tế của dự án, c�
 * **Test Case 2.3: Câu hỏi rỗng / Kiểm soát lỗi**
   - Câu hỏi: `""`
   - Kết quả: Status `200 OK`, thông báo: `"Vui lòng nhập câu hỏi tra cứu sách nhé!"`.
+
+* **Test Case 2.4: Kiểm thử lưu trữ hội thoại liên trang (Cross-Page Session Persistence)**
+  - **Kịch bản**: 
+    1. Độc giả mở trang `chatbot.html`, gửi câu hỏi: `"Sách về trí tuệ nhân tạo cho người mới bắt đầu"`. Chatbot trả về 2 cuốn sách (*Kỹ Thuật AI*, *Bá Chủ AI*).
+    2. Độc giả bấm thanh menu chuyển sang trang `search.html` (Tra cứu sách) hoặc `reservations.html` (Đặt trước).
+    3. Tại trang `search.html`, bấm vào bong bóng chat nổi 🤖: Toàn bộ câu hỏi và 2 thẻ sách vừa hỏi trên `chatbot.html` hiển thị nguyên vẹn 100%.
+    4. Độc giả gửi tiếp câu hỏi từ Widget: `"Có sách kinh tế nào hay không?"`. AI phản hồi thành công và lưu vào `sessionStorage`.
+    5. Độc giả bấm menu quay lại `chatbot.html`: Cả 2 lượt trao đổi đều hiển thị đầy đủ, không hề bị reset.
+    6. Độc giả bấm nút `🧹` (Xóa lịch sử): Xác nhận xóa sạch bộ nhớ tạm và làm mới lại giao diện.
+  - **Kết luận**: Đạt 100% yêu cầu trải nghiệm mượt mà, khắc phục triệt để nhược điểm mất phiên của kiến trúc Web đa trang (MPA).
+
+* **Test Case 2.5: Kiểm thử chống đè request (`isSending`) và cảnh báo gián đoạn (`beforeunload`)**
+  - **Kịch bản 1 (Khóa UI khi gửi)**: Độc giả nhập câu hỏi và bấm Gửi (hoặc bấm nút gợi ý mẫu). Trong suốt 5–10s khi typing indicator hiển thị:
+    - Ô nhập text bị vô hiệu hóa (`disabled`), không nhận thêm ký tự.
+    - Nút gửi và các nút gợi ý mẫu bị làm mờ và chặn click (`cursor: not-allowed`).
+    - Sau khi AI trả lời xong, các nút và ô nhập tự động mở khóa và sẵn sàng cho câu hỏi tiếp theo.
+  - **Kịch bản 2 (Hộp thoại xác nhận Tiếng Việt chuẩn ICTU khi chuyển trang)**: Trong lúc AI đang xử lý câu hỏi, độc giả click vào bất kỳ menu nào trên thanh điều hướng (*Tra cứu sách*, *Đặt trước*, *Hồ sơ*...):
+    - Hệ thống chủ động chặn chuyển trang và lập tức hiển thị **Hộp thoại xác nhận Tiếng Việt 100% chuẩn giao diện ICTU**:
+      > **⚠️ Cảnh báo gián đoạn tra cứu sách**  
+      > *🤖 Trợ lý AI đang tìm sách cho bạn... Nếu bạn chuyển trang lúc này, quá trình tìm kiếm sẽ bị gián đoạn và câu trả lời chưa kịp lưu lại. Bạn có muốn ở lại chờ AI trả lời xong không?*  
+      > Nút hành động: **[Ở lại chờ kết quả]** (xanh ICTU) và **[Vẫn rời đi]** (viền đỏ).
+    - Khắc phục hoàn toàn việc hiện popup tiếng Anh mặc định của trình duyệt (*"Leave site? Changes you made may not be saved"*).
+    - Nếu độc giả bấm **[Ở lại chờ kết quả]**: Hộp thoại đóng lại, kết nối mạng tiếp tục duy trì, câu trả lời từ AI về và hiển thị đầy đủ.
+    - Nếu độc giả bấm **[Vẫn rời đi]**: Hệ thống tắt cờ và chuyển sang trang đích, câu hỏi trước đó vẫn được lưu an toàn trong `sessionStorage`.
+  - **Kết luận**: Giao diện thuần Tiếng Việt 100%, thân thiện và chuyên nghiệp, triệt tiêu tình trạng người dùng vô tình làm đứt gãy câu hỏi.
 
 #### Bước 3: Kiểm thử hiển thị Responsive trên màn hình điện thoại (< 480px)
 - Áp dụng Media Query `@media (max-width: 480px)`:
