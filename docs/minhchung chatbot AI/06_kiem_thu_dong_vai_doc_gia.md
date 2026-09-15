@@ -1,5 +1,7 @@
 # Minh chứng kiểm thử: Đóng vai độc giả thực — Kiểm tra toàn diện Chatbot AI Thư viện
 
+> ⚠️ **Lưu ý cập nhật:** File này đã được chỉnh sửa sau lần kiểm thử gốc để sửa 2 dòng đối chiếu tiêu chí #4/#9 (tránh trùng lặp bằng chứng với file khác) và bổ sung kết quả xử lý Vấn đề 1 sau khi vá lỗi. Số liệu tốc độ (32.8s, 14.5s trung bình...) trong bảng kết quả 16 câu hỏi bên dưới là số liệu **TRƯỚC KHI tối ưu** (xem `08_toi_uu_toc_do_va_don_dep_du_lieu.md` để biết tốc độ sau tối ưu).
+
 ---
 
 ## Prompt đã dùng
@@ -81,12 +83,12 @@
 | **1** | **Tích hợp AI vào hệ thống** | G1-01, G1-02, G1-03 | **ĐẠT** — AI trả về sách thật từ kho 63 cuốn, đúng 8 thể loại Admin, 0 sách bịa. Tích hợp đầy đủ: FastAPI → chatbot_service → RAG → ChromaDB → LLM DeepSeek. | Không cần cải thiện. |
 | **2** | **Kết nối API đúng cách** | Toàn bộ 16 câu (gọi qua `tra_cuu_sach()` — cùng luồng `POST /api/chatbot/hoi`) | **ĐẠT** — Router chuẩn prefix `/api/chatbot`, endpoint `/hoi` nhận `QuestionRequest`, trả `ChatbotResponse` Pydantic. Luôn HTTP 200, không 500. | Không cần cải thiện. |
 | **3** | **Thiết kế prompt có hệ thống** | G1-01, G4-12 (injection), G4-11 (lạc đề) | **ĐẠT** — System Prompt v3 có JSON schema bắt buộc, 8 quy tắc ràng buộc, lớp chặn lạc đề. AI luôn trả JSON hợp lệ, có retry lần 2. | Không cần cải thiện. |
-| **4** | **Tối ưu prompt qua thử nghiệm** | G1-03 (9.5s), G3-09 (0ms chặn sớm) | **ĐẠT** — Đã so sánh v1/v2/v3. Prompt v3 rút gọn ~2,472 ký tự (từ 7,734 ký tự), top 4 sách, max_tokens=800. Thời gian: 77s → ~14.5s trung bình. | Tiếp tục giám sát thời gian phản hồi khi nhiều người dùng. |
+| **4** | **Tối ưu prompt qua thử nghiệm** | Không kiểm chứng trực tiếp qua 16 câu hỏi trong file này — xem minh chứng chi tiết tại `04_bang_so_sanh_ket_qua.md` (so sánh v1/v2/v3) và `08_toi_uu_toc_do_va_don_dep_du_lieu.md` (tối ưu tốc độ phản hồi). | **ĐẠT** *(dựa trên các file minh chứng khác, không phải từ kịch bản đóng vai độc giả này)* — Prompt v3 rút gọn ~2,472 ký tự (từ 7,734 ký tự), top_k 8→4, max_tokens=800. Thời gian: 77s → ~14.5s trung bình. | Tiếp tục giám sát thời gian phản hồi khi nhiều người dùng. |
 | **5** | **Sử dụng dữ liệu hệ thống** | G4-13 (thông tin cá nhân), G2-04 (không còn sách ma) | **ĐẠT** — Chatbot chỉ đọc VectorStore (sách thật). Không thể đọc bảng Readers/Loans. 0 sách ma trong ChromaDB. | Ghi chú trong README chatbot chỉ read-only VectorStore. |
 | **6** | **Hiển thị kết quả rõ ràng** | G1-01, G1-03, G2-04, G5-15a | **ĐẠT** — Mỗi sách có đầy đủ: `ten_sach`, `tac_gia`, `the_loai`, `ly_do_goi_y`, `khop_voi_tu_khoa`, `con_hang`. Widget có nút "Xem sách →". | Cân nhắc thêm `so_luong_con_lai` cho biết còn bao nhiêu cuốn. |
 | **7** | **Xử lý lỗi và giới hạn AI** | G3-09 (rỗng), G3-07 (không có sách), G5-16 (rate limit) | **ĐẠT** — 4 lớp: câu rỗng chặn ở router; lạc đề chặn retrieval 0ms; rate limit HTTP 200 + thông báo thân thiện; LLM crash → try-except → thông báo nhẹ nhàng. | Thêm log rate-limit event để giám sát lạm dụng. |
 | **8** | **Kiểm thử chức năng** | G3-09, G3-10, G4-12, G3-08 (và 12 câu còn lại) | **ĐẠT** — 16 test case bao phủ: hỏi đúng, mơ hồ, không có trong DB, câu rỗng, câu cực dài, injection, nhạy cảm, lạc đề, rate limit, song song. | Bổ sung test "hỏi theo mã sách" khi thêm tính năng này. |
-| **9** | **Review code bằng AI** | G4-12 (phát hiện ctx=6 dù injection), G3-08 (false positive) | **ĐẠT** — Dùng AI (Antigravity IDE) suốt quá trình phát triển: phát hiện sách ma, tối ưu prompt, sửa lỗi parse JSON, cải thiện `_loc_ket_qua_bija()`. | Duy trì AI review trước mỗi lần merge. |
+| **9** | **Review code bằng AI** | Không kiểm chứng trực tiếp qua 16 câu hỏi trong file này — xem minh chứng cụ thể tại `07_sua_loi_false_positive_ten_sach.md` (phát hiện lỗi G3-08 từ chính file kiểm thử này → phân tích nguyên nhân → sửa code → kiểm thử lại). | **ĐẠT** *(dựa trên file 07)* — AI (Antigravity IDE) phát hiện lỗi false positive G3-08, phân tích căn nguyên (`partial_ratio` vs `fuzz.ratio`), viết bản vá `_phat_hien_tra_cuu_ten_sach()`, chạy 4 test case xác nhận không regression. | Duy trì AI review trước mỗi lần merge. |
 | **10** | **Trải nghiệm người dùng** | 16/16 câu | **ĐẠT** — Tất cả phản hồi thân thiện tiếng Việt, không lộ lỗi kỹ thuật. Widget nổi mọi trang. Rate limit có thông báo rõ thời gian chờ. | Xem đề xuất cải thiện G3-08. |
 
 ---
@@ -106,6 +108,8 @@
 # nhưng sách đó KHÔNG có trong kho → thêm thông báo gợi ý:
 # "Thư viện chưa có cuốn '[tên sách]'. Bạn có muốn tìm sách chủ đề tương tự không?"
 ```
+
+**CẬP NHẬT SAU KHI XỬ LÝ:** Đã áp dụng bản vá (xem chi tiết tại `07_sua_loi_false_positive_ten_sach.md`). Cơ chế: thêm bước phát hiện "câu hỏi giống gần như toàn bộ 1 tên sách cụ thể" (`fuzz.ratio` toàn chuỗi >= 80) để ưu tiên tra cứu tên riêng thay vì để embedding ngữ nghĩa chi phối. Câu hỏi ngắn ≤ 7 từ không có từ khóa chủ đề cũng được đánh dấu cờ `co_the_la_ten_sach = True` để lọc sách trả về (yêu cầu `diem_khop_ten >= 75%`). Kết quả kiểm thử lại: câu "Chiến tranh và Hòa bình" giờ trả về đúng thông báo *"Thư viện hiện chưa có sách 'Chiến tranh và Hòa bình'. Bạn có thể tham khảo các sách cùng chủ đề khác nếu muốn."* thay vì gợi ý nhầm sách không liên quan. **Trạng thái: ĐÃ KHẮC PHỤC.**
 
 ---
 
@@ -166,3 +170,4 @@
 | **Kết quả tổng** | 14/16 ĐẠT, 2/16 Chấp nhận được |
 | **Người thực hiện** | Antigravity AI Agent (đóng vai độc giả) |
 | **Sinh viên xác nhận** | *(Ký tên hoặc ghi họ tên)* |
+| **Cập nhật sau kiểm thử** | Đã tối ưu tốc độ phản hồi (giảm ~65% độ dài prompt, top_k 8→4) và dọn sạch 10 sách ảo còn sót từ giai đoạn test Vector Store ban đầu — xem chi tiết `08_toi_uu_toc_do_va_don_dep_du_lieu.md` |
