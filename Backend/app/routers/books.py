@@ -1,8 +1,11 @@
+import logging
 import os
+import sys
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from pathlib import Path
 
 from ..config import COVERS_DIR
 from ..database import get_db
@@ -10,6 +13,45 @@ from ..deps import get_current_user, require_roles
 from ..models import Book, BookCopy, BorrowDetail, BorrowSlip, Nxb, TheLoai
 from ..schemas import BookBase, CoverUploadOut
 from ..audit import write_audit_log
+
+# ── Thêm thư mục gốc app vào sys.path để import chatbotAI ──────────────────
+_APP_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if str(_APP_ROOT) not in sys.path:
+    sys.path.insert(0, str(_APP_ROOT))
+
+_vs_logger = logging.getLogger("ai_calls")
+
+
+def _dong_bo_sach_len_vs(book: Book, action: str = "upsert") -> None:
+    """
+    Đồng bộ 1 sách lên Vector Store (upsert hoặc xóa).
+    LUÔN nằm trong try-except — lỗi VS không bao giờ ảnh hưởng CSDL chính.
+
+    action: 'upsert' | 'delete'
+    """
+    try:
+        from chatbotAI.vector_store import VectorStore
+        vs = VectorStore()
+        if action == "delete":
+            vs.xoa_sach(book.ma)
+            _vs_logger.info(f"[VS_SYNC] DELETE '{book.ma}' — '{book.ten}'")
+        else:
+            vs.them_sach(
+                ma_sach=book.ma,
+                ten_sach=book.ten,
+                tac_gia=book.tacGia,
+                tom_tat=book.tomTat or "",
+                the_loai=book.theLoai or "",
+                con_hang=book.soLuong > 0,
+            )
+            _vs_logger.info(
+                f"[VS_SYNC] UPSERT '{book.ma}' — '{book.ten}' "
+                f"(con_hang={book.soLuong > 0})"
+            )
+    except Exception as vs_err:
+        _vs_logger.warning(
+            f"[VS_SYNC] ⚠️  {action.upper()} '{book.ma}' thất bại (không ảnh hưởng DB): {vs_err}"
+        )
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
@@ -148,6 +190,10 @@ def create_book(
     )
     db.commit()
     db.refresh(book)
+
+    # ── Đồng bộ lên Vector Store (sau khi commit DB thành công) ─────────────
+    _dong_bo_sach_len_vs(book, action="upsert")
+
     return book
 
 
@@ -212,6 +258,10 @@ def update_book(
     )
     db.commit()
     db.refresh(book)
+
+    # ── Đồng bộ lên Vector Store (upsert cập nhật metadata mới nhất) ────────
+    _dong_bo_sach_len_vs(book, action="upsert")
+
     return book
 
 
@@ -235,6 +285,8 @@ def delete_book(
     from app.models import BookCopy
     from sqlalchemy.exc import IntegrityError
     
+    # Lưu thông tin trước khi xóa để truyền vào VS
+    sach_da_xoa = book
     try:
         db.query(BookCopy).filter(BookCopy.book_id == book.ma).delete()
         db.delete(book)
@@ -242,4 +294,8 @@ def delete_book(
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Không thể xóa sách vì đang có phiếu mượn, phạt hoặc đặt trước liên quan.")
+
+    # ── Xóa khỏi Vector Store (sau khi commit DB thành công) ─────────────────
+    _dong_bo_sach_len_vs(sach_da_xoa, action="delete")
+
     return {"message": "Đã xoá sách."}

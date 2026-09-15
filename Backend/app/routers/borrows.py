@@ -1,4 +1,7 @@
 from datetime import datetime, timedelta
+import logging
+import sys
+from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -17,6 +20,39 @@ from ..schemas import (
     CollectFineOut,
     FineOut,
 )
+
+# ── Thêm thư mục gốc vào sys.path để import chatbotAI ─────────────────────
+_APP_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if str(_APP_ROOT) not in sys.path:
+    sys.path.insert(0, str(_APP_ROOT))
+
+_vs_logger = logging.getLogger("ai_calls")
+
+
+def _dong_bo_con_hang(book: Book) -> None:
+    """
+    Cập nhật trạng thái con_hang trong Vector Store sau khi soLuong thay đổi.
+    LUÔN trong try-except — lỗi VS không nh bao giờ ảnh hưởng luồng mượn/trả.
+    """
+    try:
+        from chatbotAI.vector_store import VectorStore
+        vs = VectorStore()
+        vs.them_sach(
+            ma_sach=book.ma,
+            ten_sach=book.ten,
+            tac_gia=book.tacGia,
+            tom_tat=book.tomTat or "",
+            the_loai=book.theLoai or "",
+            con_hang=book.soLuong > 0,
+        )
+        _vs_logger.info(
+            f"[VS_SYNC] CON_HANG UPDATE '{book.ma}' — soLuong={book.soLuong} "
+            f"con_hang={book.soLuong > 0}"
+        )
+    except Exception as vs_err:
+        _vs_logger.warning(
+            f"[VS_SYNC] ⚠️  CON_HANG UPDATE '{book.ma}' thất bại (không ảnh hưởng luồng mượn/trả): {vs_err}"
+        )
 
 router = APIRouter(prefix="/api/borrows", tags=["borrows"])
 
@@ -203,6 +239,13 @@ def _perform_create_borrow(
     )
     db.commit()
     db.refresh(slip)
+
+    # ── Cập nhật con_hang trong VS cho tất cả sách vừa giảm soLuong ─────────
+    for ma_sach in merged.keys():
+        book_ref = db.get(Book, ma_sach)
+        if book_ref:
+            _dong_bo_con_hang(book_ref)
+
     return slip
 
 
@@ -293,6 +336,14 @@ def _perform_return_borrow(db: Session, user, ma: str) -> BorrowReturnOut:
         details=audit_detail,
     )
     db.commit()
+
+    # ── Cập nhật con_hang trong VS cho tất cả sách vừa được trả (soLuong tăng) ─
+    returned_sach_ids = {d.ma_sach for d in details}
+    for ma_sach in returned_sach_ids:
+        book_ref = db.get(Book, ma_sach)
+        if book_ref:
+            _dong_bo_con_hang(book_ref)
+
     return BorrowReturnOut(message="Đã trả sách.", ngay_tra=ngay_tra, fine=fine)
 
 

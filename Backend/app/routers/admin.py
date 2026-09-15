@@ -243,3 +243,77 @@ def restore_database(
         if conn is not None:
             conn.close()
     return {"message": "Đã phục hồi CSDL từ file backup.", "path": path}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Endpoint đồng bộ toàn bộ sách sang Vector Store (Admin only)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/dong-bo-vector-store")
+def dong_bo_vector_store(
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("admin")),
+):
+    """
+    Đồng bộ lại TOÀN BỘ sách từ CSDL chính sang Vector Store.
+
+    Dùng cho trường hợp:
+    - Import hàng loạt sách mới mà chưa tự động sync
+    - Vector Store bị lỗi cần build lại từ đầu
+    - Kiểm tra tính nhất quán giữa CSDL và VS
+
+    Chỉ Admin được gọi endpoint này.
+    """
+    import sys
+    from pathlib import Path
+
+    # Thêm root vào sys.path để import chatbotAI
+    _app_root = Path(__file__).resolve().parent.parent.parent.parent
+    if str(_app_root) not in sys.path:
+        sys.path.insert(0, str(_app_root))
+
+    try:
+        from chatbotAI.index_sach import dong_bo_toan_bo
+        from chatbotAI.vector_store import VectorStore
+        from ..models import Book
+
+        # Lấy toàn bộ sách từ CSDL chính
+        tat_ca_sach = db.query(Book).all()
+
+        danh_sach = [
+            {
+                "ma_sach": s.ma,
+                "ten_sach": s.ten,
+                "tac_gia": s.tacGia,
+                "tom_tat": s.tomTat or "",
+                "the_loai": s.theLoai or "",
+                "con_hang": s.soLuong > 0,
+            }
+            for s in tat_ca_sach
+        ]
+
+        dong_bo_toan_bo(danh_sach)
+
+        vs = VectorStore()
+        so_luong_vs = vs.dem_so_luong()
+
+        write_audit_log(
+            db,
+            user,
+            "SYNC_VECTOR_STORE",
+            "SYSTEM",
+            details=f"Đồng bộ {len(danh_sach)} sách → VS có {so_luong_vs} entries",
+        )
+        db.commit()
+
+        return {
+            "message": "Đồng bộ Vector Store hoàn tất.",
+            "so_sach_tu_csdl": len(danh_sach),
+            "so_sach_trong_vs": so_luong_vs,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Đồng bộ Vector Store thất bại: {e}",
+        )
