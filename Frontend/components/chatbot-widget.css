@@ -1,0 +1,503 @@
+/* ============================================================
+   chatbot-widget.css — Bong bóng chat nổi (Floating Chat Widget)
+   Đồng bộ màu sắc ICTU Library Theme (Navy #0a2e5c, #1e4b8c)
+   ============================================================ */
+
+/* 1. Nút bong bóng tròn nổi (Floating Button) */
+.cb-widget-bubble {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-900, #0a2e5c) 0%, var(--color-primary-600, #1e4b8c) 100%);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(10, 46, 92, 0.28), 0 2px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  user-select: none;
+}
+
+.cb-widget-bubble:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 12px 28px rgba(10, 46, 92, 0.36), 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.cb-widget-bubble:active {
+  transform: scale(0.96);
+}
+
+.cb-widget-bubble__icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  transition: transform 0.25s ease;
+}
+
+/* Huy hiệu gợi ý nhỏ trên nút tròn */
+.cb-widget-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #10B981;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 2. Khung chat nổi (Chat Window) */
+.cb-widget-window {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  height: 540px;
+  max-height: calc(100vh - 120px);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(10, 46, 92, 0.22), 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(10, 46, 92, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 99999;
+  font-family: var(--font-family, "Be Vietnam Pro", system-ui, sans-serif);
+  transform-origin: bottom right;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.cb-widget-window.cb-widget--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.85) translateY(20px);
+}
+
+/* Header khung chat */
+.cb-widget-header {
+  background: linear-gradient(135deg, var(--color-primary-900, #0a2e5c) 0%, var(--color-primary-600, #1e4b8c) 100%);
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.cb-widget-header__info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cb-widget-header__avatar {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cb-widget-header__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  color: #ffffff !important;
+}
+
+.cb-widget-header__status {
+  font-size: 11px;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.cb-widget-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34D399;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35);
+}
+
+.cb-widget-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cb-widget-btn-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.15s ease;
+}
+
+.cb-widget-btn-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+
+/* 3. Vùng hiển thị tin nhắn */
+.cb-widget-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+  scroll-behavior: smooth;
+}
+
+/* Từng bong bóng tin nhắn */
+.cb-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.cb-msg--user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.cb-msg--assistant {
+  align-self: flex-start;
+}
+
+.cb-msg__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: #e2e8f0;
+}
+
+.cb-msg--user .cb-msg__avatar {
+  background: var(--color-primary-soft, #e8eef7);
+}
+
+.cb-msg__bubble {
+  padding: 10px 13px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.48;
+  word-break: break-word;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cb-msg--user .cb-msg__bubble {
+  background: var(--color-primary-900, #0a2e5c);
+  color: #ffffff;
+  border-bottom-right-radius: 2px;
+}
+
+.cb-msg--assistant .cb-msg__bubble {
+  background: #ffffff;
+  color: var(--color-text-dark, #1a1a1a);
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 2px;
+}
+
+.cb-msg__time {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.cb-msg--assistant .cb-msg__time {
+  text-align: left;
+}
+
+/* Câu hỏi gợi ý nhanh ban đầu */
+.cb-widget-quick-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cb-quick-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: var(--color-primary-900, #0a2e5c);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cb-quick-btn:hover {
+  background: var(--color-primary-soft, #e8eef7);
+  border-color: var(--color-primary-600, #1e4b8c);
+  color: var(--color-primary-600, #1e4b8c);
+  transform: translateY(-1px);
+}
+
+/* Hiển thị từ khóa AI trích xuất */
+.cb-extracted-kws {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #166534;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.cb-kw-tag {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10.5px;
+}
+
+/* Thẻ sách (Book Card) thu nhỏ trong widget */
+.cb-book-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--color-primary-600, #1e4b8c);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.cb-book-card__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary-900, #0a2e5c);
+  line-height: 1.3;
+}
+
+.cb-book-card__author {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.cb-book-card__matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cb-badge-match {
+  font-size: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.cb-book-card__reason {
+  font-size: 11.5px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-style: italic;
+  border-left: 2px solid #cbd5e1;
+}
+
+.cb-book-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.cb-badge-stock {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.cb-badge-stock--in {
+  background: #def7ec;
+  color: #03543f;
+}
+
+.cb-badge-stock--out {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+
+.cb-btn-view {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary-900, #0a2e5c);
+  background: var(--color-primary-soft, #e8eef7);
+  border: 1px solid var(--color-primary-soft-border, #b9c9e0);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.cb-btn-view:hover {
+  background: var(--color-primary-900, #0a2e5c);
+  color: #ffffff;
+}
+
+/* Hiệu ứng đang gõ (Typing indicator) */
+.cb-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+}
+
+.cb-typing-dot {
+  width: 6px;
+  height: 6px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: cbBounce 1.2s infinite ease-in-out;
+}
+
+.cb-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.cb-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes cbBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+
+/* 4. Khung nhập câu hỏi ở dưới cùng */
+.cb-widget-input-area {
+  padding: 10px 12px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cb-widget-input {
+  flex: 1;
+  border: 1.5px solid #dce1ea;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cb-widget-input:focus {
+  border-color: var(--color-primary-600, #1e4b8c);
+  box-shadow: 0 0 0 2px rgba(10, 46, 92, 0.15);
+}
+
+.cb-widget-btn-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary-900, #0a2e5c);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.cb-widget-btn-send:hover:not(:disabled) {
+  background: var(--color-primary-600, #1e4b8c);
+  transform: scale(1.05);
+}
+
+.cb-widget-btn-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 5. Responsive trên thiết bị di động (< 480px) */
+@media (max-width: 480px) {
+  .cb-widget-bubble {
+    bottom: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .cb-widget-window {
+    right: 8px;
+    left: 8px;
+    bottom: 8px;
+    width: auto;
+    height: calc(100vh - 24px);
+    max-width: none;
+    max-height: none;
+    border-radius: 12px;
+  }
+}

@@ -39,9 +39,10 @@ def xay_dung_user_prompt(cau_hoi: str, context: list[dict]) -> str:
         if not isinstance(sach, dict):
             continue
 
-        tom_tat_goc = sach.get("tom_tat", "")
+        tom_tat_goc = (sach.get("tom_tat") or "").strip()
+        # Giữ trọn vẹn tóm tắt (tối đa 1000 ký tự) để AI đọc hiểu đầy đủ cốt truyện / chủ đề
         tom_tat_rut = (
-            (tom_tat_goc[:300] + "...") if len(tom_tat_goc) > 300
+            (tom_tat_goc[:1000] + "...") if len(tom_tat_goc) > 1000
             else tom_tat_goc
         )
 
@@ -55,8 +56,10 @@ def xay_dung_user_prompt(cau_hoi: str, context: list[dict]) -> str:
             mo_ta_nguon.append(f"tên riêng ({diem}%)")
 
         context_rut_gon.append({
+            "ma_sach": sach.get("ma_sach", ""),
             "ten_sach": sach.get("ten_sach", ""),
             "tac_gia": sach.get("tac_gia", ""),
+            "the_loai": sach.get("the_loai", ""),
             "tom_tat": tom_tat_rut,
             "con_hang": sach.get("con_hang", False),
             "nguon_khop": " + ".join(mo_ta_nguon) if mo_ta_nguon else "không rõ",
@@ -67,11 +70,13 @@ def xay_dung_user_prompt(cau_hoi: str, context: list[dict]) -> str:
 
     user_prompt = (
         f"Câu hỏi của độc giả: {cau_hoi}\n\n"
-        f"Danh sách sách tìm được (đã lọc sơ bộ, dạng JSON):\n"
+        f"Danh sách sách tìm được từ thư viện (kèm tóm tắt nội dung thực tế):\n"
         f"{context_json}\n\n"
-        "Hãy đánh giá lại danh sách trên, chỉ chọn những cuốn THỰC SỰ phù hợp "
-        "với câu hỏi, và trả lời theo đúng định dạng JSON đã quy định trong "
-        "system prompt."
+        "Nhiệm vụ của bạn:\n"
+        "1. Phân tích câu hỏi, trích xuất danh sách các từ khóa / khái niệm cốt lõi mà độc giả nhấn mạnh vào 'tu_khoa_nhan_manh'.\n"
+        "2. Đọc kỹ phần 'tom_tat' của từng cuốn sách trên, so sánh đối chiếu với các từ khóa và nhu cầu của độc giả.\n"
+        "3. Chọn lọc những cuốn sách THỰC SỰ phù hợp hoặc liên quan, chỉ ra các từ khóa khớp ('khop_voi_tu_khoa') và giải thích rõ trong 'ly_do_goi_y' dựa trên nội dung tóm tắt thực tế của sách.\n"
+        "4. Trả về đúng định dạng JSON đã quy định trong system prompt."
     )
 
     return user_prompt

@@ -151,10 +151,18 @@ class VectorStore:
 
         start = time.time()
 
-        # Chọn văn bản để embedding
-        van_ban_embed = (tom_tat.strip() if tom_tat and tom_tat.strip()
-                         else ten_sach.strip() if ten_sach and ten_sach.strip()
-                         else None)
+        # Chuẩn hóa văn bản embedding kết hợp Tên sách, Tác giả, Thể loại và Tóm tắt nội dung
+        phan_tu = []
+        if ten_sach and ten_sach.strip():
+            phan_tu.append(f"Tên sách: {ten_sach.strip()}")
+        if tac_gia and tac_gia.strip():
+            phan_tu.append(f"Tác giả: {tac_gia.strip()}")
+        if the_loai and the_loai.strip():
+            phan_tu.append(f"Thể loại: {the_loai.strip()}")
+        if tom_tat and tom_tat.strip():
+            phan_tu.append(f"Nội dung tóm tắt: {tom_tat.strip()}")
+
+        van_ban_embed = ". ".join(phan_tu) if phan_tu else None
 
         if van_ban_embed is None:
             _logger.warning(
@@ -179,6 +187,7 @@ class VectorStore:
                 "tac_gia": tac_gia or "",
                 "the_loai": the_loai or "",
                 "con_hang": str(con_hang),  # ChromaDB metadata chỉ nhận str/int/float
+                "tom_tat": tom_tat or "",
             }],
         )
 

@@ -71,14 +71,26 @@ def dong_bo_toan_bo(danh_sach_sach: list[dict]) -> None:
 
     start_total = time.time()
 
-    # Bước 1: Chuẩn bị văn bản cần embedding (dùng tom_tat, fallback ten_sach)
+    # Bước 1: Chuẩn bị văn bản cần embedding (kết hợp Tên, Tác giả, Thể loại và Tóm tắt)
     print("\n[Bước 1/3] Chuẩn bị văn bản embedding...")
     van_ban_list: list[str] = []
     for sach in danh_sach_sach:
-        tom_tat = sach.get("tom_tat", "")
-        ten_sach = sach.get("ten_sach", "")
-        van_ban = (tom_tat.strip() if tom_tat and tom_tat.strip()
-                   else ten_sach.strip())
+        tom_tat = (sach.get("tom_tat") or "").strip()
+        ten_sach = (sach.get("ten_sach") or "").strip()
+        tac_gia = (sach.get("tac_gia") or "").strip()
+        the_loai = (sach.get("the_loai") or "").strip()
+
+        phan_tu = []
+        if ten_sach:
+            phan_tu.append(f"Tên sách: {ten_sach}")
+        if tac_gia:
+            phan_tu.append(f"Tác giả: {tac_gia}")
+        if the_loai:
+            phan_tu.append(f"Thể loại: {the_loai}")
+        if tom_tat:
+            phan_tu.append(f"Nội dung tóm tắt: {tom_tat}")
+
+        van_ban = ". ".join(phan_tu) if phan_tu else (ten_sach or "Sách chưa có thông tin")
         van_ban_list.append(van_ban)
 
     # Bước 2: Batch embedding tất cả văn bản cùng lúc
@@ -118,6 +130,7 @@ def dong_bo_toan_bo(danh_sach_sach: list[dict]) -> None:
                     "tac_gia": sach.get("tac_gia", ""),
                     "the_loai": sach.get("the_loai", ""),
                     "con_hang": str(sach.get("con_hang", True)),
+                    "tom_tat": tom_tat or "",
                 }],
             )
             print("→ ✅ OK")

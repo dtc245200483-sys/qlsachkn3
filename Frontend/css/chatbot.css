@@ -269,6 +269,56 @@ h2.chatbot-header__title {
   margin-bottom: 8px;
 }
 
+.ai-book-card__meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.ai-book-card__matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.badge-match {
+  font-size: 11px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.ai-extracted-keywords {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.ai-keywords-label {
+  font-weight: 600;
+  color: #166534;
+}
+
+.ai-keyword-tag {
+  background: #DCFCE7;
+  color: #15803D;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
 .ai-book-card__reason {
   font-size: 12.5px;
   color: #374151;
@@ -285,8 +335,15 @@ h2.chatbot-header__title {
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px dashed #E5E7EB;
+  gap: 6px;
+}
+
+.ai-card-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .badge-stock {
@@ -294,6 +351,7 @@ h2.chatbot-header__title {
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 12px;
+  white-space: nowrap;
 }
 
 .badge-stock--in {
@@ -308,19 +366,210 @@ h2.chatbot-header__title {
 
 .btn-book-action {
   font-size: 11.5px;
-  padding: 4px 10px;
-  background: var(--color-primary-soft);
-  color: var(--color-primary-900);
-  border: 1px solid var(--color-primary-soft-border);
+  padding: 4px 9px;
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid #D1D5DB;
   border-radius: 4px;
   text-decoration: none;
   font-weight: 600;
+  cursor: pointer;
   transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-book-action:hover {
+  background: #E5E7EB;
+  color: #111827;
+}
+
+.btn-book-action--primary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-900);
+  border-color: var(--color-primary-soft-border);
+}
+
+.btn-book-action--primary:hover {
   background: var(--color-primary-900);
   color: #ffffff;
+}
+
+/* Modal Xem Chi Tiết & Tóm Tắt Sách */
+.ai-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.ai-modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.ai-modal-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-modal-header {
+  background: linear-gradient(135deg, #0a2e5c 0%, #1e4b8c 100%);
+  color: #ffffff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-modal-header__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.btn-modal-close-icon {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.btn-modal-close-icon:hover {
+  opacity: 1;
+}
+
+.ai-modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-book-title {
+  color: #0a2e5c;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+}
+
+.modal-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.modal-meta-item {
+  font-weight: 500;
+}
+
+.modal-ai-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.modal-ai-box__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #15803d;
+  margin-bottom: 4px;
+}
+
+.modal-ai-box__text {
+  font-size: 13px;
+  color: #166534;
+  line-height: 1.5;
+}
+
+.modal-keywords-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.modal-kw-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #15803d;
+  align-self: center;
+}
+
+.modal-kw-tag {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11.5px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.modal-summary-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.modal-summary-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a2e5c;
+  margin-bottom: 6px;
+}
+
+.modal-summary-content {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.ai-modal-footer {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* Banner từ chối lạc đề hoặc thông báo */

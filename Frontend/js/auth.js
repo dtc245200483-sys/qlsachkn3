@@ -15,7 +15,10 @@ window.Auth = (function () {
 
   function currentUser() {
     try {
-      var raw = sessionStorage.getItem(SESSION_KEY);
+      var raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+      if (raw && !sessionStorage.getItem(SESSION_KEY)) {
+        sessionStorage.setItem(SESSION_KEY, raw);
+      }
       return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
@@ -46,12 +49,14 @@ window.Auth = (function () {
         name: mapped.name || ""
       };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       return { ok: true, data: session };
     });
   }
 
   function logout() {
     sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
     window.location.href = "index.html";
   }
 

@@ -8,6 +8,7 @@
   var allFetchedBooks = [];
   var currentPage = 1;
   var itemsPerPage = 6;
+  var shouldScrollToResults = false;
 
   function showMessage(text, type) {
     var el = document.getElementById("page-message");
@@ -120,6 +121,15 @@
         allFetchedBooks = list;
         currentPage = 1;
         renderCurrentPage();
+        if (shouldScrollToResults) {
+          shouldScrollToResults = false;
+          var container = document.getElementById("book-list-container");
+          if (container) {
+            setTimeout(function () {
+              container.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 150);
+          }
+        }
       })
       .catch(function () {
         setLoading(false);
@@ -413,6 +423,18 @@
           loadBooks();
         }
       });
+    }
+
+    // Đọc tham số tìm kiếm từ URL (khi chuyển từ Chatbot AI: search.html?q=...)
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      var qParam = urlParams.get("q");
+      if (qParam && qInput) {
+        qInput.value = qParam.trim();
+        shouldScrollToResults = true;
+      }
+    } catch (err) {
+      // Bỏ qua lỗi URLSearchParams nếu có
     }
 
     loadCategories();

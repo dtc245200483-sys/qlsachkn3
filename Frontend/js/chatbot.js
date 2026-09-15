@@ -107,12 +107,24 @@
       bubble.appendChild(notice);
     }
 
-    // 2. Danh sách sách gợi ý
+    // 2. Trích xuất từ khóa nhấn mạnh từ người dùng (nếu có)
+    var keywords = data.tu_khoa_nhan_manh || [];
+    if (keywords.length > 0) {
+      var kwBox = document.createElement("div");
+      kwBox.className = "ai-extracted-keywords";
+      kwBox.innerHTML = '<span class="ai-keywords-label">🎯 Trọng tâm tìm kiếm:</span> ' +
+        keywords.map(function (k) {
+          return '<span class="ai-keyword-tag">#' + escapeHtml(k) + '</span>';
+        }).join(" ");
+      bubble.appendChild(kwBox);
+    }
+
+    // 3. Danh sách sách gợi ý
     var books = data.ket_qua || [];
     if (books.length > 0) {
       var headerP = document.createElement("p");
-      headerP.style.margin = "0 0 6px 0";
-      headerP.innerHTML = "<strong>📚 Dưới đây là " + books.length + " cuốn sách phù hợp nhất trong thư viện:</strong>";
+      headerP.style.margin = "8px 0 6px 0";
+      headerP.innerHTML = "<strong>📚 Dưới đây là " + books.length + " cuốn sách phù hợp nhất được đối chiếu từ tóm tắt nội dung:</strong>";
       bubble.appendChild(headerP);
 
       var grid = document.createElement("div");
@@ -129,20 +141,50 @@
         var title = escapeHtml(b.ten_sach || "Sách không tên");
         var author = escapeHtml(b.tac_gia || "Chưa rõ tác giả");
         var reason = escapeHtml(b.ly_do_goi_y || "Phù hợp với chủ đề tìm kiếm");
+        var genre = escapeHtml(b.the_loai || "Chung");
+
+        var matchTagsHtml = "";
+        var kws = b.khop_voi_tu_khoa || [];
+        if (kws.length > 0) {
+          matchTagsHtml = '<div class="ai-book-card__matches">' +
+            kws.map(function (k) {
+              return '<span class="badge-match">✨ Khớp: #' + escapeHtml(k) + '</span>';
+            }).join(" ") +
+            '</div>';
+        }
 
         var searchUrl = "search.html?q=" + encodeURIComponent(b.ten_sach || "");
 
         card.innerHTML = [
           '<div>',
-          '  <div class="ai-book-card__title">📖 ' + title + '</div>',
-          '  <div class="ai-book-card__author">Tác giả: ' + author + '</div>',
+          '  <div class="ai-book-card__title" title="Bấm để xem chi tiết tóm tắt">📖 ' + title + '</div>',
+          '  <div class="ai-book-card__meta">Tác giả: ' + author + ' • Thể loại: ' + genre + '</div>',
+          matchTagsHtml,
           '  <div class="ai-book-card__reason">"' + reason + '"</div>',
           '</div>',
           '<div class="ai-book-card__footer">',
           '  <span class="' + badgeClass + '">' + badgeText + '</span>',
-          '  <a href="' + searchUrl + '" class="btn-book-action">Xem trong kho →</a>',
+          '  <div class="ai-card-actions">',
+          '    <button type="button" class="btn-book-action btn-book-detail">📖 Xem tóm tắt</button>',
+          '    <a href="' + searchUrl + '" class="btn-book-action btn-book-action--primary" title="Xem và tra cứu sách này trong thư viện">Xem sách →</a>',
+          '  </div>',
           '</div>'
         ].join("");
+
+        // Bấm nút hoặc tiêu đề để mở modal xem tóm tắt
+        var btnDetail = card.querySelector(".btn-book-detail");
+        if (btnDetail) {
+          btnDetail.addEventListener("click", function () {
+            openBookModal(b);
+          });
+        }
+        var titleEl = card.querySelector(".ai-book-card__title");
+        if (titleEl) {
+          titleEl.style.cursor = "pointer";
+          titleEl.addEventListener("click", function () {
+            openBookModal(b);
+          });
+        }
 
         grid.appendChild(card);
       });
@@ -165,6 +207,85 @@
       lblLatency.textContent = "Thời gian phản hồi: " + data.thoi_gian_ms + "ms";
     }
   }
+
+  // ── Xử lý Modal Xem Chi Tiết & Tóm Tắt Sách ──────────────────────────────
+  function openBookModal(book) {
+    var modal = document.getElementById("ai-book-modal");
+    if (!modal) return;
+
+    var elTitle = document.getElementById("modal-book-title");
+    var elAuthor = document.getElementById("modal-book-author");
+    var elCat = document.getElementById("modal-book-category");
+    var elStatus = document.getElementById("modal-book-status");
+    var elReason = document.getElementById("modal-book-reason");
+    var elKeywords = document.getElementById("modal-book-keywords");
+    var elSummary = document.getElementById("modal-book-summary");
+    var elLink = document.getElementById("btn-modal-search-link");
+
+    if (elTitle) elTitle.textContent = book.ten_sach || "Sách không tên";
+    if (elAuthor) elAuthor.textContent = "✍️ Tác giả: " + (book.tac_gia || "Chưa rõ");
+    if (elCat) elCat.textContent = "📂 Thể loại: " + (book.the_loai || "Chung");
+
+    var isAvailable = book.con_hang !== false;
+    if (elStatus) {
+      elStatus.className = isAvailable ? "badge-stock badge-stock--in" : "badge-stock badge-stock--out";
+      elStatus.textContent = isAvailable ? "✓ Còn sách trong kho" : "✕ Đã hết (Đặt mượn trước)";
+    }
+
+    if (elReason) {
+      elReason.textContent = book.ly_do_goi_y || "Phù hợp với chủ đề tìm kiếm của bạn.";
+    }
+
+    if (elKeywords) {
+      elKeywords.innerHTML = "";
+      var kws = book.khop_voi_tu_khoa || [];
+      if (kws.length > 0) {
+        var lbl = document.createElement("span");
+        lbl.className = "modal-kw-label";
+        lbl.textContent = "Khớp từ khóa:";
+        elKeywords.appendChild(lbl);
+        kws.forEach(function (kw) {
+          var tag = document.createElement("span");
+          tag.className = "modal-kw-tag";
+          tag.textContent = "#" + kw;
+          elKeywords.appendChild(tag);
+        });
+      }
+    }
+
+    if (elSummary) {
+      var summaryText = (book.tom_tat || "").trim();
+      elSummary.textContent = summaryText || "Cuốn sách này hiện chưa có nội dung tóm tắt chi tiết trong hệ thống.";
+    }
+
+    if (elLink) {
+      elLink.href = "search.html?q=" + encodeURIComponent(book.ten_sach || "");
+    }
+
+    modal.hidden = false;
+  }
+
+  function closeBookModal() {
+    var modal = document.getElementById("ai-book-modal");
+    if (modal) {
+      modal.hidden = true;
+    }
+  }
+
+  var btnCloseModal = document.getElementById("btn-close-modal");
+  var btnModalCancel = document.getElementById("btn-modal-cancel");
+  var modalBackdrop = document.getElementById("ai-book-modal");
+
+  if (btnCloseModal) btnCloseModal.addEventListener("click", closeBookModal);
+  if (btnModalCancel) btnModalCancel.addEventListener("click", closeBookModal);
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", function (e) {
+      if (e.target === modalBackdrop) closeBookModal();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeBookModal();
+  });
 
   function appendErrorMessage(err) {
     removeTypingIndicator();

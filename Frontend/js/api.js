@@ -375,7 +375,7 @@ window.API = (function () {
 
     var session = null;
     try {
-      var raw = sessionStorage.getItem("thuvien_session");
+      var raw = sessionStorage.getItem("thuvien_session") || localStorage.getItem("thuvien_session");
       session = raw ? JSON.parse(raw) : null;
     } catch (e) {
       session = null;
@@ -541,7 +541,7 @@ window.API = (function () {
     };
     var session = null;
     try {
-      var raw = sessionStorage.getItem("thuvien_session");
+      var raw = sessionStorage.getItem("thuvien_session") || localStorage.getItem("thuvien_session");
       session = raw ? JSON.parse(raw) : null;
     } catch (e) {
       session = null;
@@ -608,7 +608,7 @@ window.API = (function () {
     }
     var session = null;
     try {
-      var raw = sessionStorage.getItem("thuvien_session");
+      var raw = sessionStorage.getItem("thuvien_session") || localStorage.getItem("thuvien_session");
       session = raw ? JSON.parse(raw) : null;
     } catch (e) {
       session = null;

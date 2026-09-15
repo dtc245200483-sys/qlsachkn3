@@ -23,7 +23,7 @@
             <h2 class="chatbot-header__title">Trợ lý AI Thư viện</h2>
             <div class="chatbot-header__subtitle">
               <span class="chatbot-status-dot"></span>
-              <span>Đang kết nối Vector Store (ChromaDB) • Mô hình RAG chuẩn hóa</span>
+              <span>Trực tuyến • Hỗ trợ tra cứu sách &amp; tài nguyên thư viện ICTU</span>
             </div>
           </div>
         </div>
@@ -36,23 +36,23 @@
 
       <!-- Thanh gợi ý nhanh -->
       <div class="quick-prompts-bar">
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách hướng dẫn tư duy làm giàu và quản lý tài chính cá nhân')">
-          💰 Tư duy làm giàu & tài chính
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách kinh tế quản trị kinh doanh và tư duy làm giàu')">
+          📚 Sách Kinh tế & Quản trị
         </button>
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách học lập trình Python từ cơ bản đến nâng cao')">
-          🐍 Lập trình Python
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách học lập trình phần mềm và công nghệ thông tin')">
+          💻 Sách Lập trình & CNTT
         </button>
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách về nghệ thuật giao tiếp của tác giả Dale Carnegie')">
-          🤝 Giao tiếp & Đắc nhân tâm
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách về trí tuệ nhân tạo AI và ChatGPT')">
+          🤖 Sách Trí tuệ nhân tạo & AI
         </button>
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('Kiến trúc hệ thống phân tán')">
-          ⚙️ Kiến trúc phân tán (Kiểm tra hết hàng)
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách an ninh mạng an toàn thông tin và hacker')">
+          🔒 Sách An ninh mạng & Bảo mật
         </button>
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('gợi ý những cuốn sách hay nhất trong thư viện')">
-          ⭐ Sách hay nên đọc
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách kỹ năng sống phát triển bản thân và nghệ thuật giao tiếp')">
+          🗣️ Sách Kỹ năng & Giao tiếp
         </button>
-        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('Ai là chủ tịch nước hiện tại?')">
-          🛡️ Thử nghiệm câu hỏi ngoài phạm vi
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('gợi ý những cuốn sách hay và đáng đọc nhất trong thư viện')">
+          ⭐ Sách hay & Đáng đọc nhất
         </button>
       </div>
 
@@ -85,8 +85,50 @@
 
       <!-- Thanh trạng thái thông tin -->
       <div class="chatbot-meta-info">
-        <span>🛡️ Hệ thống phòng vệ 2 lớp (Retrieval + Prompt V3 JSON Schema)</span>
+        <span>📚 Hệ thống tra cứu &amp; tư vấn học liệu thư viện thông minh</span>
         <span id="chat-latency">Thời gian phản hồi: --</span>
+      </div>
+    </div>
+
+    <!-- Modal xem chi tiết & tóm tắt sách AI -->
+    <div id="ai-book-modal" class="ai-modal-backdrop" hidden>
+      <div class="ai-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-book-title">
+        <div class="ai-modal-header">
+          <div class="ai-modal-header__title">
+            <span class="ai-modal-icon">📖</span>
+            <span>Chi tiết & Tóm tắt sách</span>
+          </div>
+          <button type="button" class="btn-modal-close-icon" id="btn-close-modal" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="ai-modal-body">
+          <h3 id="modal-book-title" class="modal-book-title">Tên sách</h3>
+          <div class="modal-meta-row">
+            <span id="modal-book-author" class="modal-meta-item">✍️ Tác giả: ...</span>
+            <span id="modal-book-category" class="modal-meta-item">📂 Thể loại: ...</span>
+            <span id="modal-book-status" class="badge-stock badge-stock--in">✓ Còn sách</span>
+          </div>
+          
+          <div class="modal-ai-box">
+            <div class="modal-ai-box__label">💡 Phân tích & Đánh giá từ AI:</div>
+            <div id="modal-book-reason" class="modal-ai-box__text">...</div>
+            <div id="modal-book-keywords" class="modal-keywords-row"></div>
+          </div>
+
+          <div class="modal-summary-section">
+            <div class="modal-summary-title">📝 Toàn bộ nội dung tóm tắt sách:</div>
+            <div id="modal-book-summary" class="modal-summary-content">...</div>
+          </div>
+        </div>
+        <div class="ai-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-modal-cancel">Đóng</button>
+          <a href="#" id="btn-modal-search-link" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+            <span>Xem sách</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </main>

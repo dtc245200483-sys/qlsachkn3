@@ -87,20 +87,30 @@ def _loc_ket_qua_bija(ket_qua_llm: list[dict], context: list[dict]) -> list[dict
     """
     Đối chiếu tên sách LLM trả về với context ban đầu.
     Loại bỏ mọi sách mà LLM tự bịa (không có trong context).
-
-    Kiểm tra theo ten_sach (lowercase, strip) — đủ chắc vì LLM thường
-    copy nguyên tên từ context mà không thay đổi.
+    Đồng thời làm giàu metadata từ context: ma_sach, the_loai, tom_tat, con_hang.
     """
-    # Tập hợp tên sách hợp lệ từ context (lowercase để so khớp mềm)
-    ten_hop_le = {s["ten_sach"].lower().strip() for s in context if s.get("ten_sach")}
-    ket_qua_sach = []
+    context_map = {}
+    for s in context:
+        if isinstance(s, dict) and s.get("ten_sach"):
+            key = s["ten_sach"].lower().strip()
+            context_map[key] = s
 
+    ket_qua_sach = []
     for item in ket_qua_llm:
         if not isinstance(item, dict):
             continue
         ten = (item.get("ten_sach") or "").lower().strip()
-        if ten and ten in ten_hop_le:
-            ket_qua_sach.append(item)
+        if ten and ten in context_map:
+            ctx_item = context_map[ten]
+            item_enriched = dict(item)
+            item_enriched["ma_sach"] = ctx_item.get("ma_sach", "")
+            item_enriched["the_loai"] = ctx_item.get("the_loai", "")
+            item_enriched["tom_tat"] = ctx_item.get("tom_tat", "")
+            # Đảm bảo con_hang chuẩn theo context
+            item_enriched["con_hang"] = ctx_item.get("con_hang", item.get("con_hang", True))
+            if "khop_voi_tu_khoa" not in item_enriched or not isinstance(item_enriched["khop_voi_tu_khoa"], list):
+                item_enriched["khop_voi_tu_khoa"] = []
+            ket_qua_sach.append(item_enriched)
         else:
             _logger.warning(
                 f"[CHATBOT_SERVICE] ⚠️ AI có dấu hiệu bịa dữ liệu: "
@@ -311,10 +321,17 @@ def tra_cuu_sach(cau_hoi: str, prompt_version: Optional[str] = None) -> dict:
     if not ket_qua_sach and not thong_bao:
         thong_bao = "Không có sách nào thực sự phù hợp với yêu cầu của bạn."
 
+    tu_khoa_nhan_manh = ket_qua_dict.get("tu_khoa_nhan_manh", [])
+    if not isinstance(tu_khoa_nhan_manh, list):
+        tu_khoa_nhan_manh = []
+    phan_tich_yeu_cau = ket_qua_dict.get("phan_tich_yeu_cau", "")
+
     return {
         "ket_qua": ket_qua_sach,
         "tong_so_ket_qua": len(ket_qua_sach),
         "thong_bao": thong_bao,
+        "tu_khoa_nhan_manh": tu_khoa_nhan_manh,
+        "phan_tich_yeu_cau": phan_tich_yeu_cau,
         "raw_text": phan_hoi_llm,
         "context_so_bo": len(context),
         "context_list": list(context),

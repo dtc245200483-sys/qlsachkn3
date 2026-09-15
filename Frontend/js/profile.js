@@ -206,6 +206,7 @@
     }
     user.name = name || user.name || "";
     sessionStorage.setItem("thuvien_session", JSON.stringify(user));
+    localStorage.setItem("thuvien_session", JSON.stringify(user));
     var nameEl = document.getElementById("user-name");
     if (nameEl) {
       nameEl.textContent = user.name;
