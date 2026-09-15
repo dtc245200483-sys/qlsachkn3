@@ -308,11 +308,11 @@
       form.reset();
       clearInlineErrors(form);
       if (book) {
-        ["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong", "anhBia"].forEach(
+        ["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong", "anhBia", "tomTat"].forEach(
           function (key) {
             var input = form.elements[key];
             if (input) {
-              input.value = book[key] === null ? "" : book[key];
+              input.value = (book[key] === null || book[key] === undefined) ? "" : book[key];
             }
           }
         );
