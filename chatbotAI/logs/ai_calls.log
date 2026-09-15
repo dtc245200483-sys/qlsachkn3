@@ -292,3 +292,32 @@
 [2026-09-15 12:07:37] [LLM] [deepseek/deepseek-chat] [SUCCESS] [14483ms] [3426 chars] Response: 366 chars
 [2026-09-15 12:07:41] [LLM] [deepseek/deepseek-chat] [SUCCESS] [2829ms] [4101 chars] Response: 68 chars
 [2026-09-15 12:07:45] [LLM] [deepseek/deepseek-chat] [SUCCESS] [3324ms] [5005 chars] Response: 154 chars
+[2026-09-15 12:37:26] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:37:39] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:37:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [10781ms] Model sẵn sàng.
+[2026-09-15 12:37:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [73ms] [59 chars] → 384-dim vector
+[2026-09-15 12:37:49] [VECTORSTORE] [SEARCH] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 10 kết quả [23445ms] | Top-1: Nghĩ giàu làm giàu (0.8623)
+[2026-09-15 12:37:50] [RAG_RETRIEVER] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.0246, la_lac_de=False)
+[2026-09-15 12:38:35] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:38:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:38:58] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [10489ms] Model sẵn sàng.
+[2026-09-15 12:38:58] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [69ms] [29 chars] → 384-dim vector
+[2026-09-15 12:38:58] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [22669ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 12:38:58] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 12:38:58] [CHATBOT_SERVICE] 'Ai là chủ tịch nước hiện tại?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0541 < 0.15))
+[2026-09-15 12:46:34] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:46:34] [VECTORSTORE] [COUNT] Tổng số sách đã index: 10
+[2026-09-15 12:46:34] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:46:48] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:46:58] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [9896ms] Model sẵn sàng.
+[2026-09-15 12:46:58] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [66ms] [29 chars] → 384-dim vector
+[2026-09-15 12:46:58] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [23733ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 12:46:58] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 12:46:58] [CHATBOT_SERVICE] 'Ai là chủ tịch nước hiện tại?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0541 < 0.15))
+[2026-09-15 12:47:09] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:47:23] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:47:33] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [9936ms] Model sẵn sàng.
+[2026-09-15 12:47:33] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [60ms] [23 chars] → 384-dim vector
+[2026-09-15 12:47:33] [VECTORSTORE] [SEARCH] 'sách về tư duy làm giàu' → 10 kết quả [23233ms] | Top-1: Nghĩ giàu làm giàu (0.8985)
+[2026-09-15 12:47:33] [RAG_RETRIEVER] 'sách về tư duy làm giàu' → 4/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=1.0970, la_lac_de=False)
+[2026-09-15 12:47:40] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7090ms] [3545 chars] Response: 443 chars

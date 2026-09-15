@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trợ lý AI Tra cứu sách — Thư viện ICTU</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260915-01">
+  <link rel="stylesheet" href="css/chatbot.css?v=20260915-01">
+</head>
+<body data-page="chatbot">
+  <header class="app-header" id="app-header-root"></header>
+
+  <main class="page chatbot-page">
+    <div class="chatbot-card">
+      <!-- Header -->
+      <div class="chatbot-header">
+        <div class="chatbot-header__info">
+          <div class="chatbot-header__avatar">🤖</div>
+          <div>
+            <h2 class="chatbot-header__title">Trợ lý AI Thư viện (Phiên bản V3)</h2>
+            <div class="chatbot-header__subtitle">
+              <span class="chatbot-status-dot"></span>
+              <span>Đang kết nối Vector Store (ChromaDB) • Mô hình RAG chuẩn hóa</span>
+            </div>
+          </div>
+        </div>
+        <div class="chatbot-header__actions">
+          <button type="button" class="btn-header-ghost" id="btn-clear-chat" title="Xóa đoạn hội thoại hiện tại">
+            🧹 Xóa lịch sử chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Thanh gợi ý nhanh -->
+      <div class="quick-prompts-bar">
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách hướng dẫn tư duy làm giàu và quản lý tài chính cá nhân')">
+          💰 Tư duy làm giàu & tài chính
+        </button>
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách học lập trình Python từ cơ bản đến nâng cao')">
+          🐍 Lập trình Python
+        </button>
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('sách về nghệ thuật giao tiếp của tác giả Dale Carnegie')">
+          🤝 Giao tiếp & Đắc nhân tâm
+        </button>
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('Kiến trúc hệ thống phân tán')">
+          ⚙️ Kiến trúc phân tán (Kiểm tra hết hàng)
+        </button>
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('gợi ý những cuốn sách hay nhất trong thư viện')">
+          ⭐ Sách hay nên đọc
+        </button>
+        <button type="button" class="btn-pill-prompt" onclick="chonCauHoiMau('Ai là chủ tịch nước hiện tại?')">
+          🛡️ Thử nghiệm câu hỏi ngoài phạm vi
+        </button>
+      </div>
+
+      <!-- Vùng tin nhắn -->
+      <div class="chatbot-messages" id="chat-messages">
+        <!-- Tin nhắn chào mừng ban đầu -->
+        <div class="chat-msg chat-msg--assistant">
+          <div class="chat-msg__avatar">🤖</div>
+          <div class="chat-msg__bubble">
+            <p style="margin:0 0 6px 0;"><strong>Xin chào! Tôi là Trợ lý AI của Thư viện ICTU.</strong></p>
+            <p style="margin:0 0 6px 0;">Tôi được trang bị hệ thống tìm kiếm ngữ nghĩa kết hợp dữ liệu sách thực tế của thư viện để gợi ý những cuốn sách phù hợp nhất với nhu cầu của bạn.</p>
+            <p style="margin:0; font-size: 13px; color: #4B5563;">
+              💡 <em>Mẹo: Bạn có thể bấm vào các chủ đề gợi ý phía trên hoặc gõ câu hỏi tìm sách bằng ngôn ngữ tự nhiên ở khung bên dưới.</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khung nhập tin nhắn -->
+      <div class="chatbot-input-area">
+        <textarea id="chat-input" placeholder="Nhập câu hỏi tra cứu sách (Ví dụ: 'Tôi muốn tìm sách về trí tuệ nhân tạo cho người mới bắt đầu')..." rows="1"></textarea>
+        <button type="button" class="btn-chat-send" id="btn-send">
+          <span>Gửi</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Thanh trạng thái thông tin -->
+      <div class="chatbot-meta-info">
+        <span>🛡️ Hệ thống phòng vệ 2 lớp (Retrieval + Prompt V3 JSON Schema)</span>
+        <span id="chat-latency">Thời gian phản hồi: --</span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <img class="logo logo--footer" src="assets/cropped-logoww.png" alt="Logo ICTU" onerror="this.style.display='none'">
+    <span>Hệ thống quản lý thư viện tích hợp AI — Trường ĐH CNTT &amp; Truyền thông</span>
+  </footer>
+
+  <script src="js/api.js?v=20260915-01"></script>
+  <script src="js/auth.js?v=20260809-14"></script>
+  <script src="js/layout.js?v=20260915-01"></script>
+  <script>window.Layout.init("chatbot");</script>
+  <script src="js/notifications-core.js?v=20260827-04"></script>
+  <script src="js/notif-badge.js?v=20260809-7"></script>
+  <script src="js/chatbot.js?v=20260915-01"></script>
+</body>
+</html>

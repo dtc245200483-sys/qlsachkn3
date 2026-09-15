@@ -5,7 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import CORS_ORIGINS, STATIC_DIR
-from .routers import accounts, admin, auth, books, borrows, catalog, export, notifications, profile, readers, requests, reservations, stats
+from .routers import (
+    accounts, admin, auth, books, borrows, catalog, 
+    chatbot, export, notifications, profile, readers, 
+    requests, reservations, stats
+)
 
 os.makedirs(os.path.join(STATIC_DIR, "avatars"), exist_ok=True)
 
@@ -118,6 +122,7 @@ app.include_router(notifications.router)
 app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(profile.router)
+app.include_router(chatbot.router)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 

@@ -79,7 +79,9 @@ window.API = (function () {
       profileMe: "/api/profile/me",
       updateProfileMe: "/api/profile/me",
       changeProfilePassword: "/api/profile/me/password",
-      uploadProfileAvatar: "/api/profile/me/avatar"
+      uploadProfileAvatar: "/api/profile/me/avatar",
+      chatbot: "/api/chatbot/hoi",
+      chatbotHealth: "/api/chatbot/health"
     },
     fieldMap: {
       login: {

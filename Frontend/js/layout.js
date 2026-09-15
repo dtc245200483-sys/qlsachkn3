@@ -15,6 +15,7 @@ window.Layout = (function () {
   var MENUS = {
     reader: [
       { key: "search", href: "search.html", label: "Tra cứu sách" },
+      { key: "chatbot", href: "chatbot.html", label: "🤖 Trợ lý AI" },
       { key: "reservations", href: "reservations.html", label: "Đặt trước" },
       { key: "my-borrows", href: "my-borrows.html", label: "Lịch sử mượn" },
       { key: "requests", href: "requests.html", label: "Yêu cầu" },
@@ -23,6 +24,7 @@ window.Layout = (function () {
     ],
     librarian: [
       { key: "search", href: "search.html", label: "Tra cứu sách" },
+      { key: "chatbot", href: "chatbot.html", label: "🤖 Trợ lý AI" },
       { key: "reservations", href: "reservations.html", label: "Đặt trước" },
       { key: "requests", href: "requests.html", label: "Yêu cầu" },
       { key: "borrow", href: "borrow.html", label: "Mượn / Trả sách" },
@@ -33,6 +35,7 @@ window.Layout = (function () {
     ],
     admin: [
       { key: "search", href: "search.html", label: "Tra cứu sách" },
+      { key: "chatbot", href: "chatbot.html", label: "🤖 Trợ lý AI" },
       { key: "stats", href: "stats.html", label: "Thống kê" },
       { key: "admin-accounts", href: "admin-accounts.html", label: "Tài khoản" },
       { key: "admin-catalog", href: "admin-catalog.html", label: "Danh mục" },
@@ -172,6 +175,14 @@ window.Layout = (function () {
     root.appendChild(navRow(user, pageKey));
     if (Auth.applyRoleUI) {
       Auth.applyRoleUI();
+    }
+
+    // Tự động tải Floating Chatbot Widget cho mọi trang
+    if (!document.getElementById("chatbot-widget-script")) {
+      var sc = document.createElement("script");
+      sc.id = "chatbot-widget-script";
+      sc.src = "js/chatbot-widget.js?v=20260915-01";
+      document.body.appendChild(sc);
     }
   }
 
