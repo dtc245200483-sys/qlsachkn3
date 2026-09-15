@@ -108,6 +108,8 @@ def _loc_ket_qua_bija(ket_qua_llm: list[dict], context: list[dict]) -> list[dict
             item_enriched["tom_tat"] = ctx_item.get("tom_tat", "")
             # Đảm bảo con_hang chuẩn theo context
             item_enriched["con_hang"] = ctx_item.get("con_hang", item.get("con_hang", True))
+            # Điểm fuzzy match tên sách (từ retriever) — dùng để kiểm tra chế độ tìm tên riêng
+            item_enriched["diem_khop_ten"] = ctx_item.get("diem_khop_ten", 0)
             if "khop_voi_tu_khoa" not in item_enriched or not isinstance(item_enriched["khop_voi_tu_khoa"], list):
                 item_enriched["khop_voi_tu_khoa"] = []
             ket_qua_sach.append(item_enriched)
@@ -318,8 +320,40 @@ def tra_cuu_sach(cau_hoi: str, prompt_version: Optional[str] = None) -> dict:
         )
 
     thong_bao = ket_qua_dict.get("thong_bao", "")
+
+    # Hậu xử lý đặc biệt khi câu hỏi có khả năng là tên riêng một cuốn sách cụ thể
+    # (cờ co_the_la_ten_sach được đặt bởi _phat_hien_tra_cuu_ten_sach() trong rag_retriever.py)
+    co_the_la_ten_sach = getattr(context, "co_the_la_ten_sach", False)
+    if co_the_la_ten_sach and ket_qua_sach:
+        # Trong chế độ "tìm tên sách": loại bỏ sách chỉ khớp ngẫu nhiên vài từ trong tên
+        # Yêu cầu diem_khop_ten >= 75% (cao hơn FUZZY_THRESHOLD=60 để loại false positive)
+        # Ví dụ: "Vũ Khí Hoàn Hảo - Chiến Tranh..." khớp "chiến tranh" ≈ 60-65% → bị loại
+        ket_qua_loc_ten = [s for s in ket_qua_sach if s.get("diem_khop_ten", 0) >= 75]
+        if not ket_qua_loc_ten:
+            # Sách trả về không khớp đủ tên → thư viện không có sách này
+            ket_qua_sach = []
+            cau_hoi_hien_thi = cau_hoi.strip().rstrip("?").strip()
+            thong_bao = (
+                f"Thư viện hiện chưa có sách '{cau_hoi_hien_thi}'. "
+                "Bạn có thể tham khảo các sách cùng chủ đề khác nếu muốn."
+            )
+            _logger.info(
+                f"[CHATBOT_SERVICE] '{cau_hoi[:50]}' → chế độ tên sách, "
+                f"loại bỏ {len(ket_qua_sach)} sách khớp yếu (diem_khop_ten < 75%), "
+                f"dùng thông báo cụ thể về sách chưa có trong kho."
+            )
+        else:
+            ket_qua_sach = ket_qua_loc_ten
+
     if not ket_qua_sach and not thong_bao:
-        thong_bao = "Không có sách nào thực sự phù hợp với yêu cầu của bạn."
+        if co_the_la_ten_sach:
+            cau_hoi_hien_thi = cau_hoi.strip().rstrip("?").strip()
+            thong_bao = (
+                f"Thư viện hiện chưa có sách '{cau_hoi_hien_thi}'. "
+                "Bạn có thể tham khảo các sách cùng chủ đề khác nếu muốn."
+            )
+        else:
+            thong_bao = "Không có sách nào thực sự phù hợp với yêu cầu của bạn."
 
     tu_khoa_nhan_manh = ket_qua_dict.get("tu_khoa_nhan_manh", [])
     if not isinstance(tu_khoa_nhan_manh, list):

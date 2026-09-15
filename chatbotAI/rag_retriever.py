@@ -58,10 +58,11 @@ PATTERNS_LAC_DE = [
 
 class ContextList(list):
     """
-    Subclass của list chuẩn, bổ sung thuộc tính diem_cao_nhat_truoc_loc.
+    Subclass của list chuẩn, bổ sung các thuộc tính metadata cho retrieval.
     Tương thích 100% với list thông thường (len, for, json serialize...).
     """
     diem_cao_nhat_truoc_loc: float = 0.0
+    co_the_la_ten_sach: bool = False  # True khi câu hỏi có khả năng là tên riêng 1 cuốn sách cụ thể
 
 
 def _kiem_tra_cau_hoi_lac_de(cau_hoi: str) -> bool:
@@ -163,6 +164,88 @@ def _fuzzy_match_ten(cau_hoi: str, tat_ca_sach: list[dict]) -> list[dict]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Hàm phát hiện tra cứu tên riêng (Exact-ish title lookup detection)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Từ khóa chỉ rõ đây là tìm theo CHỦ ĐỀ, không phải tra cứu tên sách cụ thể
+_TU_KHOA_TIM_KIEM_CHU_DE = [
+    "sách về", "sách gì", "sách nào", "có sách", "gợi ý", "tìm kiếm",
+    "muốn tìm", "liên quan", "đọc gì", "cho tôi", "hình như", "cuốn gì",
+    "tôi cần", "tôi muốn", "giới thiệu", "tìm sách", "sách hay",
+    "sách của", "gì đó", "của tác giả",
+]
+
+
+def _phat_hien_tra_cuu_ten_sach(
+    cau_hoi: str,
+    tat_ca_sach: list[dict],
+) -> tuple[bool, bool, list[dict]]:
+    """
+    Phát hiện câu hỏi có phải là tra cứu tên riêng một cuốn sách cụ thể hay không.
+
+    Nguyên lý: Khi câu hỏi giống gần như toàn bộ tên 1 cuốn sách cụ thể
+    (fuzz.ratio() >= 80), ưu tiên coi đây là tra cứu tên riêng (exact-ish
+    lookup), không phải tìm kiếm theo chủ đề — tránh trường hợp trùng từ
+    khóa ngẫu nhiên với sách không liên quan.
+
+    Ví dụ: "Chiến tranh và Hòa bình" → câu ngắn, không có từ khóa tìm chủ đề
+    → đây là tra cứu tên sách. Nếu thư viện không có sách này, thông báo rõ
+    ràng thay vì trả về sách chỉ trùng vài từ như "Vũ Khí Hoàn Hảo - Chiến Tranh...".
+
+    Returns:
+        Tuple (la_ten_sach_chinh_xac, co_the_la_ten_sach, sach_khop_chinh_xac)
+        - la_ten_sach_chinh_xac (bool):  True nếu sách trong kho khớp >= 80%
+          → trả trực tiếp, bỏ qua embedding
+        - co_the_la_ten_sach (bool):     True nếu câu hỏi CÓ THỂ là tên sách
+          (ratio 50-79%, hoặc câu ngắn ≤ 7 từ không có từ khóa chủ đề)
+          → dùng thông báo cụ thể hơn khi không tìm thấy sách
+        - sach_khop_chinh_xac (list):    Danh sách sách khớp chính xác
+          (chỉ có dữ liệu khi la_ten_sach_chinh_xac = True)
+    """
+    try:
+        from rapidfuzz import fuzz as _fuzz
+    except ImportError:
+        return False, False, []
+
+    cau_hoi_norm = cau_hoi.strip().lower()
+
+    # Nếu câu hỏi chứa từ khóa tìm theo chủ đề → không phải tra cứu tên sách
+    for tu_khoa in _TU_KHOA_TIM_KIEM_CHU_DE:
+        if tu_khoa in cau_hoi_norm:
+            return False, False, []
+
+    # So khớp TOÀN BỘ chuỗi (fuzz.ratio) — khác partial_ratio chỉ tìm chuỗi con
+    # Ưu điểm: fuzz.ratio thấp khi 2 chuỗi chênh lệch độ dài nhiều →
+    # "Chiến tranh và Hòa bình" sẽ KHÔNG khớp cao với "Vũ Khí Hoàn Hảo - Chiến Tranh..."
+    diem_ratio_cao_nhat = 0
+    sach_khop_chinh_xac = []
+
+    for sach in tat_ca_sach:
+        ratio = _fuzz.ratio(cau_hoi_norm, sach["ten_sach"].lower())
+        if ratio >= 80:
+            entry = dict(sach)
+            entry["diem_khop_ten"] = ratio
+            entry["nguon_khop"] = ["ten_rieng"]
+            entry["diem_tuong_dong"] = 0.0
+            entry["diem_lien_quan"] = ratio / 100.0
+            entry["ly_do_fuzzy"] = f"Tên sách khớp toàn chuỗi {ratio}%"
+            sach_khop_chinh_xac.append(entry)
+        diem_ratio_cao_nhat = max(diem_ratio_cao_nhat, ratio)
+
+    # Sách khớp chính xác tên (>= 80%) → tìm đích danh, bỏ qua embedding
+    if sach_khop_chinh_xac:
+        sach_khop_chinh_xac.sort(key=lambda x: x["diem_khop_ten"], reverse=True)
+        return True, False, sach_khop_chinh_xac
+
+    # Câu hỏi ngắn (≤ 7 từ) mà không có từ khóa chủ đề → có thể là tên sách
+    # chưa có trong kho (VD: "Chiến tranh và Hòa bình", "Harry Potter"...)
+    so_tu = len(cau_hoi.strip().split())
+    co_the_la_ten_sach = (50 <= diem_ratio_cao_nhat < 80) or (so_tu <= 7)
+
+    return False, co_the_la_ten_sach, []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Hàm tổng hợp — Retrieval chính
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -200,6 +283,7 @@ def truy_xuat_context(
         truy_xuat_context.diem_cao_nhat_truoc_loc = 0.0
         res = ContextList([])
         res.diem_cao_nhat_truoc_loc = 0.0
+        res.co_the_la_ten_sach = False
         return res
 
     vs = VectorStore()
@@ -224,8 +308,27 @@ def truy_xuat_context(
             "nguon_khop": ["ngu_nghia"],
         }
 
-    # ── Bước 2: Fuzzy match tên riêng ─────────────────────────────────────────
+    # ── Bước 2: Phát hiện "tìm đích danh tên sách" + Fuzzy match tên riêng ────
     tat_ca_sach = _lay_tat_ca_sach_tu_vs(vs)
+
+    # Bước 2a: Phát hiện câu hỏi là tên sách cụ thể (fuzz.ratio >= 80 hoặc heuristic)
+    la_ten_sach_chinh_xac, co_the_la_ten_sach, sach_khop_chinh_xac = \
+        _phat_hien_tra_cuu_ten_sach(cau_hoi.strip(), tat_ca_sach)
+
+    if la_ten_sach_chinh_xac:
+        # Sách được tìm thấy trong kho qua đối chiếu tên chính xác → bỏ qua embedding
+        sach_khop_chinh_xac.sort(key=lambda x: x["diem_khop_ten"], reverse=True)
+        res = ContextList(sach_khop_chinh_xac[:top_k])
+        res.diem_cao_nhat_truoc_loc = sach_khop_chinh_xac[0]["diem_lien_quan"]
+        res.co_the_la_ten_sach = False  # Tìm thấy chính xác → không cần cờ cảnh báo
+        _logger.info(
+            f"[RAG_RETRIEVER] '{cau_hoi[:50]}' → Tìm đích danh tên sách "
+            f"(fuzz.ratio={sach_khop_chinh_xac[0]['diem_khop_ten']}%), "
+            f"bỏ qua embedding, trả {len(sach_khop_chinh_xac)} kết quả."
+        )
+        return res
+
+    # Bước 2b: Fuzzy match tên riêng thông thường (partial_ratio >= 60)
     list_b_raw = _fuzzy_match_ten(cau_hoi.strip(), tat_ca_sach)
 
     for item in list_b_raw:
@@ -255,6 +358,7 @@ def truy_xuat_context(
         truy_xuat_context.diem_cao_nhat_truoc_loc = 0.0
         res = ContextList([])
         res.diem_cao_nhat_truoc_loc = 0.0
+        res.co_the_la_ten_sach = co_the_la_ten_sach
         return res
 
     # ── Bước 4: Tính diem_lien_quan và chuẩn hóa thang 0 - 1 ──────────────────
@@ -307,4 +411,5 @@ def truy_xuat_context(
 
     res = ContextList(ket_qua_cuoi)
     res.diem_cao_nhat_truoc_loc = diem_cao_nhat_truoc_loc
+    res.co_the_la_ten_sach = co_the_la_ten_sach
     return res
