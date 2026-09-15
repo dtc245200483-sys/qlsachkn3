@@ -20,3 +20,45 @@
 [2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'làm sao để chinh phục lòng người và được mọi người' → 3 kết quả [35ms] | Top-1: Đắc nhân tâm (0.7446)
 [2026-09-15 10:34:52] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [29ms] [42 chars] → 384-dim vector
 [2026-09-15 10:34:52] [VECTORSTORE] [SEARCH] 'khám phá vũ trụ và bí ẩn không gian bao la' → 3 kết quả [32ms] | Top-1: Lược sử thời gian (0.7946)
+[2026-09-15 10:42:02] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:42:02] [VECTORSTORE] [DELETE] Đã xóa sách 'TEST_RT_001'.
+[2026-09-15 10:42:13] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 10:42:25] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [12292ms] Model sẵn sàng.
+[2026-09-15 10:42:25] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [93ms] [37 chars] → 384-dim vector
+[2026-09-15 10:42:25] [VECTORSTORE] [SEARCH] 'cách làm món ăn truyền thống Việt Nam' → 5 kết quả [23411ms] | Top-1: Tắt đèn (0.749)
+[2026-09-15 10:42:25] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [69ms] [150 chars] → 384-dim vector
+[2026-09-15 10:42:25] [VECTORSTORE] [UPSERT] 'TEST_RT_001' — 'Bí Quyết Nấu Phở Ngon' [84ms] | embed từ: tom_tat
+[2026-09-15 10:42:25] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [25ms] [37 chars] → 384-dim vector
+[2026-09-15 10:42:25] [VECTORSTORE] [SEARCH] 'cách làm món ăn truyền thống Việt Nam' → 5 kết quả [27ms] | Top-1: Bí Quyết Nấu Phở Ngon (0.7616)
+[2026-09-15 10:42:25] [VECTORSTORE] [DELETE] Đã xóa sách 'TEST_RT_001'.
+[2026-09-15 10:42:25] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [37 chars] → 384-dim vector
+[2026-09-15 10:42:25] [VECTORSTORE] [SEARCH] 'cách làm món ăn truyền thống Việt Nam' → 5 kết quả [24ms] | Top-1: Tắt đèn (0.749)
+[2026-09-15 10:52:28] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:38] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 10:52:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [12124ms] Model sẵn sàng.
+[2026-09-15 10:52:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [78ms] [36 chars] → 384-dim vector
+[2026-09-15 10:52:50] [VECTORSTORE] [SEARCH] 'sách dạy làm bếp và chế biến thức ăn' → 10 kết quả [22413ms] | Top-1: Lập trình Python từ cơ bản đến (0.6375)
+[2026-09-15 10:52:50] [RAG_RETRIEVER] 'sách dạy làm bếp và chế biến thức ăn' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 10:52:50] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [18ms] [36 chars] → 384-dim vector
+[2026-09-15 10:52:50] [VECTORSTORE] [SEARCH] 'sách dạy làm bếp và chế biến thức ăn' → 10 kết quả [21ms] | Top-1: Lập trình Python từ cơ bản đến (0.6375)
+[2026-09-15 10:52:50] [RAG_RETRIEVER] 'sách dạy làm bếp và chế biến thức ăn' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 10:52:50] [LLM] [deepseek/deepseek-chat] [FAILURE] [0ms] [5050 chars] Error: API key chưa cấu hình
+[2026-09-15 10:52:50] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:50] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [43ms] [8 chars] → 384-dim vector
+[2026-09-15 10:52:50] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [45ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 10:52:50] [RAG_RETRIEVER] 'Carnegie' → 8 kết quả (embedding: 10, fuzzy: 1, khớp cả 2: 1)
+[2026-09-15 10:52:50] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:51] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [18ms] [8 chars] → 384-dim vector
+[2026-09-15 10:52:51] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [20ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 10:52:51] [RAG_RETRIEVER] 'Carnegie' → 8 kết quả (embedding: 10, fuzzy: 1, khớp cả 2: 1)
+[2026-09-15 10:52:51] [LLM] [deepseek/deepseek-chat] [FAILURE] [0ms] [5058 chars] Error: API key chưa cấu hình
+[2026-09-15 10:52:51] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:51] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [48ms] [35 chars] → 384-dim vector
+[2026-09-15 10:52:51] [VECTORSTORE] [SEARCH] 'sách dạy lái xe hơi và thi bằng lái' → 10 kết quả [51ms] | Top-1: Tắt đèn (0.6176)
+[2026-09-15 10:52:51] [RAG_RETRIEVER] 'sách dạy lái xe hơi và thi bằng lái' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 10:52:51] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:52:51] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [35 chars] → 384-dim vector
+[2026-09-15 10:52:51] [VECTORSTORE] [SEARCH] 'sách dạy lái xe hơi và thi bằng lái' → 10 kết quả [23ms] | Top-1: Tắt đèn (0.6176)
+[2026-09-15 10:52:51] [RAG_RETRIEVER] 'sách dạy lái xe hơi và thi bằng lái' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 10:52:51] [LLM] [deepseek/deepseek-chat] [FAILURE] [0ms] [5047 chars] Error: API key chưa cấu hình
