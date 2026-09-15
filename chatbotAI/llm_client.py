@@ -1,6 +1,11 @@
 """
-Module kết nối tới LLM API qua OpenRouter (endpoint tương thích chuẩn OpenAI)
-Dành cho hệ thống quản lý thư viện.
+llm_client.py — Module kết nối tới LLM API qua OpenRouter (OpenAI-compatible).
+Dành cho hệ thống quản lý thư viện — kiến trúc RAG.
+
+Thay đổi so với phiên bản cũ:
+  - Custom exception classes: LLMTimeoutError, LLMRateLimitError, LLMResponseError
+  - Exponential backoff: lần 1 chờ 2s, lần 2 chờ 4s
+  - Định dạng log mới: [time] [LLM] [model] [status] [Xms] [input_len chars]
 """
 
 import json
@@ -10,10 +15,11 @@ import sys
 import time
 from pathlib import Path
 from typing import Optional
+
 from dotenv import load_dotenv
 import requests
 
-# Đảm bảo stdout/stderr hiển thị tiếng Việt trên Windows console không bị lỗi cp1252
+# Đảm bảo hiển thị tiếng Việt trên Windows console
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -25,79 +31,117 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
     except Exception:
         pass
 
-# 1. Nạp biến môi trường từ file .env trong cùng thư mục chatbotAI
+# ─── Nạp biến môi trường ────────────────────────────────────────────────────
 CURRENT_DIR = Path(__file__).resolve().parent
 ENV_PATH = CURRENT_DIR / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
-# Cấu hình đường dẫn thư mục logs và file ai_calls.log
+# ─── Cấu hình logging dùng chung (logs/ai_calls.log) ────────────────────────
 LOGS_DIR = CURRENT_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOGS_DIR / "ai_calls.log"
 
-# Cấu hình logging
-logger = logging.getLogger("ai_calls")
-logger.setLevel(logging.INFO)
-
-if not logger.handlers:
-    file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
-    formatter = logging.Formatter(
-        "[%(asctime)s] %(levelname)s: %(message)s",
+_logger = logging.getLogger("ai_calls")
+_logger.setLevel(logging.INFO)
+if not _logger.handlers:
+    _fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
+    _fh.setFormatter(logging.Formatter(
+        "[%(asctime)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    ))
+    _logger.addHandler(_fh)
 
-# Các hằng số cấu hình
+# ─── Hằng số ─────────────────────────────────────────────────────────────────
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "deepseek/deepseek-chat"
 TIMEOUT_SECONDS = 15
 MAX_RETRIES = 2
-RETRY_DELAY_SECONDS = 2  # Thời gian chờ (giây) trước mỗi lần retry
+BACKOFF_BASE = 2  # Giây: lần 1 chờ 2s, lần 2 chờ 4s (exponential)
 
 
-def get_api_key() -> Optional[str]:
+# ═════════════════════════════════════════════════════════════════════════════
+# Custom Exception Classes
+# ═════════════════════════════════════════════════════════════════════════════
+
+class LLMError(Exception):
+    """Base class cho mọi lỗi liên quan đến LLM client."""
+    pass
+
+
+class LLMTimeoutError(LLMError):
+    """Raise khi request tới LLM API vượt quá timeout sau tất cả các lần retry."""
+    pass
+
+
+class LLMRateLimitError(LLMError):
+    """Raise khi API trả về HTTP 429 (Rate Limit) sau tất cả các lần retry."""
+    pass
+
+
+class LLMResponseError(LLMError):
     """
-    Đọc API key từ biến môi trường OPENROUTER_API_KEY.
-    Đảm bảo TUYỆT ĐỐI không hardcode API key.
+    Raise khi phản hồi từ LLM không hợp lệ:
+    - HTTP != 200 (trừ 429)
+    - Response body không phải JSON hợp lệ
+    - Thiếu trường 'choices' hoặc 'content' rỗng
     """
+    pass
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Hàm đọc API key
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _get_api_key() -> Optional[str]:
+    """Đọc OPENROUTER_API_KEY từ biến môi trường. TUYỆT ĐỐI không hardcode."""
     if ENV_PATH.exists():
         load_dotenv(dotenv_path=ENV_PATH, override=False)
     return os.getenv("OPENROUTER_API_KEY")
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Hàm gọi LLM chính
+# ═════════════════════════════════════════════════════════════════════════════
+
 def call_llm(
     system_prompt: str,
     user_prompt: str,
-    model: str = DEFAULT_MODEL
+    model: str = DEFAULT_MODEL,
 ) -> str:
     """
-    Gửi prompt tới LLM API (OpenRouter) và trả về nội dung câu trả lời dạng văn bản.
+    Gọi LLM API qua OpenRouter và trả về nội dung văn bản phản hồi.
 
     Tham số:
-        system_prompt (str): Lời nhắc hệ thống định hình vai trò và ngữ cảnh của AI.
-        user_prompt (str): Nội dung câu hỏi/yêu cầu từ người dùng.
-        model (str): Tên mô hình cần gọi (mặc định là 'deepseek/deepseek-chat').
+        system_prompt (str): Lời nhắc hệ thống định hình vai trò AI.
+        user_prompt (str):   Nội dung câu hỏi/yêu cầu của người dùng.
+        model (str):         Tên model (mặc định: 'deepseek/deepseek-chat').
 
     Trả về:
-        str: Nội dung phản hồi từ LLM hoặc thông báo lỗi chi tiết, không làm crash chương trình.
-    """
-    api_key = get_api_key()
-    total_prompt_len = len(system_prompt or "") + len(user_prompt or "")
-    start_total_time = time.time()
+        str: Nội dung text phản hồi từ LLM.
 
-    # Kiểm tra tính khả dụng của API key
+    Raise:
+        LLMTimeoutError:    Nếu request timeout sau tất cả retry.
+        LLMRateLimitError:  Nếu API trả HTTP 429 sau tất cả retry.
+        LLMResponseError:   Nếu phản hồi không hợp lệ (HTTP lỗi, JSON sai, rỗng).
+        ValueError:         Nếu API key chưa được cấu hình.
+    """
+    api_key = _get_api_key()
+    total_input_len = len(system_prompt or "") + len(user_prompt or "")
+    start_time = time.time()
+
+    # Kiểm tra API key
     if not api_key or api_key.strip() in ("", "your_key_here"):
-        duration = round(time.time() - start_total_time, 2)
-        err_msg = (
+        msg = (
             "[Lỗi Cấu Hình] Không tìm thấy OPENROUTER_API_KEY hợp lệ. "
-            "Vui lòng tạo file .env trong thư mục chatbotAI và cấu hình: OPENROUTER_API_KEY=your_actual_key"
+            "Vui lòng tạo file .env trong thư mục chatbotAI và cấu hình: "
+            "OPENROUTER_API_KEY=your_actual_key"
         )
-        logger.error(
-            f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-            f"Duration: {duration}s | Error: Chưa cấu hình OPENROUTER_API_KEY"
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        _logger.error(
+            f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+            f"Error: API key chưa cấu hình"
         )
-        return err_msg
+        return msg  # Trả về thông báo thân thiện thay vì raise để không crash UI
 
     headers = {
         "Authorization": f"Bearer {api_key.strip()}",
@@ -105,7 +149,6 @@ def call_llm(
         "HTTP-Referer": "https://library-management-system.local",
         "X-Title": "Library Management AI System",
     }
-
     payload = {
         "model": model,
         "messages": [
@@ -114,11 +157,11 @@ def call_llm(
         ],
     }
 
-    last_error_message = ""
-    total_attempts = 1 + MAX_RETRIES
+    last_exception: Optional[Exception] = None
+    total_attempts = 1 + MAX_RETRIES  # 3 lần tổng cộng
 
     for attempt in range(1, total_attempts + 1):
-        attempt_start_time = time.time()
+        attempt_start = time.time()
         try:
             response = requests.post(
                 OPENROUTER_ENDPOINT,
@@ -126,139 +169,153 @@ def call_llm(
                 json=payload,
                 timeout=TIMEOUT_SECONDS,
             )
-            attempt_duration = round(time.time() - attempt_start_time, 2)
+            attempt_ms = int((time.time() - attempt_start) * 1000)
 
-            # 1. Xử lý lỗi Rate Limit (HTTP 429) -> Có retry
+            # ── HTTP 429: Rate Limit → Retry với exponential backoff ──────────
             if response.status_code == 429:
-                last_error_message = (
-                    f"[Lỗi Rate Limit] API bị giới hạn tần suất gọi (HTTP 429) ở lần thử {attempt}/{total_attempts}."
+                backoff = BACKOFF_BASE ** attempt  # 2s, 4s
+                _logger.warning(
+                    f"[LLM] [{model}] [RETRY {attempt}/{total_attempts}] "
+                    f"[{attempt_ms}ms] [{total_input_len} chars] "
+                    f"HTTP 429 — chờ {backoff}s"
                 )
-                logger.warning(
-                    f"[RETRY] Attempt {attempt}/{total_attempts} | Model: {model} | "
-                    f"Prompt Length: {total_prompt_len} chars | Duration: {attempt_duration}s | HTTP 429 Rate Limit"
+                last_exception = LLMRateLimitError(
+                    f"API Rate Limit (HTTP 429) ở lần thử {attempt}/{total_attempts}. "
+                    f"Thử lại sau {backoff}s."
                 )
-                if attempt <= MAX_RETRIES:
-                    time.sleep(RETRY_DELAY_SECONDS * attempt)
+                if attempt < total_attempts:
+                    time.sleep(backoff)
                     continue
-                else:
-                    break
+                break  # Hết retry
 
-            # 2. Xử lý lỗi HTTP khác (401, 403, 500, 502, 503...) -> Không retry nếu lỗi auth/client
+            # ── HTTP != 200 (không phải 429) → Lỗi nghiêm trọng, không retry ─
             if response.status_code != 200:
-                error_body = response.text
+                error_detail = response.text
                 try:
                     err_json = response.json()
-                    error_body = err_json.get("error", {}).get("message", response.text)
+                    error_detail = err_json.get("error", {}).get("message", response.text)
                 except Exception:
                     pass
-
-                last_error_message = f"[Lỗi HTTP {response.status_code}] Yêu cầu thất bại: {error_body}"
-                logger.error(
-                    f"[FAILURE] Attempt {attempt}/{total_attempts} | Model: {model} | "
-                    f"Prompt Length: {total_prompt_len} chars | Duration: {attempt_duration}s | "
-                    f"HTTP {response.status_code}: {error_body}"
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                _logger.error(
+                    f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                    f"HTTP {response.status_code}: {error_detail[:100]}"
                 )
-                return last_error_message
+                raise LLMResponseError(
+                    f"HTTP {response.status_code}: {error_detail}"
+                )
 
-            # 3. Xử lý response không đúng định dạng JSON
+            # ── Parse JSON ────────────────────────────────────────────────────
             try:
                 data = response.json()
-            except (json.JSONDecodeError, ValueError) as json_err:
-                last_error_message = f"[Lỗi Định Dạng JSON] Phản hồi từ server không phải JSON hợp lệ: {str(json_err)}"
-                logger.error(
-                    f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                    f"Duration: {attempt_duration}s | Invalid JSON: {response.text[:200]}"
+            except (json.JSONDecodeError, ValueError) as e:
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                _logger.error(
+                    f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                    f"JSON parse error: {response.text[:100]}"
                 )
-                return last_error_message
+                raise LLMResponseError(
+                    f"Phản hồi từ server không phải JSON hợp lệ: {e}"
+                ) from e
 
-            # 4. Xử lý response rỗng / thiếu trường choices
+            # ── Kiểm tra cấu trúc choices ─────────────────────────────────────
             choices = data.get("choices")
-            if not choices or not isinstance(choices, list) or len(choices) == 0:
-                last_error_message = "[Lỗi Dữ Liệu Rỗng] Server trả về danh sách 'choices' rỗng."
-                logger.error(
-                    f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                    f"Duration: {attempt_duration}s | Empty choices in response"
+            if not choices or not isinstance(choices, list):
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                _logger.error(
+                    f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                    f"Empty choices"
                 )
-                return last_error_message
+                raise LLMResponseError("Server trả về danh sách 'choices' rỗng.")
 
-            message_obj = choices[0].get("message", {})
-            content = message_obj.get("content")
-
+            content = choices[0].get("message", {}).get("content")
             if content is None or (isinstance(content, str) and content.strip() == ""):
-                last_error_message = "[Lỗi Nội Dung Rỗng] Mô hình trả về nội dung text rỗng."
-                logger.error(
-                    f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                    f"Duration: {attempt_duration}s | Empty content"
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                _logger.error(
+                    f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                    f"Empty content"
                 )
-                return last_error_message
+                raise LLMResponseError("Mô hình trả về nội dung text rỗng.")
 
-            # Thành công: Ghi log thành công và trả kết quả
-            total_duration = round(time.time() - start_total_time, 2)
-            response_len = len(content)
-            logger.info(
-                f"[SUCCESS] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                f"Duration: {total_duration}s | Response Length: {response_len} chars"
+            # ── Thành công ────────────────────────────────────────────────────
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            _logger.info(
+                f"[LLM] [{model}] [SUCCESS] [{elapsed_ms}ms] [{total_input_len} chars] "
+                f"Response: {len(content)} chars"
             )
             return content
 
+        except (LLMResponseError, LLMRateLimitError):
+            raise  # Re-raise ngay, không retry với lỗi response
+
         except requests.exceptions.Timeout:
-            attempt_duration = round(time.time() - attempt_start_time, 2)
-            last_error_message = (
-                f"[Lỗi Timeout] Yêu cầu tới LLM quá thời gian chờ ({TIMEOUT_SECONDS}s) "
-                f"ở lần thử {attempt}/{total_attempts}."
+            attempt_ms = int((time.time() - attempt_start) * 1000)
+            backoff = BACKOFF_BASE ** attempt  # 2s, 4s
+            _logger.warning(
+                f"[LLM] [{model}] [RETRY {attempt}/{total_attempts}] "
+                f"[{attempt_ms}ms] [{total_input_len} chars] "
+                f"Timeout ({TIMEOUT_SECONDS}s) — chờ {backoff}s"
             )
-            logger.warning(
-                f"[RETRY] Attempt {attempt}/{total_attempts} | Model: {model} | "
-                f"Prompt Length: {total_prompt_len} chars | Duration: {attempt_duration}s | Timeout ({TIMEOUT_SECONDS}s)"
+            last_exception = LLMTimeoutError(
+                f"Request timeout ({TIMEOUT_SECONDS}s) ở lần thử {attempt}/{total_attempts}."
             )
-            if attempt <= MAX_RETRIES:
-                time.sleep(RETRY_DELAY_SECONDS * attempt)
+            if attempt < total_attempts:
+                time.sleep(backoff)
                 continue
-            else:
-                break
+            break
 
-        except requests.exceptions.ConnectionError as conn_err:
-            attempt_duration = round(time.time() - attempt_start_time, 2)
-            last_error_message = f"[Lỗi Kết Nối Mạng] Không thể kết nối tới server OpenRouter: {str(conn_err)}"
-            logger.error(
-                f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                f"Duration: {attempt_duration}s | ConnectionError: {str(conn_err)}"
+        except requests.exceptions.ConnectionError as e:
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            _logger.error(
+                f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                f"ConnectionError: {str(e)[:80]}"
             )
-            return last_error_message
+            raise LLMResponseError(
+                f"Không thể kết nối tới server OpenRouter: {e}"
+            ) from e
 
-        except requests.exceptions.RequestException as req_err:
-            attempt_duration = round(time.time() - attempt_start_time, 2)
-            last_error_message = f"[Lỗi Yêu Cầu] Lỗi trong quá trình gửi request tới LLM API: {str(req_err)}"
-            logger.error(
-                f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                f"Duration: {attempt_duration}s | RequestException: {str(req_err)}"
+        except requests.exceptions.RequestException as e:
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            _logger.error(
+                f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+                f"RequestException: {str(e)[:80]}"
             )
-            return last_error_message
+            raise LLMResponseError(f"Lỗi request tới LLM API: {e}") from e
 
-        except Exception as unexpected_err:
-            attempt_duration = round(time.time() - attempt_start_time, 2)
-            last_error_message = f"[Lỗi Không Xác Định] Đã xảy ra lỗi ngoài ý muốn: {str(unexpected_err)}"
-            logger.error(
-                f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-                f"Duration: {attempt_duration}s | Unexpected Exception: {str(unexpected_err)}"
-            )
-            return last_error_message
-
-    # Nếu thoát khỏi vòng lặp do hết lượt retry (Timeout hoặc HTTP 429)
-    total_duration = round(time.time() - start_total_time, 2)
-    final_error = f"{last_error_message} (Đã thử lại tối đa {MAX_RETRIES} lần nhưng không thành công)."
-    logger.error(
-        f"[FAILURE] Model: {model} | Prompt Length: {total_prompt_len} chars | "
-        f"Duration: {total_duration}s | Exceeded max retries | Last error: {last_error_message}"
+    # Hết tất cả retry → raise exception cuối cùng
+    elapsed_ms = int((time.time() - start_time) * 1000)
+    _logger.error(
+        f"[LLM] [{model}] [FAILURE] [{elapsed_ms}ms] [{total_input_len} chars] "
+        f"Exceeded max retries: {last_exception}"
     )
-    return final_error
+    if isinstance(last_exception, LLMTimeoutError):
+        raise LLMTimeoutError(
+            f"Timeout sau {MAX_RETRIES} lần retry. "
+            f"Vui lòng kiểm tra kết nối mạng."
+        ) from last_exception
+    raise LLMRateLimitError(
+        f"API Rate Limit sau {MAX_RETRIES} lần retry. "
+        f"Vui lòng thử lại sau."
+    ) from last_exception
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Chạy thử khi gọi trực tiếp file này
+# ═════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    print("=== KIỂM TRA MODULE LLM_CLIENT ===")
+    print("=== KIỂM TRA llm_client.py ===")
     print(f"File log: {LOG_FILE}")
-    test_sys = "Bạn là thủ thư AI tư vấn sách thân thiện."
-    test_user = "Giới thiệu cho tôi một cuốn sách hay về lập trình Python."
-    result = call_llm(test_sys, test_user)
-    print("Kết quả gọi call_llm:")
-    print(result)
+    try:
+        result = call_llm(
+            system_prompt="Bạn là trợ lý thư viện ngắn gọn.",
+            user_prompt="Giới thiệu 1 cuốn sách về Python trong 1 câu.",
+        )
+        print(f"Kết quả: {result}")
+    except LLMTimeoutError as e:
+        print(f"[Timeout] {e}")
+    except LLMRateLimitError as e:
+        print(f"[Rate Limit] {e}")
+    except LLMResponseError as e:
+        print(f"[Response Error] {e}")
+    except Exception as e:
+        print(f"[Lỗi khác] {e}")
