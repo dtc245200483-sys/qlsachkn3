@@ -38,42 +38,41 @@ VỊ TRÍ FILE CẦN TẠO:
 ```
 Câu hỏi
    ↓
-[rag_retriever.py] ─── Embedding search (VectorStore)  ──┐
-                   └── Fuzzy match tên riêng (rapidfuzz)──┘
-                           ↓ Gộp + sắp xếp (top_k=8)
+[rag_retriever.py] ── Embedding search (VectorStore)   ──┐
+                   └─ Fuzzy match tên riêng (rapidfuzz) ──┘
+                          ↓ Gộp + sắp xếp (top_k=8)
                    [context: list[dict]]
-                           ↓
+                          ↓
 [prompt_builder.py] ── Ghép thành user_prompt
-                           ↓
+                          ↓
 [system_prompt.txt] ── System prompt RAG-aware
-                           ↓
-[llm_client.py] ──────── call_llm() → OpenRouter API
-                           ↓
-[chatbot_service.py] ─── Parse JSON + Lọc bịa dữ liệu
-                           ↓
+                          ↓
+[llm_client.py] ───────── call_llm() → OpenRouter API (deepseek-chat)
+                          ↓
+[chatbot_service.py] ──── Parse JSON + Lọc bịa dữ liệu
+                          ↓
                    Kết quả cuối cùng
 ```
 
-**Công thức điểm tổng hợp (diem_lien_quan):**
+**Công thức điểm tổng hợp:**
 ```
-bonus = 0.3 nếu khớp cả 2 nguồn (embedding + fuzzy)
-fuzzy_chuan = diem_khop_ten / 100.0
+bonus          = 0.3  nếu khớp cả 2 nguồn (embedding + fuzzy)
+fuzzy_chuan    = diem_khop_ten / 100.0
 diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 ```
 
 ---
 
-### 3. Kết quả kiểm thử 3 câu hỏi — Retrieval Layer
+### 3. Kết quả kiểm thử 3 câu hỏi — Kết quả thực tế (LLM đã phản hồi)
 
-> **Lưu ý:** Phần Retrieval (Embedding + Fuzzy) đã chạy và xác nhận hoạt động đúng.
-> Phần LLM cần cấu hình `OPENROUTER_API_KEY` trong file `.env`.
+**Môi trường:** ChromaDB 1.5.9 | paraphrase-multilingual-MiniLM-L12-v2 | deepseek/deepseek-chat via OpenRouter
 
 ---
 
 #### 📌 Test 1: `"sách dạy làm bếp và chế biến thức ăn"` — Ngữ nghĩa
 *Từ "làm bếp", "chế biến" không xuất hiện trong tên/tóm tắt sách nào*
 
-**Context Retriever tìm được (8 sách — toàn bộ qua embedding):**
+**Context Retriever tìm được (8 sách):**
 
 | # | Nguồn | Điểm | Tên sách | Tác giả |
 |---|-------|------|---------|---------|
@@ -86,13 +85,22 @@ diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 | 7 | ngu_nghia | 0.588 | Trí tuệ nhân tạo: Tiếp cận hiện đại | Stuart Russell |
 | 8 | ngu_nghia | 0.586 | Số đỏ | Vũ Trọng Phụng |
 
-> **Nhận xét:** Không có sách nấu ăn trong DB → Retriever trả context sơ bộ với điểm thấp (≤0.637). LLM sẽ đánh giá và trả về `ket_qua: []` vì không có cuốn nào thực sự liên quan đến nấu ăn.
+**Câu trả lời LLM:**
+```json
+{
+  "ket_qua": [],
+  "tong_so_ket_qua": 0,
+  "thong_bao": "Không tìm thấy sách nào về dạy làm bếp và chế biến thức ăn trong danh sách."
+}
+```
+
+**✅ Kết quả: LLM đánh giá lại đúng** — dù Retriever trả 8 sách sơ bộ, LLM nhận ra không có cuốn nào thực sự về nấu ăn và trả về danh sách rỗng + giải thích rõ lý do.
 
 ---
 
 #### 📌 Test 2: `"Carnegie"` — Fuzzy match tên tác giả
 
-**Context Retriever tìm được (8 sách — "Đắc nhân tâm" lên đầu với điểm 1.300):**
+**Context Retriever tìm được (8 sách — "Đắc nhân tâm" lên #1 điểm 1.300):**
 
 | # | Nguồn | Điểm | Tên sách | Tác giả |
 |---|-------|------|---------|---------|
@@ -105,13 +113,29 @@ diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 | 7 | ngu_nghia | 0.550 | Kiến trúc hệ thống phân tán | Martin Kleppmann |
 | 8 | ngu_nghia | 0.513 | Lập trình Python | Nguyễn Thành Nam |
 
-> **✅ Fuzzy match hoạt động đúng:** "Carnegie" khớp tên tác giả "Dale Carnegie" (100%) → điểm bonus +0.3 → tổng **1.300** → xếp hạng #1 với khoảng cách lớn so với #2 (0.610). LLM sẽ gợi ý "Đắc nhân tâm" là kết quả chính.
+**Câu trả lời LLM:**
+```json
+{
+  "ket_qua": [
+    {
+      "ten_sach": "Đắc nhân tâm",
+      "tac_gia": "Dale Carnegie",
+      "ly_do_goi_y": "Sách của tác giả Dale Carnegie, phù hợp với từ khóa tìm kiếm.",
+      "con_hang": true
+    }
+  ],
+  "tong_so_ket_qua": 1,
+  "thong_bao": ""
+}
+```
+
+**✅ Kết quả: Fuzzy match hoạt động đúng** — tên tác giả "Carnegie" khớp "Dale Carnegie" → điểm 1.300 (bonus khớp 2 nguồn) → LLM chọn đúng "Đắc nhân tâm" và loại bỏ 7 sách không liên quan.
 
 ---
 
 #### 📌 Test 3: `"sách dạy lái xe hơi và thi bằng lái"` — Không có sách phù hợp
 
-**Context Retriever tìm được (8 sách — điểm thấp, chỉ qua embedding):**
+**Context Retriever tìm được (8 sách — điểm thấp, không có sách lái xe):**
 
 | # | Nguồn | Điểm | Tên sách |
 |---|-------|------|---------|
@@ -120,17 +144,32 @@ diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 | 3 | ngu_nghia | 0.590 | Đắc nhân tâm |
 | ... | ... | ... | ... |
 
-> **Nhận xét:** Không có sách lái xe → Retriever trả context sơ bộ với điểm thấp. LLM đánh giá lại và trả về `ket_qua: []`, `thong_bao: "Không có sách phù hợp..."`.
+**Câu trả lời LLM:**
+```json
+{
+  "ket_qua": [],
+  "tong_so_ket_qua": 0,
+  "thong_bao": "Không tìm thấy sách về dạy lái xe hoặc thi bằng lái trong danh sách được cung cấp."
+}
+```
+
+**✅ Kết quả: LLM từ chối gợi ý đúng** — không cố gợi ý sách không liên quan, trả thông báo rõ ràng.
 
 ---
 
-### 4. Xác nhận Retrieval Pipeline hoạt động đúng
+### 4. Tổng kết kết quả kiểm thử
 
 ```
-✅ Test 1 (Retrieval): 8 sách tìm được qua embedding
-✅ Test 2 (Fuzzy match): "Carnegie" → "Đắc nhân tâm" xếp #1 (điểm 1.300)
-✅ Test 3 (Retrieval): 8 sách tìm được, LLM sẽ lọc ra "không có phù hợp"
-⚠️ LLM call: Cần cấu hình OPENROUTER_API_KEY trong chatbotAI/.env
+TEST 1 (Ngữ nghĩa - không có sách phù hợp): ✅ PASS
+  → LLM đánh giá lại đúng, trả ket_qua rỗng + giải thích
+
+TEST 2 (Tên tác giả - fuzzy match):          ✅ PASS  
+  → Fuzzy match đẩy "Đắc nhân tâm" lên điểm 1.300, LLM chọn đúng
+
+TEST 3 (Ngoài phạm vi - lái xe):             ✅ PASS
+  → LLM từ chối gợi ý, thông báo rõ "không có sách phù hợp"
+
+🎉 TẤT CẢ 3 TEST PASS — Luồng RAG hoàn chỉnh hoạt động đúng!
 ```
 
 ---
@@ -141,13 +180,13 @@ diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 
 | Lý do | Giải thích |
 |-------|-----------|
-| **LLM không đảm bảo** | Dù prompt ràng buộc, LLM vẫn có thể "hallucinate" — đặc biệt với model nhỏ/rẻ tiền hoặc khi context quá dài |
-| **Defense in depth** | Nguyên tắc bảo mật: không tin vào bất kỳ một lớp bảo vệ duy nhất. Prompt là lớp 1, đối chiếu là lớp 2 độc lập |
-| **Phát hiện và ghi log** | Bước 7 ghi `_logger.warning("AI có dấu hiệu bịa dữ liệu")` → có bằng chứng kiểm tra sau |
-| **Chi phí thấp** | Đối chiếu tên sách bằng set lookup O(1) — không tốn thời gian/chi phí |
-| **Bảo vệ độc giả** | Thư viện trường học — thông tin sai về sách có thể gây mất niềm tin nghiêm trọng |
+| **LLM không đảm bảo tuyệt đối** | Dù prompt ràng buộc, LLM vẫn có thể hallucinate — đặc biệt với model nhỏ/rẻ hoặc khi context quá dài |
+| **Defense in depth** | Nguyên tắc bảo mật: không tin vào một lớp duy nhất. Prompt là lớp 1, đối chiếu là lớp 2 hoàn toàn độc lập |
+| **Phát hiện và log** | Ghi `warning("AI có dấu hiệu bịa dữ liệu")` → có bằng chứng audit sau |
+| **Chi phí O(1)** | Set lookup cực nhanh, không tốn thêm token hay API call |
+| **Bảo vệ độc giả** | Thư viện trường học — thông tin sách sai gây mất niềm tin nghiêm trọng |
 
-> **Tóm lại:** Prompt là cam kết với LLM, đối chiếu là kiểm tra độc lập với kết quả. Hai lớp này bổ sung cho nhau, không thay thế nhau.
+> **Kết luận:** Prompt là *cam kết với LLM*, đối chiếu là *kiểm tra độc lập với đầu ra*. Hai lớp bổ sung cho nhau, không thay thế nhau.
 
 ---
 
@@ -157,4 +196,4 @@ diem_lien_quan = max(diem_tuong_dong, fuzzy_chuan) + bonus
 ---
 
 ## Ngày thực hiện
-15/09/2026 10:53
+15/09/2026 11:00
