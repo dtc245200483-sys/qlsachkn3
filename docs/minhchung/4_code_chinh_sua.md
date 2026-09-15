@@ -113,4 +113,17 @@ Trước khi nghiệm thu bản cuối, AI vứt rải rác rất nhiều script
 **Cách tôi điều khiển AI:** Đóng vai QA, tôi lệnh dọn dẹp toàn bộ thư mục thừa, rà soát lại 111/111 Unit Test phải PASS 100%, sau đó đích thân tôi mới duyệt lệnh `git push` đưa bản hoàn thiện lên nhánh `master`.
 
 ---
+
+## GIAI ĐOẠN 5: KT3 - KIỂM TOÁN VÀ HOÀN THIỆN HỆ SINH THÁI AI (15/09 - 16/09/2026)
+
+### 24. Nhập vai Thủ thư kiểm tra nghiệp vụ: Bắt lỗi thiếu trường Tóm tắt nội dung sách (16/09)
+Ngày 16/09, trong đợt kiểm thử thực tế trước khi hoàn thiện nộp KT3, tôi đăng nhập tài khoản Thủ thư vào màn hình Quản lý sách (`books.html`) và mở modal "Thêm sách" / "Sửa sách". Tôi phát hiện ngay lỗ hổng: **Modal không hề có ô nhập tóm tắt nội dung sách (`tomTat`)**. Nếu thủ thư thêm sách mới, sách sẽ không có tóm tắt ngữ nghĩa, khiến Vector Store của Trợ lý AI bị rỗng ngữ cảnh và không thể gợi ý sách này.
+**Cách tôi điều khiển AI:** Tôi chỉ ra ngay sai sót này và chỉ đạo AI triển khai đồng bộ:
+1. Bổ sung trường `<textarea id="book-tomtat" name="tomTat">` chiếm toàn bộ chiều rộng modal (`grid-column: 1 / -1`) với hướng dẫn nhập ngữ cảnh rõ ràng.
+2. Sửa hàm `openForm(book)` trong `books.js` để tự động nạp `book.tomTat` khi Thủ thư nhấn nút "Sửa" sách hiện có.
+3. Rà soát `Frontend/js/api.js` đảm bảo hàm `serializeForm` tự động đóng gói trường `tomTat` gửi lên API.
+4. Kiểm tra Backend `routers/books.py`: xác nhận API lưu `tomTat` vào SQL Server và tự động kích hoạt `_dong_bo_sach_len_vs(book, action="upsert")` để cập nhật tức thì lên ChromaDB.
+
+---
 **KẾT LUẬN CUỐI CÙNG:** Bằng sự bao quát từ Data, Backend, Frontend cho tới Trải nghiệm người dùng, tôi đã bổ khuyết hoàn hảo cho sự máy móc của AI. Phần mềm cuối cùng không chỉ sạch bug về mặt kỹ thuật, mà còn cực kỳ **Thấu hiểu nghiệp vụ và Tôn trọng người dùng**.
+

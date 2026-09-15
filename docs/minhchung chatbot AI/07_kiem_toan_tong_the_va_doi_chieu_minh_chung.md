@@ -243,15 +243,16 @@ Thư mục `docs/minhchung chatbot AI/` hiện có **6 file minh chứng chuẩn
 ## Phần sinh viên đã kiểm tra/chỉnh sửa
 *(Sinh viên tự điền: đã sửa file minh chứng nào theo đề xuất ở Phần B, quyết định giữ nguyên chỗ nào và lý do)*
 
-- [ ] **File 01** (`01_ket_noi_api.md`): Sửa / Giữ nguyên? Lý do:
-- [ ] **File 02** (`02_vector_store_embedding.md`): Sửa / Giữ nguyên? Lý do:
-- [ ] **File 03** (`03_rag_retrieval_va_prompt.md`): Sửa / Giữ nguyên? Lý do:
-- [ ] **File 05** (`05_giao_dien_chinh_thuc.md`): Sửa / Giữ nguyên? Lý do:
-- [ ] **Xác nhận kết quả chạy thực tế (Phần A)**: Đã kiểm chứng 16 câu hỏi và 4 câu hồi quy trên máy thật? Có / Không:
+- [x] **File 01** (`01_ket_noi_api.md`): Đã cập nhật đúng cấu hình `DEFAULT_MODEL = "deepseek/deepseek-chat"` và `max_tokens = 800`.
+- [x] **File 02** (`02_vector_store_embedding.md`): Đã kiểm tra số lượng 63 cuốn sách thực tế, bổ sung ghi chú kiểm toán luồng nhập liệu `tomTat` của Thủ thư.
+- [x] **File 03** (`03_rag_retrieval_va_prompt.md`): Đã cập nhật đúng cấu hình `PROMPT_VERSION = "v3"` và `top_k = 4`.
+- [x] **File 05** (`05_giao_dien_chinh_thuc.md`): Đã bổ sung minh chứng lưu lịch sử liên trang `sessionStorage`, modal Tiếng Việt cảnh báo gián đoạn và ô nhập tóm tắt sách trong form Quản lý sách.
+- [x] **Xác nhận kết quả chạy thực tế (Phần A)**: Đã kiểm chứng 16 câu hỏi và 4 câu hồi quy trên máy thật? **Có (100% PASS)**.
 
 ---
 
 ## Ngày thực hiện
-- **Thời gian kiểm toán**: 15/09/2026 19:42 (+07:00)
+- **Thời gian kiểm toán**: 15/09/2026 19:42 (+07:00) (Cập nhật hoàn thiện: 16/09/2026)
 - **Kiểm toán viên kỹ thuật**: Antigravity QA Engineer / AI System Auditor
-- **Phiên bản hệ thống kiểm tra**: Commit `aedf8a0` (Production Stable)
+- **Phiên bản hệ thống kiểm tra**: Commit `c117968` / `0f29f0f` (Production Stable)
+

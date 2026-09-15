@@ -71,3 +71,11 @@ Dưới đây là 18 Prompt tiêu biểu (được sắp xếp theo đúng trìn
 
 ### 18. Prompt sửa vị trí hàng đợi Đặt trước (31/08)
 > *"Cột Vị trí đặt trước đang hiện dấu `-` dù sách đã sẵn sàng. Kiểm tra và sửa cả Backend (hàm đếm `queue_pos` bỏ quên trạng thái SAN_SANG) và Frontend (lọc mất dữ liệu API). Sửa cả 2 đầu ngay lập tức."*
+
+---
+
+## GIAI ĐOẠN 5: KT3 - HOÀN THIỆN RAG CHATBOT & QUẢN TRỊ NỘI DUNG AI (15/09 - 16/09/2026)
+
+### 19. Prompt bổ sung ô nhập Tóm tắt nội dung sách cho Thủ thư (16/09)
+> *"Ở tài khoản thủ thư chưa có phần nhập nội dung tóm tắt sách trong modal Thêm/Sửa sách (`books.html`). Bổ sung ngay ô `<textarea id="book-tomtat" name="tomTat">` chiếm full-width (2 cột) trong modal, cập nhật hàm `openForm` trong `books.js` để tự động điền tóm tắt cũ khi sửa, đảm bảo gửi lên API `POST/PUT /api/books` và kích hoạt hàm `_dong_bo_sach_len_vs` cập nhật tự động vào ChromaDB Vector Store."*
+

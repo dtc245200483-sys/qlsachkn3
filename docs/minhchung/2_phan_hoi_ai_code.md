@@ -143,5 +143,34 @@ available_copies = db.query(BookCopy).filter(
 **Phản hồi của AI:** AI sửa đúng cả 2 đầu: Backend bổ sung `SAN_SANG` vào điều kiện tính `queue_pos`, Frontend thêm trường `queue_position` vào `fieldMap`.
 
 ---
+
+## GIAI ĐOẠN 5: KT3 - HOÀN THIỆN RAG CHATBOT & QUẢN TRỊ DỮ LIỆU (16/09/2026)
+
+### 14. Prompt bổ sung trường Tóm tắt sách trong Modal Quản lý sách
+**Prompt (Lệnh) của tôi:**
+> *"Ở tài khoản thủ thư chưa có phần nhập nội dung tóm tắt sách trong modal Thêm/Sửa sách. Bổ sung ngay ô textarea trong modal Thêm/Sửa sách của `books.html`, kết nối hàm `openForm` trong `books.js` để tự nạp dữ liệu khi sửa, và đảm bảo lưu vào DB cũng như đồng bộ lên Vector Store."*
+
+**Phản hồi của AI:**
+AI đã thực hiện đúng trọn vẹn yêu cầu:
+1. Thêm `<textarea id="book-tomtat" name="tomTat">` trong `Frontend/books.html` với định dạng `grid-column: 1 / -1`.
+2. Cập nhật `Frontend/js/books.js`:
+```javascript
+// Đưa tomTat vào danh sách các trường được nạp tự động khi bấm Sửa sách
+["ma", "ten", "tacGia", "theLoai", "nxb", "namXb", "soLuong", "anhBia", "tomTat"].forEach(
+  function (key) {
+    var input = form.elements[key];
+    if (input) {
+      input.value = (book[key] === null || book[key] === undefined) ? "" : book[key];
+    }
+  }
+);
+```
+3. Backend tiếp nhận trường `tomTat` qua `BookBase` và tự động kích hoạt hàm đồng bộ Vector Store thời gian thực:
+```python
+_dong_bo_sach_len_vs(book, action="upsert")
+```
+
+---
 **TỔNG KẾT PHẦN 2:**
-Thông qua 13 minh chứng trải dài từ 09/08 đến 31/08, có thể thấy AI là một cỗ máy sinh code cực kỳ mạnh mẽ, **NHƯNG** nó chỉ phát huy sức mạnh khi được định hướng bởi các **Prompt có tư duy kỹ thuật cao** của con người. Prompt yếu = Code yếu. Prompt mạnh = Code mạnh.
+Thông qua 14 minh chứng trải dài từ 09/08 đến 16/09, có thể thấy AI là một cỗ máy sinh code cực kỳ mạnh mẽ, **NHƯNG** nó chỉ phát huy sức mạnh khi được định hướng bởi các **Prompt có tư duy kỹ thuật cao** của con người. Prompt yếu = Code yếu. Prompt mạnh = Code mạnh.
+

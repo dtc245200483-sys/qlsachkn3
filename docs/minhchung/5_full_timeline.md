@@ -40,6 +40,8 @@ Cung cấp một **bản tổng hợp đầy đủ** các nhật ký (log), prom
 | 30/08 | Xung đột FK + IntegrityError | Giải quyết khóa ngoại SQL Server | Viết quy trình migration |
 | 30/08 | 111 Unit Tests + QA toàn diện | Test 3 quyền, push GitHub master | Nghiệm thu & duyệt push |
 | 31/08 | Sửa Queue Position + Khôi phục tồn kho | Vị trí hàng đợi + bản copy bị test phá | Debug & lệnh khôi phục DB |
+| 15/09–16/09 | Tích hợp RAG AI & Lưu lịch sử liên trang | DeepSeek LLM, ChromaDB, sessionStorage, modal Tiếng Việt | Kiến trúc sư AI & kiểm toán 10 tiêu chí KT3 |
+| 16/09 | Bổ sung nhập Tóm tắt sách (tomTat) | Thêm textarea trong modal Quản lý sách, nạp/lưu tự động và đồng bộ ChromaDB | Phát hiện thiếu sót & chỉ đạo AI bổ sung |
 
 ## Thống kê tổng quan
 
@@ -47,11 +49,11 @@ Cung cấp một **bản tổng hợp đầy đủ** các nhật ký (log), prom
 |--------|---------|
 | Tổng số log trong changelog | ~700 dòng |
 | Tổng số migration (schema versioning) | 14 file |
-| Tổng số Unit Test | 111 test (PASS 100%) |
-| Số lần AI sinh code sai phải sửa | 23 lần (xem Phần 4) |
-| Số Prompt phức tạp được ghi nhận | 13 lệnh (xem Phần 2) |
+| Tổng số Unit Test | 111 test (PASS 100%) + Kịch bản RAG/Session |
+| Số lần AI sinh code sai phải sửa | 24 lần (xem Phần 4) |
+| Số Prompt phức tạp được ghi nhận | 14 lệnh (xem Phần 2) |
 | Số đoạn code giữ nguyên | 11 đoạn (xem Phần 3) |
-| Số commit Git | Nhiều commit, push cuối lên master |
+| Số commit Git | Đã push lên master (qlsachkn3) |
 
 ## Liên kết tới các phần chi tiết
 

@@ -233,9 +233,10 @@ POST /api/admin/dong-bo-vector-store   (Admin only)
 ---
 
 ## Phần sinh viên đã kiểm tra/chỉnh sửa
-(sinh viên tự điền sau khi review code)
+- [x] **Kiểm tra luồng nhập liệu của Thủ thư (16/09/2026)**: Phát hiện trên màn hình Quản lý sách (`books.html`), modal "Thêm sách / Sửa sách" bị thiếu trường nhập `Tóm tắt nội dung sách` (`tomTat`), khiến sách mới thêm vào SQL Server không có nội dung ngữ cảnh để đồng bộ sang ChromaDB. Đã chỉ đạo bổ sung trường `<textarea name="tomTat">` trong `books.html`, nạp dữ liệu tự động trong `books.js` và xác nhận hàm `_dong_bo_sach_len_vs` cập nhật tức thì sang Vector Store.
 
 ---
 
 ## Ngày thực hiện
-15/09/2026 10:44
+15/09/2026 10:44 (Cập nhật bổ sung: 16/09/2026)
+
