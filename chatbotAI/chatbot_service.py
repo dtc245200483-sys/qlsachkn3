@@ -139,14 +139,43 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
         _logger.error(f"[CHATBOT_SERVICE] Retrieval thất bại: {e}")
         return {"loi": f"Lỗi tìm kiếm: {e}"}
 
-    # ── Bước 2: Không có context → trả về ngay, không cần gọi LLM ────────────
+    # ── Bước 2: Không có context (hoặc bị lọc hết ở bước 1) → chặn tầng retrieval
     if not context:
-        _logger.info(f"[CHATBOT_SERVICE] '{cau_hoi[:50]}' → context rỗng, bỏ qua LLM")
+        diem_cao_nhat = getattr(context, "diem_cao_nhat_truoc_loc", None)
+        if diem_cao_nhat is None:
+            diem_cao_nhat = getattr(truy_xuat_context, "diem_cao_nhat_truoc_loc", 0.0)
+
+        # Phân biệt 2 trường hợp:
+        # Trường hợp 1: Điểm rất thấp (< 0.15) → Câu hỏi HOÀN TOÀN lạc đề
+        if diem_cao_nhat < 0.15:
+            thong_bao = (
+                "Tôi chỉ hỗ trợ tra cứu sách trong thư viện. "
+                "Bạn vui lòng đặt câu hỏi liên quan đến sách nhé!"
+            )
+            ly_do_chan = (
+                f"câu hỏi hoàn toàn lạc đề (điểm cao nhất {diem_cao_nhat:.4f} < 0.15)"
+            )
+        # Trường hợp 2: Điểm trung bình (0.15 - 0.35) → Hỏi sách nhưng thư viện chưa có
+        else:
+            thong_bao = "Không tìm thấy sách phù hợp trong thư viện."
+            ly_do_chan = (
+                f"không có sách phù hợp trong thư viện "
+                f"(điểm cao nhất {diem_cao_nhat:.4f} nằm trong [0.15, 0.35])"
+            )
+
+        log_msg = (
+            f"[CHATBOT_SERVICE] '{cau_hoi}' → đã chặn ở tầng retrieval, "
+            f"không tốn API call ({ly_do_chan})"
+        )
+        _logger.info(log_msg)
+        print(log_msg)
+
         return {
             "ket_qua": [],
             "tong_so_ket_qua": 0,
-            "thong_bao": "Không tìm thấy sách phù hợp trong thư viện.",
+            "thong_bao": thong_bao,
             "context_so_bo": 0,
+            "diem_cao_nhat": diem_cao_nhat,
         }
 
     # ── Bước 3: Xây dựng user prompt ─────────────────────────────────────────

@@ -43,6 +43,47 @@ _logger = logging.getLogger("ai_calls")
 # Ngưỡng fuzzy match — partial_ratio >= 60 mới tính là khớp
 FUZZY_THRESHOLD = 60
 
+# Mẫu phát hiện câu hỏi hoàn toàn lạc đề (chính trị, thời sự, đời tư, nấu ăn, toán đố, spam)
+PATTERNS_LAC_DE = [
+    # Chính trị, thời sự, chức danh lãnh đạo, bộ máy nhà nước
+    r"\b(chủ tịch nước|thủ tướng|tổng bí thư|chủ tịch quốc hội|bộ trưởng|chính phủ|quốc hội|đảng cộng sản|tổng thống|bầu cử|chiến tranh|thời sự|tin tức|biển đông)\b",
+    # Công thức món ăn, nấu nướng (không phải tìm sách)
+    r"\b(công thức nấu|cách nấu|nấu phở|nấu bún|nấu lẩu|món ăn|cách làm bánh|pha chế|cách luộc|hôm nay ăn gì|món ngon)\b",
+    # Toán đố, phép tính, spam số học
+    r"\b(\d+\s*[\+\-\*\/x]\s*\d+|\d+\s+với\s+\d+\s+bằng|bằng mấy|giải phương trình|tính đạo hàm|tích phân)\b",
+    # Đời tư, chitchat cá nhân, trêu chọc bot
+    r"\b(bạn tên gì|bạn là ai|bao nhiêu tuổi|người yêu|đời tư|kể chuyện cười|hát đi|thời tiết hôm nay)\b",
+]
+
+
+class ContextList(list):
+    """
+    Subclass của list chuẩn, bổ sung thuộc tính diem_cao_nhat_truoc_loc.
+    Tương thích 100% với list thông thường (len, for, json serialize...).
+    """
+    diem_cao_nhat_truoc_loc: float = 0.0
+
+
+def _kiem_tra_cau_hoi_lac_de(cau_hoi: str) -> bool:
+    """
+    Kiểm tra câu hỏi có thuộc các chủ đề hoàn toàn lạc đề (ngoài phạm vi thư viện) hay không.
+    Nếu câu hỏi chứa từ khóa thể hiện rõ nhu cầu tìm sách thì không coi là lạc đề.
+    """
+    if not cau_hoi or not isinstance(cau_hoi, str):
+        return False
+    cau_hoi_lower = cau_hoi.lower().strip()
+
+    # Từ khóa rõ ràng về nhu cầu tra cứu sách/thư viện
+    tu_khoa_sach = ["sách", "truyện", "tiểu thuyết", "tác phẩm", "giáo trình", "tác giả", "cuốn", "mượn sách", "đọc sách"]
+    if any(tk in cau_hoi_lower for tk in tu_khoa_sach):
+        return False
+
+    import re
+    for pattern in PATTERNS_LAC_DE:
+        if re.search(pattern, cau_hoi_lower):
+            return True
+    return False
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Hàm lấy toàn bộ metadata sách từ Vector Store (dùng cho fuzzy match)
@@ -125,31 +166,41 @@ def _fuzzy_match_ten(cau_hoi: str, tat_ca_sach: list[dict]) -> list[dict]:
 # Hàm tổng hợp — Retrieval chính
 # ─────────────────────────────────────────────────────────────────────────────
 
-def truy_xuat_context(cau_hoi: str, top_k: int = 8) -> list[dict]:
+def truy_xuat_context(
+    cau_hoi: str,
+    top_k: int = 8,
+    nguong_lien_quan: float = 0.35,
+) -> list[dict]:
     """
-    Tầng Retrieval RAG: kết hợp Embedding + Fuzzy match → context tối ưu.
+    Tầng Retrieval RAG: kết hợp Embedding + Fuzzy match → lọc theo ngưỡng liên quan.
 
     Luồng xử lý:
     1. Embedding search → list A (tìm theo ngữ nghĩa/chủ đề)
     2. Fuzzy match tên riêng → list B (khớp tên sách/tác giả)
     3. Gộp A + B, loại trùng theo ma_sach, cộng gộp thông tin
-    4. Sắp xếp: ưu tiên khớp cả 2 nguồn, rồi theo điểm cao nhất
-    5. Giới hạn top_k kết quả cuối cùng
+    4. Chuẩn hóa điểm liên quan về thang 0-1, ghi nhận diem_cao_nhat_truoc_loc
+    5. LỌC BỎ các sách có điểm liên quan < nguong_lien_quan (0.35)
+    6. Nếu sau khi lọc không còn cuốn nào, trả về list rỗng
 
     Tham số:
         cau_hoi (str): Câu hỏi tra cứu của độc giả.
         top_k (int):   Số kết quả tối đa trả về (mặc định 8).
+        nguong_lien_quan (float): Ngưỡng điểm tối thiểu để đưa vào context (mặc định 0.35).
 
     Trả về:
-        list[dict]: Danh sách sách đã lọc, mỗi phần tử gồm:
+        ContextList[dict]: Danh sách sách đã lọc đạt ngưỡng, mỗi phần tử gồm:
             ma_sach, ten_sach, tac_gia, the_loai, con_hang, tom_tat,
-            diem_tuong_dong (float, 0–1, chỉ có nếu khớp embedding),
+            diem_tuong_dong (float, 0–1, đã chuẩn hóa),
             diem_khop_ten (int, 0–100, chỉ có nếu khớp fuzzy),
-            diem_lien_quan (float, điểm tổng hợp để sắp xếp),
+            diem_lien_quan (float, điểm tổng hợp để xếp hạng),
             nguon_khop (list[str]: ["ngu_nghia"] | ["ten_rieng"] | cả 2)
+        Kèm thuộc tính diem_cao_nhat_truoc_loc trên list kết quả.
     """
     if not cau_hoi or not isinstance(cau_hoi, str) or not cau_hoi.strip():
-        return []
+        truy_xuat_context.diem_cao_nhat_truoc_loc = 0.0
+        res = ContextList([])
+        res.diem_cao_nhat_truoc_loc = 0.0
+        return res
 
     vs = VectorStore()
 
@@ -198,23 +249,35 @@ def truy_xuat_context(cau_hoi: str, top_k: int = 8) -> list[dict]:
                 "nguon_khop": ["ten_rieng"],
             }
 
-    # ── Bước 3: Không có kết quả → trả về rỗng ────────────────────────────────
+    # ── Bước 3: Không có kết quả sơ bộ → trả về rỗng ──────────────────────────
     if not map_ket_qua:
-        _logger.info(f"[RAG_RETRIEVER] '{cau_hoi[:50]}' → 0 kết quả")
-        return []
+        _logger.info(f"[RAG_RETRIEVER] '{cau_hoi[:50]}' → 0 kết quả sơ bộ")
+        truy_xuat_context.diem_cao_nhat_truoc_loc = 0.0
+        res = ContextList([])
+        res.diem_cao_nhat_truoc_loc = 0.0
+        return res
 
-    # ── Bước 4: Tính diem_lien_quan và sắp xếp ────────────────────────────────
-    # Công thức: ưu tiên khớp 2 nguồn (bonus +0.3), rồi theo embedding score
-    # Fuzzy score 0–100 → chuẩn hóa /100 để cùng scale với embedding (0–1)
+    # ── Bước 4: Tính diem_lien_quan và chuẩn hóa thang 0 - 1 ──────────────────
     danh_sach = list(map_ket_qua.values())
+    la_lac_de = _kiem_tra_cau_hoi_lac_de(cau_hoi)
 
     for item in danh_sach:
         co_ca_hai = len(item["nguon_khop"]) == 2
         bonus = 0.3 if co_ca_hai else 0.0
         diem_fuzzy_chuan = item["diem_khop_ten"] / 100.0
-        # Lấy max của 2 điểm rồi cộng bonus khớp 2 nguồn
+
+        # Chuẩn hóa diem_tuong_dong từ vector_store (1 - dist/2) về cosine similarity chuẩn
+        diem_raw = item.get("diem_tuong_dong", 0.0)
+        diem_sim = round(max(0.0, 2.0 * diem_raw - 1.0), 4)
+
+        # Nếu câu hỏi hoàn toàn lạc đề (chính trị, thời sự, công thức nấu ăn, toán đố...),
+        # hạ thấp điểm liên quan để đảm bảo < 0.15 và kích hoạt lớp chặn tầng retrieval
+        if la_lac_de:
+            diem_sim = round(min(diem_sim * 0.15, 0.08), 4)
+
+        item["diem_tuong_dong"] = diem_sim
         item["diem_lien_quan"] = round(
-            max(item["diem_tuong_dong"], diem_fuzzy_chuan) + bonus, 4
+            max(diem_sim, diem_fuzzy_chuan) + bonus, 4
         )
 
     # Sắp xếp: khớp cả 2 nguồn lên đầu, rồi theo điểm giảm dần
@@ -223,14 +286,25 @@ def truy_xuat_context(cau_hoi: str, top_k: int = 8) -> list[dict]:
         reverse=True,
     )
 
-    # ── Bước 5: Giới hạn top_k ────────────────────────────────────────────────
-    ket_qua_cuoi = danh_sach[:top_k]
+    # Ghi nhận điểm cao nhất trước khi lọc
+    diem_cao_nhat_truoc_loc = max([x["diem_lien_quan"] for x in danh_sach], default=0.0)
+    truy_xuat_context.diem_cao_nhat_truoc_loc = diem_cao_nhat_truoc_loc
+
+    # ── Bước 5: LỌC BỎ những sách có điểm liên quan < nguong_lien_quan (0.35) ──
+    ket_qua_sau_loc = [
+        item for item in danh_sach
+        if item["diem_lien_quan"] >= nguong_lien_quan
+    ]
+
+    # Giới hạn top_k kết quả cuối cùng
+    ket_qua_cuoi = ket_qua_sau_loc[:top_k]
 
     _logger.info(
         f"[RAG_RETRIEVER] '{cau_hoi[:50]}' → "
-        f"{len(ket_qua_cuoi)} kết quả "
-        f"(embedding: {len(list_a_raw)}, fuzzy: {len(list_b_raw)}, "
-        f"khớp cả 2: {sum(1 for x in ket_qua_cuoi if len(x['nguon_khop'])==2)})"
+        f"{len(ket_qua_cuoi)}/{len(danh_sach)} sách đạt ngưỡng {nguong_lien_quan} "
+        f"(max_score_truoc_loc={diem_cao_nhat_truoc_loc:.4f}, la_lac_de={la_lac_de})"
     )
 
-    return ket_qua_cuoi
+    res = ContextList(ket_qua_cuoi)
+    res.diem_cao_nhat_truoc_loc = diem_cao_nhat_truoc_loc
+    return res
