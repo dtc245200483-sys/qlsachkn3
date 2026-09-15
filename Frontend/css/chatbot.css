@@ -53,29 +53,36 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-.chatbot-header__title {
+.chatbot-header__title,
+h2.chatbot-header__title {
+  color: #ffffff !important;
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .chatbot-header__subtitle {
-  margin: 2px 0 0 0;
-  font-size: 12px;
-  color: var(--color-text-muted-navy);
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #e2e8f0 !important;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.chatbot-header__subtitle span {
+  color: #e2e8f0 !important;
+}
+
 .chatbot-status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10B981;
+  width: 9px;
+  height: 9px;
+  background-color: #34D399;
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35);
 }
 
 .chatbot-header__actions {
@@ -84,25 +91,27 @@
 }
 
 .btn-header-ghost {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 6px 12px;
   font-size: 12.5px;
+  font-weight: 600;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .btn-header-ghost:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Thanh câu hỏi gợi ý nhanh */
 .quick-prompts-bar {
-  background: var(--color-primary-soft);
-  border-bottom: 1px solid var(--color-primary-soft-border);
-  padding: 8px var(--space-3);
+  background: #f1f5f9;
+  border-bottom: 1px solid #dce1ea;
+  padding: 10px var(--space-3);
   display: flex;
   gap: 8px;
   overflow-x: auto;
@@ -112,22 +121,24 @@
 
 .btn-pill-prompt {
   background: #ffffff;
-  border: 1px solid var(--color-border);
+  border: 1.5px solid #b9c9e0;
   color: var(--color-primary-900);
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 12.5px;
   cursor: pointer;
   transition: all var(--transition-fast);
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(10, 46, 92, 0.05);
 }
 
 .btn-pill-prompt:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-900);
   color: #ffffff;
-  border-color: var(--color-primary-600);
+  border-color: var(--color-primary-900);
   transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(10, 46, 92, 0.18);
 }
 
 /* Vùng nội dung tin nhắn */

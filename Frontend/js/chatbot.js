@@ -211,10 +211,7 @@
     showTypingIndicator();
 
     try {
-      var res = await window.API.call("chatbot", {
-        method: "POST",
-        payload: { cau_hoi: q }
-      });
+      var res = await window.API.call("chatbot", { cau_hoi: q }, "POST");
 
       if (!res.ok) {
         appendErrorMessage(res.message || res.detail || "Không thể kết nối đến máy chủ");

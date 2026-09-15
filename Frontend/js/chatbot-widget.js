@@ -150,7 +150,7 @@
     // Nút tròn nổi
     var btn = document.createElement("div");
     btn.id = "ictu-ai-widget-btn";
-    btn.title = "Hỏi Trợ lý AI Thư viện (V3)";
+    btn.title = "Hỏi Trợ lý AI Thư viện";
     btn.innerHTML = "🤖";
 
     // Khung chat nổi
@@ -158,11 +158,11 @@
     box.id = "ictu-ai-widget-box";
     box.innerHTML = [
       '<div class="ai-w-header">',
-      '  <div class="ai-w-header__title">🤖 Trợ lý AI Thư viện (V3)</div>',
+      '  <div class="ai-w-header__title">🤖 Trợ lý AI Thư viện</div>',
       '  <button type="button" class="ai-w-close" id="ai-w-close-btn">&times;</button>',
       '</div>',
       '<div class="ai-w-body" id="ai-w-body">',
-      '  <div class="ai-w-msg-bot">Xin chào! Tôi là Trợ lý AI V3 của thư viện. Bạn cần tìm sách gì hôm nay?</div>',
+      '  <div class="ai-w-msg-bot">Xin chào! Tôi là Trợ lý AI của thư viện. Bạn cần tìm sách gì hôm nay?</div>',
       '</div>',
       '<div class="ai-w-footer">',
       '  <input type="text" class="ai-w-input" id="ai-w-input" placeholder="Hỏi tìm sách..." />',
@@ -214,10 +214,7 @@
       body.scrollTop = body.scrollHeight;
 
       try {
-        var res = await window.API.call("chatbot", {
-          method: "POST",
-          payload: { cau_hoi: q }
-        });
+        var res = await window.API.call("chatbot", { cau_hoi: q }, "POST");
 
         if (res.ok && res.data) {
           var d = res.data;

@@ -321,3 +321,5 @@
 [2026-09-15 12:47:33] [VECTORSTORE] [SEARCH] 'sách về tư duy làm giàu' → 10 kết quả [23233ms] | Top-1: Nghĩ giàu làm giàu (0.8985)
 [2026-09-15 12:47:33] [RAG_RETRIEVER] 'sách về tư duy làm giàu' → 4/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=1.0970, la_lac_de=False)
 [2026-09-15 12:47:40] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7090ms] [3545 chars] Response: 443 chars
+[2026-09-15 12:50:30] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:50:30] [VECTORSTORE] [COUNT] Tổng số sách đã index: 10
