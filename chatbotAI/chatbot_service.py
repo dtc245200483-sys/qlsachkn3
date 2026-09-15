@@ -17,6 +17,7 @@ Lớp bảo vệ chống hallucination:
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +40,7 @@ if str(APP_ROOT) not in sys.path:
 from chatbotAI.rag_retriever import truy_xuat_context    # noqa: E402
 from chatbotAI.prompt_builder import xay_dung_user_prompt # noqa: E402
 from chatbotAI.llm_client import call_llm                 # noqa: E402
+from chatbotAI.config import doc_system_prompt, PROMPT_VERSION # noqa: E402
 
 _logger = logging.getLogger("ai_calls")
 
@@ -46,15 +48,11 @@ SYSTEM_PROMPT_FILE = Path(__file__).resolve().parent / "prompts" / "system_promp
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Hàm đọc system prompt
+# Hàm đọc system prompt (fallback tương thích ngược)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _doc_system_prompt() -> str:
-    if not SYSTEM_PROMPT_FILE.exists():
-        raise FileNotFoundError(
-            f"Không tìm thấy system prompt tại: {SYSTEM_PROMPT_FILE}"
-        )
-    return SYSTEM_PROMPT_FILE.read_text(encoding="utf-8").strip()
+def _doc_system_prompt(version: Optional[str] = None) -> str:
+    return doc_system_prompt(version=version)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -116,37 +114,46 @@ def _loc_ket_qua_bija(ket_qua_llm: list[dict], context: list[dict]) -> list[dict
 # Hàm chính: tra_cuu_sach()
 # ─────────────────────────────────────────────────────────────────────────────
 
-def tra_cuu_sach(cau_hoi: str) -> dict:
+def tra_cuu_sach(cau_hoi: str, prompt_version: Optional[str] = None) -> dict:
     """
-    Luồng RAG tra cứu sách hoàn chỉnh.
+    Luồng RAG tra cứu sách hoàn chỉnh hỗ trợ đa phiên bản prompt (v1, v2, v3).
 
     Tham số:
         cau_hoi (str): Câu hỏi của độc giả.
+        prompt_version (str, optional): "v1", "v2", "v3". Mặc định dùng PROMPT_VERSION từ config.
 
     Trả về:
         dict: {
           "ket_qua": [...],        # danh sách sách gợi ý
           "tong_so_ket_qua": int,
-          "thong_bao": str,        # rỗng nếu có kết quả
-          "context_so_bo": int,    # số sách retriever tìm được ban đầu
+          "thong_bao": str,        # thông báo kết quả hoặc lý do
+          "raw_text": str,         # phản hồi văn bản thô từ LLM
+          "context_so_bo": int,    # số sách retriever tìm được
+          "context_list": list,    # danh sách context chi tiết
+          "thoi_gian_ms": int,     # thời gian xử lý (ms)
+          "prompt_version": str,   # phiên bản prompt sử dụng
+          "canh_bao_bia": bool,    # cảnh báo có sách ngoài context
         }
-        hoặc {"loi": str} nếu hệ thống gặp sự cố.
     """
+    start_time = time.time()
+    version = prompt_version or PROMPT_VERSION
+
     # ── Bước 1: Retrieval ─────────────────────────────────────────────────────
+    # Với v1 và v2: lấy context sơ bộ (nguong=0.0) mô phỏng vòng thử nghiệm 1 & 2
+    # Với v3: áp dụng lớp lọc ngưỡng liên quan (nguong=0.35)
+    nguong = 0.35 if version == "v3" else 0.0
     try:
-        context = truy_xuat_context(cau_hoi)
+        context = truy_xuat_context(cau_hoi, nguong_lien_quan=nguong)
     except Exception as e:
         _logger.error(f"[CHATBOT_SERVICE] Retrieval thất bại: {e}")
         return {"loi": f"Lỗi tìm kiếm: {e}"}
 
-    # ── Bước 2: Không có context (hoặc bị lọc hết ở bước 1) → chặn tầng retrieval
-    if not context:
+    # ── Bước 2: Chặn tầng retrieval (Chỉ áp dụng với v3 bản chính thức) ─────────
+    if version == "v3" and not context:
         diem_cao_nhat = getattr(context, "diem_cao_nhat_truoc_loc", None)
         if diem_cao_nhat is None:
             diem_cao_nhat = getattr(truy_xuat_context, "diem_cao_nhat_truoc_loc", 0.0)
 
-        # Phân biệt 2 trường hợp:
-        # Trường hợp 1: Điểm rất thấp (< 0.15) → Câu hỏi HOÀN TOÀN lạc đề
         if diem_cao_nhat < 0.15:
             thong_bao = (
                 "Tôi chỉ hỗ trợ tra cứu sách trong thư viện. "
@@ -155,7 +162,6 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
             ly_do_chan = (
                 f"câu hỏi hoàn toàn lạc đề (điểm cao nhất {diem_cao_nhat:.4f} < 0.15)"
             )
-        # Trường hợp 2: Điểm trung bình (0.15 - 0.35) → Hỏi sách nhưng thư viện chưa có
         else:
             thong_bao = "Không tìm thấy sách phù hợp trong thư viện."
             ly_do_chan = (
@@ -170,12 +176,33 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
         _logger.info(log_msg)
         print(log_msg)
 
+        elapsed_ms = int((time.time() - start_time) * 1000)
         return {
             "ket_qua": [],
             "tong_so_ket_qua": 0,
             "thong_bao": thong_bao,
+            "raw_text": thong_bao,
             "context_so_bo": 0,
+            "context_list": [],
             "diem_cao_nhat": diem_cao_nhat,
+            "thoi_gian_ms": elapsed_ms,
+            "prompt_version": version,
+            "canh_bao_bia": False,
+        }
+
+    # Nếu không có context (ngay cả khi nguong=0.0)
+    if not context:
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        return {
+            "ket_qua": [],
+            "tong_so_ket_qua": 0,
+            "thong_bao": "Không tìm thấy sách phù hợp trong thư viện.",
+            "raw_text": "Không tìm thấy sách phù hợp trong thư viện.",
+            "context_so_bo": 0,
+            "context_list": [],
+            "thoi_gian_ms": elapsed_ms,
+            "prompt_version": version,
+            "canh_bao_bia": False,
         }
 
     # ── Bước 3: Xây dựng user prompt ─────────────────────────────────────────
@@ -184,9 +211,9 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
     except Exception as e:
         return {"loi": f"Lỗi xây dựng prompt: {e}"}
 
-    # ── Bước 4: Đọc system prompt ────────────────────────────────────────────
+    # ── Bước 4: Đọc system prompt theo version ────────────────────────────────
     try:
-        system_prompt = _doc_system_prompt()
+        system_prompt = _doc_system_prompt(version=version)
     except FileNotFoundError as e:
         return {"loi": f"Lỗi cấu hình: {e}"}
 
@@ -197,18 +224,50 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
         _logger.error(f"[CHATBOT_SERVICE] Gọi LLM thất bại: {e}")
         return {"loi": f"LLM không phản hồi: {e}"}
 
-    # Nếu call_llm trả về chuỗi lỗi cấu hình (không có API key)
     if isinstance(phan_hoi_llm, str) and phan_hoi_llm.startswith("[Lỗi"):
         return {"loi": phan_hoi_llm}
 
-    # ── Bước 6: Parse JSON — thử lại 1 lần nếu lỗi ──────────────────────────
-    ket_qua_dict = _parse_json_llm(phan_hoi_llm)
+    elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # ── Bước 6 & 7: Xử lý phản hồi theo từng phiên bản prompt ────────────────
+    if version in ("v1", "v2"):
+        ket_qua_dict = _parse_json_llm(phan_hoi_llm)
+        if ket_qua_dict and "ket_qua" in ket_qua_dict:
+            ket_qua_goc = ket_qua_dict.get("ket_qua", [])
+            ket_qua_sach = _loc_ket_qua_bija(ket_qua_goc, context)
+            canh_bao_bia = len(ket_qua_goc) > len(ket_qua_sach)
+            thong_bao = ket_qua_dict.get("thong_bao", phan_hoi_llm)
+        else:
+            ket_qua_sach = []
+            for s in context:
+                if s.get("ten_sach") and s["ten_sach"].lower() in phan_hoi_llm.lower():
+                    ket_qua_sach.append({
+                        "ten_sach": s["ten_sach"],
+                        "tac_gia": s["tac_gia"],
+                        "ly_do_goi_y": "Được đề cập trong phản hồi",
+                        "con_hang": s["con_hang"],
+                    })
+            canh_bao_bia = False
+            thong_bao = phan_hoi_llm
+
+        return {
+            "ket_qua": ket_qua_sach,
+            "tong_so_ket_qua": len(ket_qua_sach),
+            "thong_bao": thong_bao,
+            "raw_text": phan_hoi_llm,
+            "context_so_bo": len(context),
+            "context_list": list(context),
+            "thoi_gian_ms": elapsed_ms,
+            "prompt_version": version,
+            "canh_bao_bia": canh_bao_bia,
+        }
+
+    # ── Phiên bản v3 (JSON chuẩn bắt buộc) ──────────────────────────────────
+    ket_qua_dict = _parse_json_llm(phan_hoi_llm)
     if ket_qua_dict is None:
         _logger.warning(
             "[CHATBOT_SERVICE] Parse JSON lần 1 thất bại — thử lại với yêu cầu bổ sung."
         )
-        # Thử lại lần 2: yêu cầu LLM output lại đúng JSON
         retry_prompt = (
             f"{user_prompt}\n\n"
             "[QUAN TRỌNG: Phản hồi trước của bạn không phải JSON hợp lệ. "
@@ -221,39 +280,45 @@ def tra_cuu_sach(cau_hoi: str) -> dict:
                 user_prompt=retry_prompt,
             )
             ket_qua_dict = _parse_json_llm(phan_hoi_llm_2)
+            if ket_qua_dict:
+                phan_hoi_llm = phan_hoi_llm_2
         except Exception:
             ket_qua_dict = None
 
         if ket_qua_dict is None:
             _logger.error("[CHATBOT_SERVICE] Parse JSON lần 2 vẫn thất bại.")
-            return {"loi": "Hệ thống AI gặp sự cố, vui lòng thử lại"}
+            return {
+                "ket_qua": [],
+                "tong_so_ket_qua": 0,
+                "thong_bao": phan_hoi_llm,
+                "raw_text": phan_hoi_llm,
+                "context_so_bo": len(context),
+                "context_list": list(context),
+                "thoi_gian_ms": elapsed_ms,
+                "prompt_version": version,
+                "canh_bao_bia": True,
+            }
 
-    # ── Bước 7: Đối chiếu chống bịa dữ liệu ────────────────────────────────
     ket_qua_goc = ket_qua_dict.get("ket_qua", [])
     ket_qua_sach = _loc_ket_qua_bija(ket_qua_goc, context)
-
     so_bi_loai = len(ket_qua_goc) - len(ket_qua_sach)
     if so_bi_loai > 0:
         _logger.warning(
-            f"[CHATBOT_SERVICE] Đã loại bỏ {so_bi_loai} sách LLM bịa "
-            f"khỏi kết quả cuối cùng."
+            f"[CHATBOT_SERVICE] Đã loại bỏ {so_bi_loai} sách LLM bịa khỏi kết quả cuối cùng."
         )
 
     thong_bao = ket_qua_dict.get("thong_bao", "")
     if not ket_qua_sach and not thong_bao:
         thong_bao = "Không có sách nào thực sự phù hợp với yêu cầu của bạn."
 
-    ket_qua_cuoi = {
+    return {
         "ket_qua": ket_qua_sach,
         "tong_so_ket_qua": len(ket_qua_sach),
         "thong_bao": thong_bao,
+        "raw_text": phan_hoi_llm,
         "context_so_bo": len(context),
+        "context_list": list(context),
+        "thoi_gian_ms": elapsed_ms,
+        "prompt_version": version,
+        "canh_bao_bia": so_bi_loai > 0,
     }
-
-    _logger.info(
-        f"[CHATBOT_SERVICE] '{cau_hoi[:50]}' → "
-        f"context={len(context)}, LLM chọn={len(ket_qua_goc)}, "
-        f"sau lọc bịa={len(ket_qua_sach)}"
-    )
-
-    return ket_qua_cuoi

@@ -107,6 +107,7 @@ def call_llm(
     system_prompt: str,
     user_prompt: str,
     model: str = DEFAULT_MODEL,
+    max_tokens: int = 1500,
 ) -> str:
     """
     Gọi LLM API qua OpenRouter và trả về nội dung văn bản phản hồi.
@@ -115,6 +116,7 @@ def call_llm(
         system_prompt (str): Lời nhắc hệ thống định hình vai trò AI.
         user_prompt (str):   Nội dung câu hỏi/yêu cầu của người dùng.
         model (str):         Tên model (mặc định: 'deepseek/deepseek-chat').
+        max_tokens (int):    Số lượng token phản hồi tối đa (mặc định 1500).
 
     Trả về:
         str: Nội dung text phản hồi từ LLM.
@@ -151,6 +153,7 @@ def call_llm(
     }
     payload = {
         "model": model,
+        "max_tokens": max_tokens,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},

@@ -62,3 +62,233 @@
 [2026-09-15 10:52:51] [VECTORSTORE] [SEARCH] 'sách dạy lái xe hơi và thi bằng lái' → 10 kết quả [23ms] | Top-1: Tắt đèn (0.6176)
 [2026-09-15 10:52:51] [RAG_RETRIEVER] 'sách dạy lái xe hơi và thi bằng lái' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
 [2026-09-15 10:52:51] [LLM] [deepseek/deepseek-chat] [FAILURE] [0ms] [5047 chars] Error: API key chưa cấu hình
+[2026-09-15 10:58:59] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 10:59:45] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 10:59:59] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [14099ms] Model sẵn sàng.
+[2026-09-15 10:59:59] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [73ms] [36 chars] → 384-dim vector
+[2026-09-15 10:59:59] [VECTORSTORE] [SEARCH] 'sách dạy làm bếp và chế biến thức ăn' → 10 kết quả [60453ms] | Top-1: Lập trình Python từ cơ bản đến (0.6375)
+[2026-09-15 11:00:00] [RAG_RETRIEVER] 'sách dạy làm bếp và chế biến thức ăn' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 11:00:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:00:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [36 chars] → 384-dim vector
+[2026-09-15 11:00:00] [VECTORSTORE] [SEARCH] 'sách dạy làm bếp và chế biến thức ăn' → 10 kết quả [26ms] | Top-1: Lập trình Python từ cơ bản đến (0.6375)
+[2026-09-15 11:00:00] [RAG_RETRIEVER] 'sách dạy làm bếp và chế biến thức ăn' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 11:00:04] [LLM] [deepseek/deepseek-chat] [SUCCESS] [4540ms] [5050 chars] Response: 137 chars
+[2026-09-15 11:00:04] [CHATBOT_SERVICE] 'sách dạy làm bếp và chế biến thức ăn' → context=8, LLM chọn=0, sau lọc bịa=0
+[2026-09-15 11:00:04] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:00:04] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [8 chars] → 384-dim vector
+[2026-09-15 11:00:04] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [24ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:00:04] [RAG_RETRIEVER] 'Carnegie' → 8 kết quả (embedding: 10, fuzzy: 1, khớp cả 2: 1)
+[2026-09-15 11:00:04] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:00:04] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [8 chars] → 384-dim vector
+[2026-09-15 11:00:04] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [25ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:00:04] [RAG_RETRIEVER] 'Carnegie' → 8 kết quả (embedding: 10, fuzzy: 1, khớp cả 2: 1)
+[2026-09-15 11:00:10] [LLM] [deepseek/deepseek-chat] [SUCCESS] [5250ms] [5058 chars] Response: 266 chars
+[2026-09-15 11:00:10] [CHATBOT_SERVICE] 'Carnegie' → context=8, LLM chọn=1, sau lọc bịa=1
+[2026-09-15 11:00:10] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:00:10] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [71ms] [35 chars] → 384-dim vector
+[2026-09-15 11:00:10] [VECTORSTORE] [SEARCH] 'sách dạy lái xe hơi và thi bằng lái' → 10 kết quả [73ms] | Top-1: Tắt đèn (0.6176)
+[2026-09-15 11:00:10] [RAG_RETRIEVER] 'sách dạy lái xe hơi và thi bằng lái' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 11:00:10] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:00:10] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [43ms] [35 chars] → 384-dim vector
+[2026-09-15 11:00:10] [VECTORSTORE] [SEARCH] 'sách dạy lái xe hơi và thi bằng lái' → 10 kết quả [45ms] | Top-1: Tắt đèn (0.6176)
+[2026-09-15 11:00:10] [RAG_RETRIEVER] 'sách dạy lái xe hơi và thi bằng lái' → 8 kết quả (embedding: 10, fuzzy: 0, khớp cả 2: 0)
+[2026-09-15 11:00:14] [LLM] [deepseek/deepseek-chat] [SUCCESS] [4727ms] [5047 chars] Response: 144 chars
+[2026-09-15 11:00:14] [CHATBOT_SERVICE] 'sách dạy lái xe hơi và thi bằng lái' → context=8, LLM chọn=0, sau lọc bịa=0
+[2026-09-15 11:12:22] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:12:32] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [17360ms] Model sẵn sàng.
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [86ms] [29 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 5 kết quả [26927ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [26ms] [25 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 5 kết quả [28ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [50ms] [17 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 5 kết quả [52ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [17 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 5 kết quả [24ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [36 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] 'sách dạy làm bếp và chế biến thức ăn' → 5 kết quả [23ms] | Top-1: Lập trình Python từ cơ bản đến (0.6375)
+[2026-09-15 11:12:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [17ms] [8 chars] → 384-dim vector
+[2026-09-15 11:12:49] [VECTORSTORE] [SEARCH] 'Carnegie' → 5 kết quả [19ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:13:09] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:13:19] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [11159ms] Model sẵn sàng.
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [53ms] [29 chars] → 384-dim vector
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [18ms] [25 chars] → 384-dim vector
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [17 chars] → 384-dim vector
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [16ms] [17 chars] → 384-dim vector
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [36 chars] → 384-dim vector
+[2026-09-15 11:13:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [18ms] [8 chars] → 384-dim vector
+[2026-09-15 11:13:39] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:14:22] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:14:33] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:14:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [13251ms] Model sẵn sàng.
+[2026-09-15 11:14:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [71ms] [29 chars] → 384-dim vector
+[2026-09-15 11:14:47] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [25001ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:14:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [31ms] [25 chars] → 384-dim vector
+[2026-09-15 11:14:47] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 10 kết quả [34ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:14:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [26ms] [17 chars] → 384-dim vector
+[2026-09-15 11:14:47] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 10 kết quả [29ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:14:47] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [25ms] [17 chars] → 384-dim vector
+[2026-09-15 11:14:47] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 10 kết quả [27ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:15:29] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:15:38] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:15:56] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [17929ms] Model sẵn sàng.
+[2026-09-15 11:15:56] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [90ms] [39 chars] → 384-dim vector
+[2026-09-15 11:15:56] [VECTORSTORE] [SEARCH] 'sách học lập trình python cho người mới' → 2 kết quả [27036ms] | Top-1: Lập trình Python từ cơ bản đến (0.9085)
+[2026-09-15 11:15:56] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [32ms] [39 chars] → 384-dim vector
+[2026-09-15 11:15:57] [VECTORSTORE] [SEARCH] 'tìm sách về vũ trụ, lỗ đen và thời gian' → 2 kết quả [34ms] | Top-1: Lược sử thời gian (0.8225)
+[2026-09-15 11:15:57] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [24ms] [40 chars] → 384-dim vector
+[2026-09-15 11:15:57] [VECTORSTORE] [SEARCH] 'sách văn học hiện thực phê phán Việt Nam' → 2 kết quả [26ms] | Top-1: Số đỏ (0.8353)
+[2026-09-15 11:15:57] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [51ms] [36 chars] → 384-dim vector
+[2026-09-15 11:15:57] [VECTORSTORE] [SEARCH] 'sách dạy kỹ năng giao tiếp và ứng xử' → 2 kết quả [53ms] | Top-1: Đắc nhân tâm (0.8532)
+[2026-09-15 11:15:57] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [8 chars] → 384-dim vector
+[2026-09-15 11:15:57] [VECTORSTORE] [SEARCH] 'Carnegie' → 2 kết quả [24ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:15:57] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [35ms] [12 chars] → 384-dim vector
+[2026-09-15 11:15:57] [VECTORSTORE] [SEARCH] 'Đắc nhân tâm' → 2 kết quả [38ms] | Top-1: Đắc nhân tâm (0.7661)
+[2026-09-15 11:18:20] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:30] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [11237ms] Model sẵn sàng.
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [75ms] [29 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [20935ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [29 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [25ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 11:18:41] [CHATBOT_SERVICE] 'Ai là chủ tịch nước hiện tại?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0541 < 0.15))
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [24ms] [25 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 10 kết quả [27ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'Cho tôi công thức nấu phở' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0299, la_lac_de=True)
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [25 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 10 kết quả [24ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'Cho tôi công thức nấu phở' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0299, la_lac_de=True)
+[2026-09-15 11:18:41] [CHATBOT_SERVICE] 'Cho tôi công thức nấu phở' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0299 < 0.15))
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [22ms] [17 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 10 kết quả [25ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] '1 với 1 bằng mấy?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0284, la_lac_de=True)
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [19ms] [17 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 10 kết quả [21ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] '1 với 1 bằng mấy?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0284, la_lac_de=True)
+[2026-09-15 11:18:41] [CHATBOT_SERVICE] '1 với 1 bằng mấy?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0284 < 0.15))
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [23ms] [17 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 10 kết quả [25ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'sách Harry Potter' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.2344, la_lac_de=False)
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [16ms] [17 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 10 kết quả [18ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'sách Harry Potter' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.2344, la_lac_de=False)
+[2026-09-15 11:18:41] [CHATBOT_SERVICE] 'sách Harry Potter' → đã chặn ở tầng retrieval, không tốn API call (không có sách phù hợp trong thư viện (điểm cao nhất 0.2344 nằm trong [0.15, 0.35]))
+[2026-09-15 11:18:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:18:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [17ms] [8 chars] → 384-dim vector
+[2026-09-15 11:18:41] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [19ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:18:41] [RAG_RETRIEVER] 'Carnegie' → 1/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=1.3000, la_lac_de=False)
+[2026-09-15 11:19:39] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:19:49] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [11001ms] Model sẵn sàng.
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [86ms] [29 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [20585ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [33ms] [29 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [36ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 11:20:00] [CHATBOT_SERVICE] 'Ai là chủ tịch nước hiện tại?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0541 < 0.15))
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [30ms] [25 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 10 kết quả [32ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'Cho tôi công thức nấu phở' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0299, la_lac_de=True)
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [23ms] [25 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'Cho tôi công thức nấu phở' → 10 kết quả [26ms] | Top-1: 7 Thói quen của người hiệu quả (0.5995)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'Cho tôi công thức nấu phở' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0299, la_lac_de=True)
+[2026-09-15 11:20:00] [CHATBOT_SERVICE] 'Cho tôi công thức nấu phở' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0299 < 0.15))
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [26ms] [17 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 10 kết quả [29ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] '1 với 1 bằng mấy?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0284, la_lac_de=True)
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [25ms] [17 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] '1 với 1 bằng mấy?' → 10 kết quả [28ms] | Top-1: Cha giàu cha nghèo (0.5948)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] '1 với 1 bằng mấy?' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.0284, la_lac_de=True)
+[2026-09-15 11:20:00] [CHATBOT_SERVICE] '1 với 1 bằng mấy?' → đã chặn ở tầng retrieval, không tốn API call (câu hỏi hoàn toàn lạc đề (điểm cao nhất 0.0284 < 0.15))
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [17 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 10 kết quả [24ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'sách Harry Potter' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.2344, la_lac_de=False)
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [17 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'sách Harry Potter' → 10 kết quả [23ms] | Top-1: Nghĩ giàu làm giàu (0.6172)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'sách Harry Potter' → 0/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=0.2344, la_lac_de=False)
+[2026-09-15 11:20:00] [CHATBOT_SERVICE] 'sách Harry Potter' → đã chặn ở tầng retrieval, không tốn API call (không có sách phù hợp trong thư viện (điểm cao nhất 0.2344 nằm trong [0.15, 0.35]))
+[2026-09-15 11:20:00] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:20:00] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [21ms] [8 chars] → 384-dim vector
+[2026-09-15 11:20:00] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [23ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 11:20:00] [RAG_RETRIEVER] 'Carnegie' → 1/10 sách đạt ngưỡng 0.35 (max_score_truoc_loc=1.3000, la_lac_de=False)
+[2026-09-15 11:56:15] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:59:50] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:59:54] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 11:59:59] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:00:30] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:01:11] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:01:21] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [9587ms] Model sẵn sàng.
+[2026-09-15 12:01:21] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [257ms] [59 chars] → 384-dim vector
+[2026-09-15 12:01:21] [VECTORSTORE] [SEARCH] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 10 kết quả [51233ms] | Top-1: Nghĩ giàu làm giàu (0.8623)
+[2026-09-15 12:01:21] [RAG_RETRIEVER] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.0246, la_lac_de=False)
+[2026-09-15 12:01:29] [LLM] [deepseek/deepseek-chat] [FAILURE] [7640ms] [3539 chars] Empty choices
+[2026-09-15 12:01:46] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7057ms] [25 chars] Response: 36 chars
+[2026-09-15 12:01:58] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:02:09] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:02:18] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [9392ms] Model sẵn sàng.
+[2026-09-15 12:02:19] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [55ms] [59 chars] → 384-dim vector
+[2026-09-15 12:02:19] [VECTORSTORE] [SEARCH] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 10 kết quả [20229ms] | Top-1: Nghĩ giàu làm giàu (0.8623)
+[2026-09-15 12:02:19] [RAG_RETRIEVER] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.0246, la_lac_de=False)
+[2026-09-15 12:03:42] [LLM] [deepseek/deepseek-chat] [SUCCESS] [26825ms] [259 chars] Response: 1189 chars
+[2026-09-15 12:04:10] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:04:22] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADING] Đang load model lần đầu tiên...
+[2026-09-15 12:04:32] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [LOADED] [10430ms] Model sẵn sàng.
+[2026-09-15 12:04:33] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [63ms] [59 chars] → 384-dim vector
+[2026-09-15 12:04:33] [VECTORSTORE] [SEARCH] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 10 kết quả [22759ms] | Top-1: Nghĩ giàu làm giàu (0.8623)
+[2026-09-15 12:04:33] [RAG_RETRIEVER] 'sách hướng dẫn tư duy làm giàu và quản lý tài chín' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.0246, la_lac_de=False)
+[2026-09-15 12:04:51] [LLM] [deepseek/deepseek-chat] [SUCCESS] [18762ms] [3539 chars] Response: 1538 chars
+[2026-09-15 12:05:06] [LLM] [deepseek/deepseek-chat] [SUCCESS] [14403ms] [4214 chars] Response: 1261 chars
+[2026-09-15 12:05:13] [LLM] [deepseek/deepseek-chat] [SUCCESS] [6176ms] [5118 chars] Response: 465 chars
+[2026-09-15 12:05:14] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:05:14] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [37ms] [15 chars] → 384-dim vector
+[2026-09-15 12:05:14] [VECTORSTORE] [SEARCH] 'sách gì hay hay' → 10 kết quả [41ms] | Top-1: Nghĩ giàu làm giàu (0.7143)
+[2026-09-15 12:05:14] [RAG_RETRIEVER] 'sách gì hay hay' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=0.4286, la_lac_de=False)
+[2026-09-15 12:05:38] [LLM] [deepseek/deepseek-chat] [SUCCESS] [24065ms] [3423 chars] Response: 1292 chars
+[2026-09-15 12:06:01] [LLM] [deepseek/deepseek-chat] [SUCCESS] [22291ms] [4098 chars] Response: 1340 chars
+[2026-09-15 12:06:13] [LLM] [deepseek/deepseek-chat] [SUCCESS] [11078ms] [5002 chars] Response: 994 chars
+[2026-09-15 12:06:13] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:06:13] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [44ms] [45 chars] → 384-dim vector
+[2026-09-15 12:06:13] [VECTORSTORE] [SEARCH] 'sách hướng dẫn lái xe ô tô và thi bằng lái B2' → 10 kết quả [47ms] | Top-1: Tắt đèn (0.5768)
+[2026-09-15 12:06:13] [RAG_RETRIEVER] 'sách hướng dẫn lái xe ô tô và thi bằng lái B2' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=0.1536, la_lac_de=False)
+[2026-09-15 12:06:20] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7257ms] [3479 chars] Response: 335 chars
+[2026-09-15 12:06:28] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7038ms] [4154 chars] Response: 99 chars
+[2026-09-15 12:06:40] [LLM] [deepseek/deepseek-chat] [SUCCESS] [11490ms] [5058 chars] Response: 159 chars
+[2026-09-15 12:06:41] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:06:41] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [49ms] [27 chars] → 384-dim vector
+[2026-09-15 12:06:41] [VECTORSTORE] [SEARCH] 'Kiến trúc hệ thống phân tán' → 10 kết quả [54ms] | Top-1: Kiến trúc hệ thống phân tán (0.7509)
+[2026-09-15 12:06:41] [RAG_RETRIEVER] 'Kiến trúc hệ thống phân tán' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.3000, la_lac_de=False)
+[2026-09-15 12:06:50] [LLM] [deepseek/deepseek-chat] [SUCCESS] [9410ms] [3510 chars] Response: 795 chars
+[2026-09-15 12:06:57] [LLM] [deepseek/deepseek-chat] [SUCCESS] [6322ms] [4185 chars] Response: 409 chars
+[2026-09-15 12:07:05] [LLM] [deepseek/deepseek-chat] [SUCCESS] [7090ms] [5089 chars] Response: 274 chars
+[2026-09-15 12:07:06] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:07:06] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [57ms] [8 chars] → 384-dim vector
+[2026-09-15 12:07:06] [VECTORSTORE] [SEARCH] 'Carnegie' → 10 kết quả [62ms] | Top-1: Nghĩ giàu làm giàu (0.6098)
+[2026-09-15 12:07:06] [RAG_RETRIEVER] 'Carnegie' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=1.3000, la_lac_de=False)
+[2026-09-15 12:07:11] [LLM] [deepseek/deepseek-chat] [SUCCESS] [5543ms] [3478 chars] Response: 381 chars
+[2026-09-15 12:07:18] [LLM] [deepseek/deepseek-chat] [SUCCESS] [6654ms] [4153 chars] Response: 466 chars
+[2026-09-15 12:07:22] [LLM] [deepseek/deepseek-chat] [SUCCESS] [3091ms] [5057 chars] Response: 252 chars
+[2026-09-15 12:07:23] [VECTORSTORE] [INIT] Collection 'sach_thu_vien' sẵn sàng. Hiện có 10 sách đã index. DB: D:\ung dung tri tue nhan ao\app\chatbotAI\vector_db
+[2026-09-15 12:07:23] [EMBEDDING] [paraphrase-multilingual-MiniLM-L12-v2] [SUCCESS] [35ms] [29 chars] → 384-dim vector
+[2026-09-15 12:07:23] [VECTORSTORE] [SEARCH] 'Ai là chủ tịch nước hiện tại?' → 10 kết quả [37ms] | Top-1: 7 Thói quen của người hiệu quả (0.6802)
+[2026-09-15 12:07:23] [RAG_RETRIEVER] 'Ai là chủ tịch nước hiện tại?' → 8/10 sách đạt ngưỡng 0.0 (max_score_truoc_loc=0.0541, la_lac_de=True)
+[2026-09-15 12:07:37] [LLM] [deepseek/deepseek-chat] [SUCCESS] [14483ms] [3426 chars] Response: 366 chars
+[2026-09-15 12:07:41] [LLM] [deepseek/deepseek-chat] [SUCCESS] [2829ms] [4101 chars] Response: 68 chars
+[2026-09-15 12:07:45] [LLM] [deepseek/deepseek-chat] [SUCCESS] [3324ms] [5005 chars] Response: 154 chars

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V3: Thử Nghiệm Prompt Đầy Đủ & Chặn Lạc Đề (Port 8003)</title>
+  <style>
+    :root {
+      --primary: #065F46;
+      --primary-light: #A7F3D0;
+      --bg: #F0FDF4;
+      --card-bg: #FFFFFF;
+      --text: #1F2937;
+      --border: #6EE7B7;
+      --accent: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 24px 16px; line-height: 1.5; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { background: var(--card-bg); border-top: 6px solid var(--accent); padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.1); margin-bottom: 20px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #D1FAE5; color: #065F46; margin-bottom: 8px; }
+    h1 { font-size: 22px; color: var(--primary); margin-bottom: 6px; }
+    p.subtitle { color: #047857; font-size: 14px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid var(--border); margin-bottom: 20px; }
+    .section-title { font-size: 15px; font-weight: 700; color: #065F46; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .btn-quick { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.15s ease; text-align: left; }
+    .btn-quick:hover { background: #D1FAE5; border-color: #34D399; }
+    .input-group { display: flex; gap: 10px; margin-top: 10px; }
+    textarea { flex: 1; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #A7F3D0; font-size: 15px; resize: vertical; min-height: 60px; outline: none; transition: border-color 0.2s; }
+    textarea:focus { border-color: var(--accent); }
+    .btn-send { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 0 24px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-send:hover { background: #047857; }
+    .btn-send:disabled { background: #A7F3D0; cursor: not-allowed; }
+    .meta-bar { display: flex; gap: 16px; align-items: center; margin-bottom: 12px; font-size: 13px; color: #065F46; font-weight: 500; }
+    .meta-tag { background: #D1FAE5; padding: 4px 8px; border-radius: 6px; }
+    .warning-box { background: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px 16px; border-radius: 6px; color: #991B1B; margin-bottom: 16px; font-size: 14px; display: none; }
+    details { background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 8px; margin-bottom: 16px; padding: 10px 14px; }
+    summary { font-size: 13px; font-weight: 600; color: #065F46; cursor: pointer; outline: none; }
+    .context-list { margin-top: 10px; font-size: 13px; color: #374151; list-style: none; }
+    .context-item { padding: 6px 0; border-bottom: 1px dashed #A7F3D0; display: flex; justify-content: space-between; }
+    .context-item:last-child { border-bottom: none; }
+    .response-area { min-height: 100px; }
+    .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+    .book-card { background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+    .book-card .title { font-weight: 700; font-size: 15px; color: #065F46; }
+    .book-card .author { font-size: 13px; color: #047857; }
+    .book-card .reason { font-size: 13px; color: #374151; margin-top: 4px; }
+    .status-tag { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; }
+    .status-in { background: #DEF7EC; color: #03543F; }
+    .status-out { background: #FDE8E8; color: #9B1C1C; }
+    .notice-box { background: #ECFDF5; border-left: 4px solid #10B981; padding: 14px 16px; border-radius: 8px; color: #065F46; font-size: 14.5px; line-height: 1.5; }
+    .text-response { white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #1F2937; padding: 14px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB; font-family: monospace; }
+    .loader { display: none; text-align: center; padding: 30px; color: #059669; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">CỔNG DỊCH VỤ: PORT 8003</span>
+      <h1>🧪 THỬ NGHIỆM PHIÊN BẢN V3 (Đầy đủ, chặn lạc đề)</h1>
+      <p class="subtitle">System Prompt: <code>v3_json_hoan_chinh.txt</code> • Bản chuẩn chính thức (Ràng buộc chặt, ép schema JSON, có Quy tắc 8 và lớp chặn tầng retrieval)</p>
+    </header>
+
+    <div class="card">
+      <div class="section-title">⚡ Câu hỏi mẫu thử nghiệm (Click để chọn nhanh):</div>
+      <div class="quick-btns">
+        <button class="btn-quick" onclick="chonCauHoi('sách hướng dẫn tư duy làm giàu và quản lý tài chính cá nhân')">1. Ngữ nghĩa: Làm giàu & tài chính</button>
+        <button class="btn-quick" onclick="chonCauHoi('sách gì hay hay')">2. Mơ hồ: "sách gì hay hay"</button>
+        <button class="btn-quick" onclick="chonCauHoi('sách hướng dẫn lái xe ô tô và thi bằng lái B2')">3. Ngoài thư viện: Lái xe ô tô</button>
+        <button class="btn-quick" onclick="chonCauHoi('Kiến trúc hệ thống phân tán')">4. Hết hàng: Kiến trúc hệ thống phân tán</button>
+        <button class="btn-quick" onclick="chonCauHoi('Carnegie')">5. Tên tác giả: "Carnegie"</button>
+        <button class="btn-quick" onclick="chonCauHoi('Ai là chủ tịch nước hiện tại?')">6. Lạc đề: Chủ tịch nước</button>
+      </div>
+
+      <div class="input-group">
+        <textarea id="txtCauHoi" placeholder="Nhập câu hỏi tra cứu sách hoặc bấm câu hỏi mẫu ở trên..."></textarea>
+        <button class="btn-send" id="btnGui" onclick="guiCauHoi()">Gửi Hỏi</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="meta-bar">
+        <span>⏱️ Thời gian xử lý: <strong id="lblLatency">-- ms</strong></span>
+        <span>📚 Context tìm được: <strong id="lblContextCount">0</strong></span>
+        <span>🎯 Sách phản hồi: <strong id="lblResultCount">0</strong></span>
+      </div>
+
+      <div id="boxWarning" class="warning-box">
+        ⚠️ <strong>Cảnh báo:</strong> AI có dấu hiệu bịa thông tin hoặc gợi ý sách không nằm trong Context được cung cấp!
+      </div>
+
+      <details id="detailsContext">
+        <summary>📋 Chi tiết Context đạt ngưỡng >= 0.35 từ Vector Store (Click để xem danh sách sách)</summary>
+        <ul id="listContext" class="context-list">
+          <li style="color:#9CA3AF;">Chưa có dữ liệu context.</li>
+        </ul>
+      </details>
+
+      <div class="section-title">🤖 Phản hồi của Trợ lý AI (Prompt V3 - JSON Chuẩn):</div>
+      <div id="loader" class="loader">⏳ Đang xử lý qua 2 lớp bảo vệ và gọi LLM... Vui lòng chờ.</div>
+      <div id="boxKetQua" class="response-area">
+        <p style="color:#9CA3AF; font-style:italic;">Chưa có câu hỏi nào được gửi. Hãy chọn một câu hỏi mẫu hoặc nhập câu hỏi để kiểm tra.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function chonCauHoi(q) {
+      document.getElementById("txtCauHoi").value = q;
+      document.getElementById("txtCauHoi").focus();
+    }
+
+    async function guiCauHoi() {
+      const q = document.getElementById("txtCauHoi").value.trim();
+      if (!q) { alert("Vui lòng nhập câu hỏi!"); return; }
+
+      const btn = document.getElementById("btnGui");
+      const loader = document.getElementById("loader");
+      const boxKetQua = document.getElementById("boxKetQua");
+      const boxWarning = document.getElementById("boxWarning");
+      const lblLatency = document.getElementById("lblLatency");
+      const lblContextCount = document.getElementById("lblContextCount");
+      const lblResultCount = document.getElementById("lblResultCount");
+      const listContext = document.getElementById("listContext");
+
+      btn.disabled = true;
+      loader.style.display = "block";
+      boxKetQua.style.display = "none";
+      boxWarning.style.display = "none";
+
+      const startTime = performance.now();
+
+      try {
+        const res = await fetch("http://localhost:8003/hoi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cau_hoi: q })
+        });
+
+        const data = await res.json();
+        const clientLatency = Math.round(performance.now() - startTime);
+        lblLatency.textContent = (data.thoi_gian_ms || clientLatency) + " ms";
+
+        // Render context
+        const ctxList = data.context_list || [];
+        lblContextCount.textContent = data.context_so_bo || ctxList.length;
+        if (ctxList.length > 0) {
+          listContext.innerHTML = ctxList.map((c, i) => `
+            <li class="context-item">
+              <span><strong>[${i+1}] ${c.ten_sach}</strong> — ${c.tac_gia} (${c.con_hang ? 'Còn hàng' : 'Hết hàng'})</span>
+              <span style="color:#059669; font-size:12px;">Điểm liên quan: ${c.diem_lien_quan !== undefined ? c.diem_lien_quan : (c.diem_tuong_dong || 'N/A')}</span>
+            </li>
+          `).join('');
+        } else {
+          listContext.innerHTML = '<li style="color:#9CA3AF;">Context rỗng (Bị chặn ở tầng retrieval hoặc không tìm thấy sách).</li>';
+        }
+
+        // Cảnh báo bịa dữ liệu
+        if (data.canh_bao_bia) {
+          boxWarning.style.display = "block";
+        }
+
+        // Render kết quả
+        lblResultCount.textContent = data.tong_so_ket_qua || (data.ket_qua ? data.ket_qua.length : 0);
+        let htmlContent = "";
+
+        if (data.thong_bao && (!data.ket_qua || data.ket_qua.length === 0)) {
+          htmlContent += `<div class="notice-box">📢 <strong>Thông báo hệ thống:</strong><br>${data.thong_bao}</div>`;
+        } else if (data.ket_qua && data.ket_qua.length > 0) {
+          htmlContent += '<div class="book-grid">';
+          data.ket_qua.forEach(b => {
+            const statusClass = b.con_hang ? "status-in" : "status-out";
+            const statusText = b.con_hang ? "Còn hàng" : "Hết hàng (Đặt trước)";
+            htmlContent += `
+              <div class="book-card">
+                <div class="title">${b.ten_sach}</div>
+                <div class="author">Tác giả: ${b.tac_gia || 'N/A'}</div>
+                <span class="status-tag ${statusClass}">${statusText}</span>
+                <div class="reason">${b.ly_do_goi_y || ''}</div>
+              </div>
+            `;
+          });
+          htmlContent += '</div>';
+
+          if (data.thong_bao) {
+            htmlContent += `<div style="margin-top:12px;" class="notice-box">${data.thong_bao}</div>`;
+          }
+        }
+
+        // Xem raw JSON
+        if (data.raw_text) {
+          htmlContent += `
+            <details style="margin-top:14px; background:#F9FAFB; border:1px solid #E5E7EB;">
+              <summary style="color:#6B7280;">🔍 Xem phản hồi thô (Raw JSON từ LLM)</summary>
+              <pre class="text-response" style="margin-top:8px;">${data.raw_text}</pre>
+            </details>
+          `;
+        }
+
+        boxKetQua.innerHTML = htmlContent || '<p style="color:#6B7280;">Không có kết quả trả về.</p>';
+      } catch (err) {
+        boxKetQua.innerHTML = `<div class="warning-box" style="display:block;">⚠️ Lỗi kết nối tới API Port 8003: ${err.message}. Hãy đảm bảo server api_v3.py đang chạy!</div>`;
+      } finally {
+        btn.disabled = false;
+        loader.style.display = "none";
+        boxKetQua.style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>
